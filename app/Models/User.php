@@ -22,6 +22,7 @@ class User extends Authenticatable
         'email',
         'password',
         'is_admin',
+        'is_partner',
     ];
 
     /**
@@ -45,6 +46,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'is_partner' => 'boolean',
         ];
     }
 
@@ -56,5 +58,47 @@ class User extends Authenticatable
     public function addresses()
     {
         return $this->hasMany(Address::class);
+    }
+
+    /**
+     * Admin roles for this user (super_admin, finance_admin, store_admin, etc.).
+     */
+    public function adminRoles()
+    {
+        return $this->belongsToMany(AdminRole::class, 'admin_role_user')
+            ->withTimestamps();
+    }
+
+    public function partner()
+    {
+        return $this->hasOne(Partner::class);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        if (!$this->is_admin) {
+            return false;
+        }
+        
+        // Load roles if not already loaded
+        if (!$this->relationLoaded('adminRoles')) {
+            $this->load('adminRoles');
+        }
+        
+        return $this->adminRoles->contains('name', 'super_admin');
+    }
+
+    public function hasAdminRole(string $role): bool
+    {
+        if (!$this->is_admin) {
+            return false;
+        }
+        
+        // Load roles if not already loaded
+        if (!$this->relationLoaded('adminRoles')) {
+            $this->load('adminRoles');
+        }
+        
+        return $this->adminRoles->contains('name', $role);
     }
 }

@@ -9,11 +9,11 @@
             <p class="text-xs text-slate-500">List of registered customers.</p>
         </div>
         <div class="flex gap-2">
-            <a href="{{ route('admin.users.export', request()->query()) }}"
+            <a href="{{ route('admin.users.export') . '?' . http_build_query(request()->query()) }}"
                class="inline-flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm">
                 Export CSV
             </a>
-            <a href="{{ route('admin.users.report', request()->query()) }}"
+            <a href="{{ route('admin.users.report') . '?' . http_build_query(request()->query()) }}"
                class="inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm">
                 Generate Report
             </a>

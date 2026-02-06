@@ -22,6 +22,7 @@ class CheckoutController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email',
             'address' => 'required|string|max:500',
+            'payment_method' => 'required|in:mpesa,paybill,card,cod',
         ]);
 
         // Basic example checkout flow
@@ -35,7 +36,7 @@ class CheckoutController extends Controller
             'user_id' => auth()->id(),
             'total' => $total,
             'status' => 'pending',
-            'payment_method' => 'cod',
+            'payment_method' => $request->input('payment_method', 'cod'),
             'shipping_address' => $request->input('address'),
         ]);
 

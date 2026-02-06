@@ -11,7 +11,20 @@ use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
+    /**
+     * Check if user has permission to access store management.
+     */
+    protected function checkStoreAdminPermission()
+    {
+        $user = auth()->user();
+        if (!$user->isSuperAdmin() && !$user->hasAdminRole('store_admin')) {
+            abort(403, 'You do not have permission to access this resource.');
+        }
+    }
+
     public function index()
+    {
+        $this->checkStoreAdminPermission();
     {
         $query = Product::with('category');
 
@@ -34,11 +47,14 @@ class ProductController extends Controller
 
     public function create()
     {
+        $this->checkStoreAdminPermission();
         $categories = Category::all();
         return view('admin.products.create', compact('categories'));
     }
 
     public function store(StoreProductRequest $request)
+    {
+        $this->checkStoreAdminPermission();
     {
         $data = $request->validated();
         
@@ -158,89 +174,119 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        $this->checkStoreAdminPermission();
         $product->delete();
         return redirect()->route('admin.products.index')->with('success', 'Product deleted.');
     }
 
     public function export()
     {
-        $query = Product::with('category');
-
-        if ($search = request('q')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
-            });
-        }
-
-        if ($categoryId = request('category_id')) {
-            $query->where('category_id', $categoryId);
-        }
-
-        $products = $query->latest()->get();
-
-        $filename = 'products_export_' . date('Y-m-d_His') . '.csv';
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ];
-
-        $callback = function() use ($products) {
-            $file = fopen('php://output', 'w');
-            
-            // Add CSV headers
-            fputcsv($file, ['ID', 'Name', 'SKU', 'Category', 'Price', 'Stock', 'Status', 'Featured', 'Description', 'Created At']);
-            
-            // Add data rows
-            foreach ($products as $product) {
-                fputcsv($file, [
-                    $product->id,
-                    $product->name,
-                    $product->sku ?? '-',
-                    $product->category->name ?? '-',
-                    $product->price,
-                    $product->stock,
-                    $product->status ?? '-',
-                    $product->featured ? 'Yes' : 'No',
-                    strip_tags($product->description ?? ''),
-                    $product->created_at->format('Y-m-d H:i:s'),
-                ]);
+        $this->checkStoreAdminPermission();
+        try {
+            // Clear any output buffering
+            if (ob_get_level()) {
+                ob_end_clean();
             }
-            
-            fclose($file);
-        };
 
-        return response()->stream($callback, 200, $headers);
+            $query = Product::with('category');
+
+            if ($search = request('q')) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('sku', 'like', "%{$search}%");
+                });
+            }
+
+            if ($categoryId = request('category_id')) {
+                $query->where('category_id', $categoryId);
+            }
+
+            $products = $query->latest()->get();
+
+            $filename = 'products_export_' . date('Y-m-d_His') . '.csv';
+            
+            $headers = [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Pragma' => 'no-cache',
+                'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                'Expires' => '0'
+            ];
+
+            $callback = function() use ($products) {
+                $file = fopen('php://output', 'w');
+                
+                // Add BOM for UTF-8
+                fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+                
+                // Add CSV headers
+                fputcsv($file, ['ID', 'Name', 'SKU', 'Category', 'Price', 'Stock', 'Status', 'Featured', 'Description', 'Created At']);
+                
+                // Add data rows
+                foreach ($products as $product) {
+                    fputcsv($file, [
+                        $product->id,
+                        $product->name,
+                        $product->sku ?? '-',
+                        $product->category->name ?? '-',
+                        $product->price,
+                        $product->stock ?? 0,
+                        $product->status ?? 'active',
+                        $product->featured ? 'Yes' : 'No',
+                        strip_tags($product->description ?? ''),
+                        $product->created_at->format('Y-m-d H:i:s'),
+                    ]);
+                }
+                
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Export failed: ' . $e->getMessage());
+        }
     }
 
     public function report()
     {
-        $query = Product::with('category');
+        $this->checkStoreAdminPermission();
+        try {
+            // Clear any output buffering
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
 
-        if ($search = request('q')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
-            });
+            $query = Product::with('category');
+
+            if ($search = request('q')) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('sku', 'like', "%{$search}%");
+                });
+            }
+
+            if ($categoryId = request('category_id')) {
+                $query->where('category_id', $categoryId);
+            }
+
+            $products = $query->latest()->get();
+            $totalProducts = $products->count();
+            $totalValue = $products->sum('price');
+            $lowStock = $products->where('stock', '<', 10)->count();
+
+            $html = view('admin.reports.products', compact('products', 'totalProducts', 'totalValue', 'lowStock'))->render();
+            
+            $dompdf = new \Dompdf\Dompdf();
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'landscape');
+            $dompdf->setOption('isRemoteEnabled', true);
+            $dompdf->setOption('isHtml5ParserEnabled', true);
+            $dompdf->render();
+            
+            return $dompdf->stream('products_report_' . date('Y-m-d_His') . '.pdf', ['Attachment' => false]);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to generate report: ' . $e->getMessage());
         }
-
-        if ($categoryId = request('category_id')) {
-            $query->where('category_id', $categoryId);
-        }
-
-        $products = $query->latest()->get();
-        $totalProducts = $products->count();
-        $totalValue = $products->sum('price');
-        $lowStock = $products->where('stock', '<', 10)->count();
-
-        $html = view('admin.reports.products', compact('products', 'totalProducts', 'totalValue', 'lowStock'))->render();
-        
-        $dompdf = new \Dompdf\Dompdf();
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->render();
-        
-        return $dompdf->stream('products_report_' . date('Y-m-d_His') . '.pdf');
     }
 }
 

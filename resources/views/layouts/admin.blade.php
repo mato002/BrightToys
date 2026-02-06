@@ -63,6 +63,24 @@
             body.admin-sidebar-collapsed #admin-sidebar {
                 width: 4.5rem;
             }
+            /* Adjust header when collapsed - center everything */
+            body.admin-sidebar-collapsed #admin-sidebar > div > div:first-child {
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+                justify-content: center;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            /* Hide logo text container when collapsed */
+            body.admin-sidebar-collapsed #admin-sidebar > div > div:first-child > div:first-child {
+                justify-content: center;
+            }
+            /* Center the collapse button when sidebar is collapsed */
+            body.admin-sidebar-collapsed #admin-sidebar #sidebar-collapse-toggle {
+                position: relative;
+                margin: 0;
+                align-self: center;
+            }
         }
     </style>
 </head>
@@ -103,6 +121,16 @@
                 </span>
                 <span class="font-medium sidebar-label">Dashboard</span>
             </a>
+            
+            @php
+                $user = auth()->user();
+                $isSuperAdmin = $user->isSuperAdmin();
+                $hasStoreAdmin = $user->hasAdminRole('store_admin');
+                $hasFinanceAdmin = $user->hasAdminRole('finance_admin');
+            @endphp
+
+            {{-- Store Admin Section: Products, Categories, Orders, Customers --}}
+            @if($isSuperAdmin || $hasStoreAdmin)
             <a href="{{ route('admin.products.index') }}"
                class="group flex items-center px-3 py-2.5 rounded-xl transition
                       {{ request()->routeIs('admin.products.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
@@ -152,7 +180,64 @@
                 </span>
                 <span class="font-medium sidebar-label">Customers</span>
             </a>
+            @endif
 
+            {{-- Admins (Super Admin or Finance Admin can manage) --}}
+            @if($isSuperAdmin || $hasFinanceAdmin)
+            <a href="{{ route('admin.admins.index') }}"
+               class="group flex items-center px-3 py-2.5 rounded-xl transition
+                      {{ request()->routeIs('admin.admins.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
+                <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
+                    {{-- Shield/Admin icon --}}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M12 2L4 5v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V5l-8-3z" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <span class="font-medium sidebar-label">Admins</span>
+            </a>
+            @endif
+
+            {{-- Finance Admin Section: Partners, Financial, Documents, Activity Logs --}}
+            @if($isSuperAdmin || $hasFinanceAdmin)
+            <p class="px-3 mt-4 mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-emerald-200/80 sidebar-section-label">
+                Partnership
+            </p>
+            <a href="{{ route('admin.partners.index') }}"
+               class="group flex items-center px-3 py-2.5 rounded-xl transition
+                      {{ request()->routeIs('admin.partners.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
+                <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
+                    <i class="fas fa-handshake"></i>
+                </span>
+                <span class="font-medium sidebar-label">Partners</span>
+            </a>
+            <a href="{{ route('admin.financial.index') }}"
+               class="group flex items-center px-3 py-2.5 rounded-xl transition
+                      {{ request()->routeIs('admin.financial.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
+                <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
+                    <i class="fas fa-dollar-sign"></i>
+                </span>
+                <span class="font-medium sidebar-label">Financial</span>
+            </a>
+            <a href="{{ route('admin.documents.index') }}"
+               class="group flex items-center px-3 py-2.5 rounded-xl transition
+                      {{ request()->routeIs('admin.documents.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
+                <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
+                    <i class="fas fa-folder-open"></i>
+                </span>
+                <span class="font-medium sidebar-label">Documents</span>
+            </a>
+            <a href="{{ route('admin.activity-logs.index') }}"
+               class="group flex items-center px-3 py-2.5 rounded-xl transition
+                      {{ request()->routeIs('admin.activity-logs.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
+                <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
+                    <i class="fas fa-history"></i>
+                </span>
+                <span class="font-medium sidebar-label">Activity Logs</span>
+            </a>
+            @endif
+
+            {{-- Support (Store Admin or Super Admin) --}}
+            @if($isSuperAdmin || $hasStoreAdmin)
             <p class="px-3 mt-4 mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-emerald-200/80 sidebar-section-label">
                 Support
             </p>
@@ -168,13 +253,26 @@
                 </span>
                 <span class="font-medium sidebar-label">Support & messages</span>
             </a>
+            @endif
 
             <p class="px-3 mt-4 mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-emerald-200/80 sidebar-section-label">
-                Settings
+                Account
             </p>
             <a href="{{ route('admin.profile') }}"
                class="group flex items-center px-3 py-2.5 rounded-xl transition
-                      {{ request()->routeIs('admin.profile') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
+                      {{ request()->routeIs('admin.profile*') && !request()->routeIs('admin.settings*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
+                <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
+                    {{-- User icon --}}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4z" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M4 20a8 8 0 0 1 16 0" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <span class="font-medium sidebar-label">Profile</span>
+            </a>
+            <a href="{{ route('admin.settings') }}"
+               class="group flex items-center px-3 py-2.5 rounded-xl transition
+                      {{ request()->routeIs('admin.settings*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
                 <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
                     {{-- Settings icon --}}
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -182,7 +280,7 @@
                         <path d="M19.4 14a1.8 1.8 0 0 0 .36 1.98l.03.03a2 2 0 1 1-2.83 2.83l-.03-.03A1.8 1.8 0 0 0 15 19.4a1.8 1.8 0 0 0-1 .33 1.8 1.8 0 0 0-.8 1.52V22a2 2 0 1 1-4 0v-.75a1.8 1.8 0 0 0-.8-1.52 1.8 1.8 0 0 0-1-.33 1.8 1.8 0 0 0-1.98.36l-.03.03a2 2 0 1 1-2.83-2.83l.03-.03A1.8 1.8 0 0 0 4.6 14a1.8 1.8 0 0 0-.33-1 1.8 1.8 0 0 0-1.52-.8H2a2 2 0 1 1 0-4h.75a1.8 1.8 0 0 0 1.52-.8 1.8 1.8 0 0 0 .33-1A1.8 1.8 0 0 0 4 4.6a1.8 1.8 0 0 0-1.98-.36l-.03.03a2 2 0 1 1 2.83-2.83l.03.03A1.8 1.8 0 0 0 9 4.6a1.8 1.8 0 0 0 1-.33 1.8 1.8 0 0 0 .8-1.52V2a2 2 0 1 1 4 0v.75a1.8 1.8 0 0 0 .8 1.52 1.8 1.8 0 0 0 1 .33 1.8 1.8 0 0 0 1.98-.36l.03-.03a2 2 0 1 1 2.83 2.83l-.03.03A1.8 1.8 0 0 0 19.4 10c0 .36.12.71.33 1a1.8 1.8 0 0 0 1.52.8H22a2 2 0 1 1 0 4h-.75a1.8 1.8 0 0 0-1.52.8 1.8 1.8 0 0 0-.33 1z" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </span>
-                <span class="font-medium sidebar-label">Profile & settings</span>
+                <span class="font-medium sidebar-label">Settings</span>
             </a>
             </nav>
 
@@ -246,10 +344,10 @@
                         <p class="font-semibold text-slate-900 truncate">{{ auth()->user()->name ?? 'Admin' }}</p>
                         <p class="text-[11px] text-slate-500 truncate">{{ auth()->user()->email ?? '' }}</p>
                     </div>
-                    <a href="#"
+                    <a href="{{ route('admin.profile') }}"
                        class="flex items-center px-3 py-2 text-slate-700 hover:bg-slate-50">
                         <span class="mr-2 text-[13px]">👤</span>
-                        <span>My Profile (coming soon)</span>
+                        <span>My Profile</span>
                     </a>
                     <form id="logout-form" action="{{ route('logout') }}" method="POST">
                         @csrf
@@ -292,9 +390,28 @@
             }
 
             if (collapseToggle) {
-                collapseToggle.addEventListener('click', function () {
-                    const isCollapsed = document.body.classList.toggle('admin-sidebar-collapsed');
-                    collapseToggle.querySelector('span').textContent = isCollapsed ? '»' : '«';
+                collapseToggle.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const body = document.body;
+                    const isCurrentlyCollapsed = body.classList.contains('admin-sidebar-collapsed');
+                    
+                    // Toggle the collapsed class
+                    if (isCurrentlyCollapsed) {
+                        body.classList.remove('admin-sidebar-collapsed');
+                    } else {
+                        body.classList.add('admin-sidebar-collapsed');
+                    }
+                    
+                    // Update button text
+                    const span = collapseToggle.querySelector('span');
+                    if (span) {
+                        span.textContent = body.classList.contains('admin-sidebar-collapsed') ? '»' : '«';
+                    }
+                    
+                    // Update button title
+                    collapseToggle.setAttribute('title', body.classList.contains('admin-sidebar-collapsed') ? 'Expand sidebar' : 'Collapse sidebar');
                 });
             }
 
@@ -354,6 +471,7 @@
             });
         })();
     </script>
+    @stack('scripts')
 </body>
 </html>
 

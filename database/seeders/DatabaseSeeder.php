@@ -25,6 +25,16 @@ class DatabaseSeeder extends Seeder
         // Additional customers
         User::factory(10)->create();
 
+        // Admin roles must be seeded first
+        $this->call([
+            AdminRoleSeeder::class,
+        ]);
+
+        // Test users for partnership system
+        $this->call([
+            TestUsersSeeder::class,
+        ]);
+
         // Catalog data
         $this->call([
             CategorySeeder::class,

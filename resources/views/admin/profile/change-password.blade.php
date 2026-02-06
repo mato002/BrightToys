@@ -20,7 +20,7 @@
         </a>
     </div>
 
-    <div class="max-w-2xl">
+    <div>
         <div class="bg-white border rounded-2xl p-6 shadow-sm">
             @if(session('success'))
                 <div class="mb-4 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-lg">
@@ -45,11 +45,19 @@
                     <label for="current_password" class="block text-xs font-semibold text-slate-700 mb-1.5">
                         Current password
                     </label>
-                    <input type="password"
-                           id="current_password"
-                           name="current_password"
-                           required
-                           class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    <div class="relative">
+                        <input type="password"
+                               id="current_password"
+                               name="current_password"
+                               required
+                               class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 password-toggle-input">
+                        <button type="button"
+                                class="absolute inset-y-0 right-0 px-3 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 focus:outline-none password-toggle-btn transition-colors"
+                                data-target="current_password"
+                                style="z-index: 10;">
+                            Show
+                        </button>
+                    </div>
                     <p class="mt-1 text-[11px] text-slate-500">
                         Enter your current password to confirm the change.
                     </p>
@@ -59,11 +67,19 @@
                     <label for="password" class="block text-xs font-semibold text-slate-700 mb-1.5">
                         New password
                     </label>
-                    <input type="password"
-                           id="password"
-                           name="password"
-                           required
-                           class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    <div class="relative">
+                        <input type="password"
+                               id="password"
+                               name="password"
+                               required
+                               class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 password-toggle-input">
+                        <button type="button"
+                                class="absolute inset-y-0 right-0 px-3 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 focus:outline-none password-toggle-btn transition-colors"
+                                data-target="password"
+                                style="z-index: 10;">
+                            Show
+                        </button>
+                    </div>
                     <p class="mt-1 text-[11px] text-slate-500">
                         Use at least 8 characters with a mix of letters, numbers and symbols.
                     </p>
@@ -73,11 +89,19 @@
                     <label for="password_confirmation" class="block text-xs font-semibold text-slate-700 mb-1.5">
                         Confirm new password
                     </label>
-                    <input type="password"
-                           id="password_confirmation"
-                           name="password_confirmation"
-                           required
-                           class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    <div class="relative">
+                        <input type="password"
+                               id="password_confirmation"
+                               name="password_confirmation"
+                               required
+                               class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 password-toggle-input">
+                        <button type="button"
+                                class="absolute inset-y-0 right-0 px-3 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 focus:outline-none password-toggle-btn transition-colors"
+                                data-target="password_confirmation"
+                                style="z-index: 10;">
+                            Show
+                        </button>
+                    </div>
                 </div>
 
                 <div class="flex items-center gap-3 pt-2">
@@ -96,4 +120,25 @@
             </form>
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const buttons = document.querySelectorAll('.password-toggle-btn');
+
+            buttons.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const targetId = btn.getAttribute('data-target');
+                    const input = document.getElementById(targetId);
+
+                    if (!input) return;
+
+                    const isHidden = input.type === 'password';
+                    input.type = isHidden ? 'text' : 'password';
+                    btn.textContent = isHidden ? 'Hide' : 'Show';
+                });
+            });
+        });
+    </script>
+    @endpush
 @endsection

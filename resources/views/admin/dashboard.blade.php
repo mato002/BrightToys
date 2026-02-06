@@ -131,7 +131,7 @@
                 </div>
             </div>
             <div class="p-4">
-                <canvas id="salesChart" class="w-full h-52"></canvas>
+                <canvas id="salesChart" style="max-height: 208px;"></canvas>
             </div>
         </div>
 
@@ -144,7 +144,7 @@
                 </div>
             </div>
             <div class="p-4">
-                <canvas id="statusChart" class="w-full h-52"></canvas>
+                <canvas id="statusChart" style="max-height: 208px;"></canvas>
             </div>
         </div>
     </div>
@@ -259,17 +259,22 @@
 @endsection
 
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
-        (function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const salesCtx = document.getElementById('salesChart');
             const statusCtx = document.getElementById('statusChart');
 
+            // Sales Chart (Line Chart)
             if (salesCtx) {
-                const salesData = @json($salesLast7Days->pluck('total'));
-                const salesLabels = @json($salesLast7Days->pluck('date'));
+                const salesData = @json($salesLast7Days->pluck('total')->toArray());
+                const salesLabels = @json($salesLast7Days->pluck('date')->toArray());
 
-                new Chart(salesCtx, {
+                // Ensure we have data
+                if (!salesData || salesData.length === 0) {
+                    salesCtx.parentElement.innerHTML = '<div class="flex items-center justify-center h-52 text-slate-400 text-sm">No sales data available</div>';
+                } else {
+                    new Chart(salesCtx, {
                     type: 'line',
                     data: {
                         labels: salesLabels,
@@ -281,43 +286,97 @@
                             tension: 0.35,
                             fill: true,
                             borderWidth: 2,
-                            pointRadius: 3,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#059669',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointHoverRadius: 6,
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: { display: false },
+                            legend: { 
+                                display: false 
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                titleFont: { size: 12 },
+                                bodyFont: { size: 11 },
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'Ksh ' + Number(context.parsed.y).toLocaleString();
+                                    }
+                                }
+                            }
                         },
                         scales: {
-                            x: { ticks: { font: { size: 10 } } },
+                            x: { 
+                                ticks: { 
+                                    font: { size: 10 },
+                                    color: '#64748b'
+                                },
+                                grid: {
+                                    display: false
+                                }
+                            },
                             y: {
-                                ticks: { font: { size: 10 } },
+                                ticks: { 
+                                    font: { size: 10 },
+                                    color: '#64748b',
+                                    callback: function(value) {
+                                        return 'Ksh ' + value.toLocaleString();
+                                    }
+                                },
                                 beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(148, 163, 184, 0.1)'
+                                }
                             }
                         }
                     }
-                });
+                    });
+                }
             }
 
+            // Status Chart (Doughnut Chart)
             if (statusCtx) {
-                const statusData = @json($statusCounts->values());
-                const statusLabels = @json($statusCounts->keys());
+                @php
+                    $statusLabels = $statusCounts->keys()->map(function($key) {
+                        return ucfirst(str_replace('_', ' ', $key));
+                    })->toArray();
+                    $statusData = $statusCounts->values()->toArray();
+                    $statusKeys = $statusCounts->keys()->toArray();
+                    $statusColorMap = [
+                        'pending' => '#f97316',
+                        'processing' => '#0ea5e9',
+                        'completed' => '#22c55e',
+                        'shipped' => '#64748b',
+                        'cancelled' => '#ef4444'
+                    ];
+                    $backgroundColors = array_map(function($key) use ($statusColorMap) {
+                        return $statusColorMap[$key] ?? '#94a3b8';
+                    }, $statusKeys);
+                @endphp
+                
+                const statusData = @json($statusData);
+                const statusLabels = @json($statusLabels);
+                const backgroundColors = @json($backgroundColors);
 
-                new Chart(statusCtx, {
+                // Ensure we have data
+                if (!statusData || statusData.length === 0 || statusData.every(v => v === 0)) {
+                    statusCtx.parentElement.innerHTML = '<div class="flex items-center justify-center h-52 text-slate-400 text-sm">No order data available</div>';
+                } else {
+                    new Chart(statusCtx, {
                     type: 'doughnut',
                     data: {
                         labels: statusLabels,
                         datasets: [{
                             data: statusData,
-                            backgroundColor: [
-                                '#f97316', // pending
-                                '#0ea5e9', // processing
-                                '#22c55e', // completed
-                                '#64748b', // shipped
-                                '#ef4444', // cancelled
-                            ],
+                            backgroundColor: backgroundColors,
+                            borderWidth: 0,
                         }]
                     },
                     options: {
@@ -326,14 +385,35 @@
                         plugins: {
                             legend: {
                                 position: 'bottom',
-                                labels: { font: { size: 10 } }
+                                labels: { 
+                                    font: { size: 10 },
+                                    padding: 12,
+                                    usePointStyle: true,
+                                    pointStyle: 'circle'
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                titleFont: { size: 12 },
+                                bodyFont: { size: 11 },
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                        return label + ': ' + value + ' (' + percentage + '%)';
+                                    }
+                                }
                             }
                         },
                         cutout: '60%',
                     }
-                });
+                    });
+                }
             }
-        })();
+        });
     </script>
 @endpush
 

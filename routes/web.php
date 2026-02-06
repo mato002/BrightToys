@@ -88,15 +88,58 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('users', AdminUserController::class)->only(['index', 'show']);
     Route::get('/users/export', [AdminUserController::class, 'export'])->name('users.export');
     Route::get('/users/report', [AdminUserController::class, 'report'])->name('users.report');
+    
+    Route::resource('admins', \App\Http\Controllers\Admin\AdminController::class);
 
     Route::get('/profile', [AdminProfileController::class, 'index'])->name('profile');
     Route::get('/profile/edit', [AdminProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
-    Route::get('/profile/change-password', [AdminProfileController::class, 'showChangePasswordForm'])->name('profile.change-password');
-    Route::post('/profile/change-password', [AdminProfileController::class, 'changePassword'])->name('profile.change-password.post');
+    
+    Route::get('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings');
+    Route::put('/settings/password', [\App\Http\Controllers\Admin\SettingsController::class, 'updatePassword'])->name('settings.password');
+    
+    // Redirect old change-password route to settings
+    Route::get('/profile/change-password', function() {
+        return redirect()->route('admin.settings');
+    })->name('profile.change-password');
 
     Route::resource('support-tickets', SupportTicketController::class)->only(['index', 'show', 'update']);
     Route::get('/support-tickets/export', [SupportTicketController::class, 'export'])->name('support-tickets.export');
     Route::get('/support-tickets/report', [SupportTicketController::class, 'report'])->name('support-tickets.report');
+
+    // Partnership Management
+    Route::resource('partners', \App\Http\Controllers\Admin\PartnerController::class);
+    
+    // Financial Management
+    Route::prefix('financial')->name('financial.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\FinancialController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\FinancialController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\FinancialController::class, 'store'])->name('store');
+        Route::get('/{financial}', [\App\Http\Controllers\Admin\FinancialController::class, 'show'])->name('show');
+        Route::post('/{financial}/approve', [\App\Http\Controllers\Admin\FinancialController::class, 'approve'])->name('approve');
+        Route::post('/{financial}/reject', [\App\Http\Controllers\Admin\FinancialController::class, 'reject'])->name('reject');
+        Route::post('/{financial}/archive', [\App\Http\Controllers\Admin\FinancialController::class, 'archive'])->name('archive');
+        
+        // Contributions
+        Route::get('/contributions', [\App\Http\Controllers\Admin\FinancialController::class, 'contributions'])->name('contributions');
+        Route::post('/contributions', [\App\Http\Controllers\Admin\FinancialController::class, 'storeContribution'])->name('contributions.store');
+        Route::post('/contributions/{contribution}/approve', [\App\Http\Controllers\Admin\FinancialController::class, 'approveContribution'])->name('contributions.approve');
+    });
+
+    // Documents
+    Route::resource('documents', \App\Http\Controllers\Admin\DocumentController::class);
+    Route::get('/documents/{document}/download', [\App\Http\Controllers\Admin\DocumentController::class, 'download'])->name('documents.download');
+    Route::post('/documents/{document}/archive', [\App\Http\Controllers\Admin\DocumentController::class, 'archive'])->name('documents.archive');
+
+    // Activity Logs
+    Route::get('/activity-logs', [\App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
+    Route::get('/activity-logs/{activityLog}', [\App\Http\Controllers\Admin\ActivityLogController::class, 'show'])->name('activity-logs.show');
+});
+
+// Partner Dashboard (read-only financial access)
+Route::prefix('partner')->name('partner.')->middleware(['auth', 'partner'])->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\Partner\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/financial-records', [\App\Http\Controllers\Partner\DashboardController::class, 'financialRecords'])->name('financial-records');
+    Route::get('/contributions', [\App\Http\Controllers\Partner\DashboardController::class, 'contributions'])->name('contributions');
 });
 

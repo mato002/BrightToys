@@ -69,21 +69,27 @@ class DashboardController extends Controller
 
         $filename = 'dashboard_export_' . date('Y-m-d_His') . '.csv';
         $headers = [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
         ];
 
         $callback = function() use ($stats) {
             $file = fopen('php://output', 'w');
             
+            // Add BOM for UTF-8
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
             fputcsv($file, ['Metric', 'Value']);
             fputcsv($file, ['Total Products', $stats['products']]);
             fputcsv($file, ['Total Orders', $stats['orders']]);
             fputcsv($file, ['Total Users', $stats['users']]);
-            fputcsv($file, ['Total Revenue', $stats['revenue']]);
+            fputcsv($file, ['Total Revenue', number_format($stats['revenue'], 2)]);
             fputcsv($file, ['Pending Orders', $stats['pending_orders']]);
             fputcsv($file, ['Completed Orders', $stats['completed_orders']]);
-            fputcsv($file, ['Today Revenue', $stats['today_revenue']]);
+            fputcsv($file, ['Today Revenue', number_format($stats['today_revenue'], 2)]);
             
             fclose($file);
         };
@@ -120,14 +126,20 @@ class DashboardController extends Controller
             ->take(10)
             ->get();
 
-        $html = view('admin.reports.dashboard', compact('stats', 'salesLast7Days', 'statusCounts', 'topProducts'))->render();
-        
-        $dompdf = new \Dompdf\Dompdf();
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-        
-        return $dompdf->stream('dashboard_report_' . date('Y-m-d_His') . '.pdf');
+        try {
+            $html = view('admin.reports.dashboard', compact('stats', 'salesLast7Days', 'statusCounts', 'topProducts'))->render();
+            
+            $dompdf = new \Dompdf\Dompdf();
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->setOption('isRemoteEnabled', true);
+            $dompdf->setOption('isHtml5ParserEnabled', true);
+            $dompdf->render();
+            
+            return $dompdf->stream('dashboard_report_' . date('Y-m-d_His') . '.pdf', ['Attachment' => false]);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to generate report: ' . $e->getMessage());
+        }
     }
 }
 
