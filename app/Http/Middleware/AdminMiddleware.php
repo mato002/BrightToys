@@ -11,7 +11,11 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (! Auth::check() || ! Auth::user()->is_admin) {
+        $user = Auth::user();
+
+        // In this system, partners are also admins (investors operating the business).
+        // Allow access if the user is either an admin or a partner.
+        if (! $user || (!($user->is_admin ?? false) && !($user->is_partner ?? false))) {
             abort(403);
         }
 

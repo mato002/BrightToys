@@ -22,7 +22,7 @@ class SupportTicketController extends Controller
     public function index()
     {
         $this->checkStoreAdminPermission();
-    {
+        
         $tickets = SupportTicket::latest()->paginate(15);
 
         return view('admin.support.index', compact('tickets'));
@@ -116,10 +116,10 @@ class SupportTicketController extends Controller
             $html = view('admin.reports.support-tickets', compact('tickets', 'totalTickets', 'statusCounts'))->render();
             
             $dompdf = new \Dompdf\Dompdf();
+            $dompdf->getOptions()->set('isRemoteEnabled', true);
+            $dompdf->getOptions()->set('isHtml5ParserEnabled', true);
             $dompdf->loadHtml($html);
             $dompdf->setPaper('A4', 'portrait');
-            $dompdf->setOption('isRemoteEnabled', true);
-            $dompdf->setOption('isHtml5ParserEnabled', true);
             $dompdf->render();
             
             return $dompdf->stream('support_tickets_report_' . date('Y-m-d_His') . '.pdf', ['Attachment' => false]);

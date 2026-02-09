@@ -130,10 +130,10 @@ class DashboardController extends Controller
             $html = view('admin.reports.dashboard', compact('stats', 'salesLast7Days', 'statusCounts', 'topProducts'))->render();
             
             $dompdf = new \Dompdf\Dompdf();
+            $dompdf->getOptions()->set('isRemoteEnabled', true);
+            $dompdf->getOptions()->set('isHtml5ParserEnabled', true);
             $dompdf->loadHtml($html);
             $dompdf->setPaper('A4', 'portrait');
-            $dompdf->setOption('isRemoteEnabled', true);
-            $dompdf->setOption('isHtml5ParserEnabled', true);
             $dompdf->render();
             
             return $dompdf->stream('dashboard_report_' . date('Y-m-d_His') . '.pdf', ['Attachment' => false]);

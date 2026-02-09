@@ -63,13 +63,41 @@ class ProductController extends Controller
     public function show(string $slug)
     {
         $product = Product::query()->where('slug', $slug)->with('category')->firstOrFail();
+        
+        // Related products (same category)
         $related = Product::query()
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
+            ->where('status', 'active')
             ->take(4)
             ->get();
+        
+        // Recently viewed products (from session)
+        $recentlyViewed = collect();
+        if (auth()->check()) {
+            $viewedIds = session('recently_viewed', []);
+            if (!empty($viewedIds)) {
+                $recentlyViewed = Product::query()
+                    ->whereIn('id', array_slice($viewedIds, 0, 4))
+                    ->where('id', '!=', $product->id)
+                    ->where('status', 'active')
+                    ->get();
+            }
+        }
+        
+        // Track this product as viewed
+        if (auth()->check()) {
+            $viewed = session('recently_viewed', []);
+            // Remove if already exists
+            $viewed = array_diff($viewed, [$product->id]);
+            // Add to beginning
+            array_unshift($viewed, $product->id);
+            // Keep only last 10
+            $viewed = array_slice($viewed, 0, 10);
+            session(['recently_viewed' => $viewed]);
+        }
 
-        return view('frontend.product', compact('product', 'related'));
+        return view('frontend.product', compact('product', 'related', 'recentlyViewed'));
     }
 
     public function category(string $slug)

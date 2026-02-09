@@ -8,11 +8,14 @@ use App\Models\Order;
 class OrderController extends Controller
 {
     /**
-     * Check if user has permission to access store management.
+     * Check if user has permission to access store management (view only for partners).
      */
-    protected function checkStoreAdminPermission()
+    protected function checkStoreAdminPermission($allowPartners = false)
     {
         $user = auth()->user();
+        if ($allowPartners && $user->is_partner) {
+            return; // Partners can view
+        }
         if (!$user->isSuperAdmin() && !$user->hasAdminRole('store_admin')) {
             abort(403, 'You do not have permission to access this resource.');
         }
@@ -20,7 +23,7 @@ class OrderController extends Controller
 
     public function index()
     {
-        $this->checkStoreAdminPermission();
+        $this->checkStoreAdminPermission(true); // Allow partners to view
         
         $query = Order::with(['user', 'items']);
 
@@ -56,19 +59,40 @@ class OrderController extends Controller
     
     public function show(Order $order)
     {
-        $this->checkStoreAdminPermission();
+        $this->checkStoreAdminPermission(true); // Allow partners to view
         $order->load('items.product', 'user');
         return view('admin.orders.show', compact('order'));
     }
 
     public function update(\Illuminate\Http\Request $request, Order $order)
     {
-        $this->checkStoreAdminPermission();
+        $this->checkStoreAdminPermission(false); // Partners cannot modify
         $data = $request->validate([
             'status' => 'required|string|in:pending,processing,shipped,completed,cancelled',
         ]);
 
+        $oldStatus = $order->status;
         $order->update($data);
+
+        // Send email notification if status changed and user exists
+        if ($oldStatus !== $data['status'] && $order->user) {
+            try {
+                \Illuminate\Support\Facades\Mail::to($order->user->email)
+                    ->send(new \App\Mail\OrderStatusUpdateMail($order, $oldStatus, $data['status']));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to send order status update email: ' . $e->getMessage());
+            }
+        }
+
+        // If order is cancelled, restore stock
+        if ($data['status'] === 'cancelled' && $oldStatus !== 'cancelled') {
+            foreach ($order->items as $item) {
+                if ($item->product) {
+                    $item->product->stock += $item->quantity;
+                    $item->product->save();
+                }
+            }
+        }
 
         return redirect()
             ->route('admin.orders.show', $order)
@@ -196,10 +220,10 @@ class OrderController extends Controller
             $html = view('admin.reports.orders', compact('orders', 'totalOrders', 'totalRevenue', 'statusCounts'))->render();
             
             $dompdf = new \Dompdf\Dompdf();
+            $dompdf->getOptions()->set('isRemoteEnabled', true);
+            $dompdf->getOptions()->set('isHtml5ParserEnabled', true);
             $dompdf->loadHtml($html);
             $dompdf->setPaper('A4', 'landscape');
-            $dompdf->setOption('isRemoteEnabled', true);
-            $dompdf->setOption('isHtml5ParserEnabled', true);
             $dompdf->render();
             
             return $dompdf->stream('orders_report_' . date('Y-m-d_His') . '.pdf', ['Attachment' => false]);

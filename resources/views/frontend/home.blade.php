@@ -14,19 +14,19 @@
                             <div class="inline-flex items-center gap-2 text-xs font-semibold bg-white/20 backdrop-blur px-3 py-1 rounded-full mb-4">
                                 <span class="h-1.5 w-1.5 rounded-full bg-white animate-pulse"></span>
                                 NEW ARRIVALS
-                            </div>
+                </div>
                             <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-4">
                                 Build the thrill with<br>
                                 <span class="text-yellow-200">LEGO Formula 1</span>
-                            </h1>
+                </h1>
                             <p class="text-sm sm:text-base text-white/90 mb-6 max-w-lg">
                                 Discover exciting new toys that spark creativity and imagination. Shop the latest collections now!
-                            </p>
-                            <a href="{{ route('frontend.new_arrivals') }}"
+                </p>
+                    <a href="{{ route('frontend.new_arrivals') }}"
                                class="inline-flex items-center justify-center bg-white text-amber-600 hover:bg-amber-50 text-sm font-bold px-6 py-3 rounded-full shadow-lg transition-all hover:scale-105">
                                 Shop Now →
-                            </a>
-                        </div>
+                    </a>
+                </div>
                         <div class="hidden md:block">
                             <div class="bg-white/10 backdrop-blur rounded-2xl p-8 text-center">
                                 <div class="text-6xl mb-4">🧩</div>
@@ -84,12 +84,12 @@
                                class="inline-flex items-center justify-center bg-white text-blue-600 hover:bg-blue-50 text-sm font-bold px-6 py-3 rounded-full shadow-lg transition-all hover:scale-105">
                                 Explore Toys →
                             </a>
-                        </div>
+            </div>
                         <div class="hidden md:block">
                             <div class="bg-white/10 backdrop-blur rounded-2xl p-8 text-center">
                                 <div class="mb-4"><i class="fas fa-star text-6xl text-yellow-300"></i></div>
                                 <p class="text-white font-semibold">Quality Toys</p>
-                            </div>
+                    </div>
                         </div>
                     </div>
                 </div>
@@ -119,7 +119,7 @@
                 <div>
                     <div class="text-3xl md:text-4xl font-bold text-blue-600 mb-1">50+</div>
                     <p class="text-xs md:text-sm text-slate-600">Top Brands</p>
-                </div>
+                    </div>
                 <div>
                     <div class="text-3xl md:text-4xl font-bold text-emerald-600 mb-1">24/7</div>
                     <p class="text-xs md:text-sm text-slate-600">Customer Support</p>

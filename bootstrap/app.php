@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'customer' => \App\Http\Middleware\CustomerMiddleware::class,
             'partner' => \App\Http\Middleware\PartnerMiddleware::class,
             'role' => \App\Http\Middleware\CheckRole::class,
+            'project.access' => \App\Http\Middleware\CheckProjectAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

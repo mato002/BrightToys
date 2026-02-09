@@ -52,7 +52,10 @@
                     <div class="border border-slate-200 rounded-xl mb-4 p-5 bg-white shadow-sm hover:shadow-md transition-shadow">
                         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3 pb-4 border-b border-slate-100">
                             <div>
-                                <p class="font-bold text-slate-900 text-base">Order #{{ $order->id }}</p>
+                                <p class="font-bold text-slate-900 text-base">Order #{{ $order->order_number ?? $order->id }}</p>
+                                @if($order->tracking_number)
+                                    <p class="text-xs text-slate-500 mt-1">Tracking: <span class="font-semibold">{{ $order->tracking_number }}</span></p>
+                                @endif
                                 <p class="text-xs text-slate-500 mt-1">{{ $order->created_at->format('F d, Y \a\t g:i A') }}</p>
                             </div>
                             <div class="text-right">
@@ -69,6 +72,23 @@
                                     {{ ucfirst($order->status) }}
                                 </span>
                             </div>
+                        </div>
+
+                        <div class="flex gap-2 mb-4 flex-wrap">
+                            <a href="{{ route('account.orders.track', $order) }}" class="text-xs text-amber-600 hover:text-amber-700 font-semibold px-3 py-1.5 border border-amber-200 rounded-lg hover:bg-amber-50 transition-colors">
+                                Track Order
+                            </a>
+                            <a href="{{ route('account.orders.invoice', $order) }}" target="_blank" class="text-xs text-blue-600 hover:text-blue-700 font-semibold px-3 py-1.5 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors">
+                                Download Invoice
+                            </a>
+                            @if(in_array($order->status, ['pending', 'processing']))
+                                <form action="{{ route('account.orders.cancel', $order) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this order?');" class="inline">
+                                    @csrf
+                                    <button type="submit" class="text-xs text-red-600 hover:text-red-700 font-semibold px-3 py-1.5 border border-red-200 rounded-lg hover:bg-red-50 transition-colors">
+                                        Cancel Order
+                                    </button>
+                                </form>
+                            @endif
                         </div>
 
                         <div class="space-y-2">

@@ -104,6 +104,11 @@ class TestUsersSeeder extends Seeder
                     'is_partner' => true,
                 ]
             );
+            
+            // Ensure is_partner flag is set
+            if (!$user->is_partner) {
+                $user->update(['is_partner' => true]);
+            }
 
             $partner = Partner::firstOrCreate(
                 ['email' => $partnerData['email']],
@@ -114,6 +119,11 @@ class TestUsersSeeder extends Seeder
                     'status' => 'active',
                 ]
             );
+            
+            // Always ensure user_id is set correctly (in case partner existed before user)
+            if ($partner->user_id !== $user->id) {
+                $partner->update(['user_id' => $user->id]);
+            }
 
             // Create ownership record
             PartnerOwnership::firstOrCreate(

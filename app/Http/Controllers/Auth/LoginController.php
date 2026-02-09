@@ -23,12 +23,21 @@ class LoginController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            // Redirect admins to dashboard, customers to the last intended page or home
-            if (Auth::user()->is_admin ?? false) {
+            $user = Auth::user();
+
+            // Partners are admins with extra responsibilities,
+            // but their primary home is the Partner Console.
+            if ($user->is_partner ?? false) {
+                return redirect()->intended(route('partner.dashboard'));
+            }
+
+            // Pure admins (non-partner) → Admin dashboard
+            if ($user->is_admin ?? false) {
                 return redirect()->intended(route('admin.dashboard'));
             }
 
-            return redirect()->intended(route('home'));
+            // Regular customers → Customer account dashboard (with intended support)
+            return redirect()->intended(route('account.profile'));
         }
 
         return back()->withErrors([
@@ -43,7 +52,8 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('home');
+        // After logout always send user back to the login page
+        return redirect()->route('login');
     }
 }
 

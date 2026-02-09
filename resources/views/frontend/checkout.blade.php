@@ -53,10 +53,27 @@
                         <p class="text-xs text-slate-500">Where should we send your toys?</p>
                     </div>
 
+                    @if(auth()->check() && $addresses->isNotEmpty())
+                        <div class="mb-4">
+                            <label class="block text-xs font-semibold mb-2 text-slate-700">Use Saved Address</label>
+                            <select id="saved-address-select" class="border border-slate-200 rounded-lg w-full px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-400">
+                                <option value="">Select a saved address or enter new one</option>
+                                @foreach($addresses as $address)
+                                    <option value="{{ $address->id }}" 
+                                            data-name="{{ $address->name }}"
+                                            data-phone="{{ $address->phone }}"
+                                            data-address="{{ $address->address }}, {{ $address->city }}, {{ $address->county }}, {{ $address->country }}">
+                                        {{ $address->name }} - {{ $address->city }}, {{ $address->county }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
+
                     <div class="grid md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-semibold mb-2 text-slate-700">Full Name *</label>
-                            <input type="text" name="name" value="{{ old('name', auth()->user()->name ?? '') }}" required
+                            <input type="text" name="name" id="name" value="{{ old('name', auth()->user()->name ?? '') }}" required
                                    placeholder="Enter your full name"
                                    class="border border-slate-200 rounded-lg w-full px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-400">
                         </div>
@@ -70,11 +87,26 @@
                     </div>
 
                     <div>
+                        <label class="block text-xs font-semibold mb-2 text-slate-700">Phone Number *</label>
+                        <input type="tel" name="phone" id="phone" value="{{ old('phone') }}" required
+                               placeholder="e.g., 0712345678"
+                               class="border border-slate-200 rounded-lg w-full px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-400">
+                        <p class="text-xs text-slate-500 mt-1">We'll use this to contact you about your order.</p>
+                    </div>
+
+                    <div>
                         <label class="block text-xs font-semibold mb-2 text-slate-700">Shipping Address *</label>
-                        <textarea name="address" rows="3" required
+                        <textarea name="address" id="address" rows="3" required
                                   placeholder="Street address, Building name, Apartment/Unit number, City, County"
                                   class="border border-slate-200 rounded-lg w-full px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-400">{{ old('address') }}</textarea>
                         <p class="text-xs text-slate-500 mt-1">Please provide complete address details for accurate delivery.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold mb-2 text-slate-700">Order Notes (Optional)</label>
+                        <textarea name="notes" rows="2" 
+                                  placeholder="Any special instructions for delivery..."
+                                  class="border border-slate-200 rounded-lg w-full px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-400">{{ old('notes') }}</textarea>
                     </div>
 
                     {{-- Payment section --}}
@@ -173,34 +205,54 @@
                 </form>
             </div>
 
-            {{-- Order summary column (placeholder for now) --}}
-            <aside class="bg-white border border-slate-200 rounded-2xl p-5 text-sm shadow-sm h-full">
+            {{-- Order summary column --}}
+            <aside class="bg-white border border-slate-200 rounded-2xl p-5 text-sm shadow-sm h-full sticky top-4">
                 <h2 class="text-sm font-semibold text-slate-900 mb-3">Order Summary</h2>
-                <p class="text-xs text-slate-500 mb-3">A quick overview of the toys in your cart.</p>
+                
+                @if(isset($cartItems) && $cartItems->count() > 0)
+                    <div class="space-y-3 mb-4 max-h-64 overflow-y-auto">
+                        @foreach($cartItems as $item)
+                            <div class="flex items-start gap-3 pb-3 border-b border-slate-100 last:border-0">
+                                @if($item->product && $item->product->image_url)
+                                    <img src="{{ asset('images/toys/' . $item->product->image_url) }}" 
+                                         alt="{{ $item->product->name }}"
+                                         class="w-16 h-16 object-cover rounded-lg">
+                                @else
+                                    <div class="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center">
+                                        <span class="text-xs text-slate-400">No Image</span>
+                                    </div>
+                                @endif
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs font-semibold text-slate-900 truncate">{{ $item->product->name ?? 'Product' }}</p>
+                                    <p class="text-[11px] text-slate-500">Qty: {{ $item->quantity }}</p>
+                                    <p class="text-xs font-semibold text-amber-600 mt-1">KES {{ number_format(($item->product->price ?? 0) * $item->quantity, 2) }}</p>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
 
-                {{-- TODO: replace with real cart summary if available --}}
-                <div class="space-y-2 border-t border-slate-100 pt-3 mt-3 text-xs text-slate-600">
-                    <div class="flex justify-between">
-                        <span>Items total</span>
-                        <span>—</span>
+                    <div class="space-y-2 border-t border-slate-200 pt-3 mt-3 text-xs">
+                        <div class="flex justify-between text-slate-600">
+                            <span>Subtotal</span>
+                            <span>KES {{ number_format($subtotal ?? 0, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between text-slate-600">
+                            <span>Delivery</span>
+                            <span>KES {{ number_format($shipping ?? 500, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between font-semibold text-slate-900 pt-2 border-t border-slate-200 mt-2 text-sm">
+                            <span>Total</span>
+                            <span class="text-amber-600">KES {{ number_format($total ?? 0, 2) }}</span>
+                        </div>
                     </div>
-                    <div class="flex justify-between">
-                        <span>Delivery</span>
-                        <span>—</span>
-                    </div>
-                    <div class="flex justify-between font-semibold text-slate-900 pt-2 border-t border-dashed border-slate-200 mt-2">
-                        <span>Amount due</span>
-                        <span>—</span>
-                    </div>
-                    <p class="text-[11px] text-slate-400 mt-3">
-                        Exact totals will be shown once cart integration is complete.
-                    </p>
-                </div>
+                @else
+                    <p class="text-xs text-slate-500">Your cart is empty.</p>
+                @endif
             </aside>
         </div>
     </div>
 
-    {{-- Simple inline JS for payment tab behaviour (no framework dependency) --}}
+    {{-- Simple inline JS for payment tab behaviour and address selection --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const tabs = document.querySelectorAll('.payment-tab');
@@ -220,6 +272,19 @@
                     });
                 });
             });
+
+            // Handle saved address selection
+            const addressSelect = document.getElementById('saved-address-select');
+            if (addressSelect) {
+                addressSelect.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    if (selectedOption.value) {
+                        document.getElementById('name').value = selectedOption.dataset.name || '';
+                        document.getElementById('phone').value = selectedOption.dataset.phone || '';
+                        document.getElementById('address').value = selectedOption.dataset.address || '';
+                    }
+                });
+            }
         });
     </script>
 @endsection

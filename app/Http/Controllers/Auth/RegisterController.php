@@ -26,7 +26,8 @@ class RegisterController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('home');
+        // New customers should land in their account dashboard after registration
+        return redirect()->route('account.profile');
     }
 }
 

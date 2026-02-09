@@ -37,5 +37,10 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('cartCount', $cartCount ?? 0);
         });
+
+        // Cache frequently accessed data
+        \Illuminate\Support\Facades\Cache::remember('categories_menu', 3600, function () {
+            return \App\Models\Category::orderBy('name')->get();
+        });
     }
 }

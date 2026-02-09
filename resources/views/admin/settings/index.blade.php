@@ -172,6 +172,132 @@
                 </form>
             </div>
 
+            {{-- Roles & Permissions Management --}}
+            @if($canManageRoles ?? false)
+            <div class="bg-white border rounded-2xl p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-base font-semibold text-slate-900">Roles & Permissions</h2>
+                        <p class="text-[11px] text-slate-500 mt-0.5">
+                            Assign or remove admin roles to manage access levels.
+                        </p>
+                    </div>
+                </div>
+
+                @if(session('error'))
+                    <div class="mb-4 text-sm text-red-700 bg-red-50 border border-red-200 px-4 py-2 rounded-lg">
+                        {{ session('error') }}
+                    </div>
+                @endif
+
+                <div class="space-y-4">
+                    @forelse($adminUsers ?? [] as $adminUser)
+                        <div class="border border-slate-200 rounded-xl p-4 hover:border-emerald-300 transition-colors">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <h3 class="text-sm font-semibold text-slate-900">{{ $adminUser->name }}</h3>
+                                        @if($adminUser->id === auth()->id())
+                                            <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] text-blue-700 border border-blue-100">
+                                                You
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <p class="text-[11px] text-slate-500">{{ $adminUser->email }}</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    @if($adminUser->isSuperAdmin())
+                                        <span class="inline-flex items-center rounded-full bg-purple-50 px-2 py-1 text-[10px] font-medium text-purple-700 border border-purple-100">
+                                            Super Admin
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <form action="{{ route('admin.settings.assign-roles', $adminUser) }}" method="POST" class="space-y-3" id="roles-form-{{ $adminUser->id }}">
+                                @csrf
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-2">Assign Roles</label>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach($roles ?? [] as $role)
+                                            <label class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs cursor-pointer transition-colors
+                                                {{ $adminUser->adminRoles->contains($role->id) 
+                                                    ? 'bg-emerald-50 border-emerald-300 text-emerald-700' 
+                                                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-emerald-300' }}">
+                                                <input type="checkbox" 
+                                                       name="roles[]" 
+                                                       value="{{ $role->id }}"
+                                                       {{ $adminUser->adminRoles->contains($role->id) ? 'checked' : '' }}
+                                                       class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 role-checkbox"
+                                                       data-form-id="roles-form-{{ $adminUser->id }}">
+                                                <span>{{ $role->display_name }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 pt-2">
+                                    <button type="submit" 
+                                            class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path d="M5 13l4 4L19 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                        <span>Save Roles</span>
+                                    </button>
+                                    <span class="text-[10px] text-slate-400">Check/uncheck roles and click Save</span>
+                                </div>
+                            </form>
+
+                            @if($adminUser->adminRoles->count() > 0)
+                                <div class="mt-3 pt-3 border-t border-slate-100">
+                                    <p class="text-[11px] text-slate-500 mb-2">Current Roles:</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach($adminUser->adminRoles as $role)
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-medium text-emerald-700 border border-emerald-100">
+                                                {{ $role->display_name }}
+                                                @if($adminUser->id !== auth()->id() || $role->name !== 'super_admin')
+                                                    <form action="{{ route('admin.settings.remove-role', [$adminUser, $role]) }}" 
+                                                          method="POST" 
+                                                          class="inline"
+                                                          onsubmit="return confirm('Remove {{ $role->display_name }} role from {{ $adminUser->name }}?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" 
+                                                                class="ml-1 text-emerald-600 hover:text-red-600 transition-colors"
+                                                                title="Remove role">
+                                                            ×
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @else
+                                <div class="mt-3 pt-3 border-t border-slate-100">
+                                    <p class="text-[11px] text-slate-400 italic">No roles assigned</p>
+                                </div>
+                            @endif
+                        </div>
+                    @empty
+                        <div class="text-center py-8 text-slate-500 text-sm">
+                            No admin users found.
+                        </div>
+                    @endforelse
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-slate-100">
+                    <div class="bg-slate-50 rounded-lg p-3 text-xs">
+                        <p class="font-semibold text-slate-900 mb-2">Role Permissions:</p>
+                        <ul class="space-y-1 text-slate-600">
+                            <li><strong>Super Administrator:</strong> Full access to all features</li>
+                            <li><strong>Finance Administrator:</strong> Manage partners, finances, documents, and create admins</li>
+                            <li><strong>Store Administrator:</strong> Manage products, categories, orders, and customers</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             {{-- Recent Activity --}}
             <div class="bg-white border rounded-2xl p-5">
                 <div class="flex items-center justify-between mb-3">
@@ -199,6 +325,7 @@
     @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Password toggle functionality
             const buttons = document.querySelectorAll('.password-toggle-btn');
 
             buttons.forEach((btn) => {
@@ -211,6 +338,21 @@
                     const isHidden = input.type === 'password';
                     input.type = isHidden ? 'text' : 'password';
                     btn.textContent = isHidden ? 'Hide' : 'Show';
+                });
+            });
+
+            // Visual feedback for role checkboxes
+            const roleCheckboxes = document.querySelectorAll('.role-checkbox');
+            roleCheckboxes.forEach((checkbox) => {
+                checkbox.addEventListener('change', function() {
+                    const label = this.closest('label');
+                    if (this.checked) {
+                        label.classList.remove('bg-slate-50', 'border-slate-200', 'text-slate-600');
+                        label.classList.add('bg-emerald-50', 'border-emerald-300', 'text-emerald-700');
+                    } else {
+                        label.classList.remove('bg-emerald-50', 'border-emerald-300', 'text-emerald-700');
+                        label.classList.add('bg-slate-50', 'border-slate-200', 'text-slate-600');
+                    }
                 });
             });
         });

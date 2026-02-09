@@ -48,8 +48,8 @@
                     <label class="block text-xs font-semibold mb-1 text-slate-700">Amount <span class="text-red-500">*</span></label>
                     <div class="flex gap-2">
                         <select name="currency" required class="border border-slate-200 rounded px-3 py-2 text-sm">
+                            <option value="KES" selected>KES</option>
                             <option value="USD">USD</option>
-                            <option value="KES">KES</option>
                         </select>
                         <input type="number" name="amount" step="0.01" min="0" required
                                class="border border-slate-200 rounded flex-1 px-3 py-2 text-sm">

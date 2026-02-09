@@ -60,6 +60,11 @@ class User extends Authenticatable
         return $this->hasMany(Address::class);
     }
 
+    public function wishlist()
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
     /**
      * Admin roles for this user (super_admin, finance_admin, store_admin, etc.).
      */
@@ -100,5 +105,32 @@ class User extends Authenticatable
         }
         
         return $this->adminRoles->contains('name', $role);
+    }
+
+    /**
+     * Projects this user is assigned to manage
+     */
+    public function projects()
+    {
+        return $this->belongsToMany(Project::class, 'project_user')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
+    /**
+     * Check if user is assigned to a project
+     */
+    public function isAssignedToProject($projectId): bool
+    {
+        return $this->projects()->where('project_id', $projectId)->exists();
+    }
+
+    /**
+     * Get user's role for a specific project
+     */
+    public function getProjectRole($projectId): ?string
+    {
+        $assignment = $this->projects()->where('project_id', $projectId)->first();
+        return $assignment ? $assignment->pivot->role : null;
     }
 }

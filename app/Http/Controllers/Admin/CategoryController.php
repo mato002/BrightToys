@@ -10,11 +10,14 @@ use Illuminate\Support\Str;
 class CategoryController extends Controller
 {
     /**
-     * Check if user has permission to access store management.
+     * Check if user has permission to access store management (view only for partners).
      */
-    protected function checkStoreAdminPermission()
+    protected function checkStoreAdminPermission($allowPartners = false)
     {
         $user = auth()->user();
+        if ($allowPartners && $user->is_partner) {
+            return; // Partners can view
+        }
         if (!$user->isSuperAdmin() && !$user->hasAdminRole('store_admin')) {
             abort(403, 'You do not have permission to access this resource.');
         }
@@ -22,7 +25,7 @@ class CategoryController extends Controller
 
     public function index()
     {
-        $this->checkStoreAdminPermission();
+        $this->checkStoreAdminPermission(true); // Allow partners to view
         
         $query = Category::withCount('products');
 
@@ -61,7 +64,7 @@ class CategoryController extends Controller
 
     public function show(Category $category)
     {
-        $this->checkStoreAdminPermission();
+        $this->checkStoreAdminPermission(true); // Allow partners to view
         $category->load(['products' => function ($q) {
             $q->latest()->take(10);
         }]);
@@ -178,10 +181,10 @@ class CategoryController extends Controller
             $html = view('admin.reports.categories', compact('categories', 'totalCategories', 'totalProducts'))->render();
             
             $dompdf = new \Dompdf\Dompdf();
+            $dompdf->getOptions()->set('isRemoteEnabled', true);
+            $dompdf->getOptions()->set('isHtml5ParserEnabled', true);
             $dompdf->loadHtml($html);
             $dompdf->setPaper('A4', 'portrait');
-            $dompdf->setOption('isRemoteEnabled', true);
-            $dompdf->setOption('isHtml5ParserEnabled', true);
             $dompdf->render();
             
             return $dompdf->stream('categories_report_' . date('Y-m-d_His') . '.pdf', ['Attachment' => false]);

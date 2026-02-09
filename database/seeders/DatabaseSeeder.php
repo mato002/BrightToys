@@ -35,6 +35,11 @@ class DatabaseSeeder extends Seeder
             TestUsersSeeder::class,
         ]);
 
+        // Projects
+        $this->call([
+            ProjectSeeder::class,
+        ]);
+
         // Catalog data
         $this->call([
             CategorySeeder::class,

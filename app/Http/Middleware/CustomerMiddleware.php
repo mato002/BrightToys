@@ -19,8 +19,16 @@ class CustomerMiddleware
             return redirect()->route('login');
         }
 
-        // If user is an admin, redirect them to admin dashboard
-        if (Auth::user()->is_admin) {
+        $user = Auth::user();
+
+        // If user is a partner, redirect them to the Partner Console
+        if ($user->is_partner ?? false) {
+            return redirect()->route('partner.dashboard')
+                ->with('error', 'Partners should use the Partner Console, not the customer account area.');
+        }
+
+        // If user is an admin (non-partner), redirect to admin dashboard
+        if ($user->is_admin ?? false) {
             return redirect()->route('admin.dashboard')
                 ->with('error', 'Admins cannot access customer account pages. Please use the admin panel.');
         }

@@ -6,7 +6,7 @@
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
         <div>
             <h1 class="text-lg font-semibold">Partners</h1>
-            <p class="text-xs text-slate-500">Manage partnership ownership and details.</p>
+            <p class="text-xs text-slate-500">View and manage partnership ownership and details. Partners create and manage their own projects.</p>
         </div>
         <a href="{{ route('admin.partners.create') }}"
            class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-4 py-2 rounded">

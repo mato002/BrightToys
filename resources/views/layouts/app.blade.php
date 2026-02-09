@@ -3,9 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'BrightToys Store')</title>
+    <title>@yield('title', 'BrightToys Store - Quality Toys for Kids in Kenya')</title>
+    
+    {{-- SEO Meta Tags --}}
+    <meta name="description" content="@yield('meta_description', 'BrightToys - Kenya\'s premier online toy store. Quality toys for children of all ages. Free delivery, secure payments, and excellent customer service.')">
+    <meta name="keywords" content="@yield('meta_keywords', 'toys, kids toys, children toys, Kenya, online shopping, educational toys, baby toys')">
+    <meta name="author" content="BrightToys">
+    <meta name="robots" content="index, follow">
+    
+    {{-- Open Graph / Facebook --}}
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="@yield('og_title', 'BrightToys - Quality Toys for Kids')">
+    <meta property="og:description" content="@yield('og_description', 'Kenya\'s premier online toy store. Quality toys for children of all ages.')">
+    <meta property="og:image" content="@yield('og_image', asset('images/toys/default.jpg'))">
+    
+    {{-- Twitter --}}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ url()->current() }}">
+    <meta name="twitter:title" content="@yield('twitter_title', 'BrightToys - Quality Toys for Kids')">
+    <meta name="twitter:description" content="@yield('twitter_description', 'Kenya\'s premier online toy store.')">
+    <meta name="twitter:image" content="@yield('twitter_image', asset('images/toys/default.jpg'))">
+    
+    @stack('meta')
+    
+    {{-- Canonical URL --}}
+    <link rel="canonical" href="{{ url()->current() }}">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    {{-- Structured Data (JSON-LD) --}}
+    @stack('structured_data')
 </head>
 <body class="bg-gray-50 text-gray-900">
     {{-- Top bar --}}
@@ -37,7 +66,13 @@
 
             {{-- Icons --}}
             <div class="flex items-center space-x-4 text-sm">
-                <a href="{{ route('shop.index') }}" class="hover:text-amber-600">Wishlist (0)</a>
+                @auth
+                    <a href="{{ route('wishlist.index') }}" class="hover:text-amber-600">
+                        Wishlist ({{ auth()->user()->wishlist()->count() }})
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="hover:text-amber-600">Wishlist</a>
+                @endauth
                 <a href="{{ route('cart.index') }}" class="relative hover:text-amber-600">
                     Cart
                     <span id="cart-count" class="ml-1 inline-flex items-center justify-center rounded-full bg-amber-500 text-white text-xs px-2 py-0.5">
@@ -46,9 +81,20 @@
                 </a>
 
                 @auth
-                    <a href="{{ route('account.profile') }}" class="text-xs font-semibold hover:text-amber-600">
-                        My Account
-                    </a>
+                    @php($user = auth()->user())
+                    @if($user->is_partner ?? false)
+                        <a href="{{ route('partner.dashboard') }}" class="text-xs font-semibold hover:text-amber-600">
+                            Partner
+                        </a>
+                    @elseif($user->is_admin ?? false)
+                        <a href="{{ route('admin.dashboard') }}" class="text-xs font-semibold hover:text-amber-600">
+                            Admin
+                        </a>
+                    @else
+                        <a href="{{ route('account.profile') }}" class="text-xs font-semibold hover:text-amber-600">
+                            My Account
+                        </a>
+                    @endif
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="text-xs font-semibold text-red-500 hover:text-red-600">

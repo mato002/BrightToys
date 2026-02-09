@@ -55,7 +55,7 @@
         </div>
     </form>
 
-    <div class="bg-white border border-slate-100 rounded-lg overflow-x-auto text-sm shadow-sm">
+    <div class="bg-white border border-slate-100 rounded-lg overflow-x-auto admin-table-scroll text-sm shadow-sm">
         <table class="min-w-full">
             <thead class="bg-slate-50 text-xs text-slate-500 uppercase tracking-wide">
             <tr>

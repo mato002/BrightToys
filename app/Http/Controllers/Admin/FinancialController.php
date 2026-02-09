@@ -99,7 +99,7 @@ class FinancialController extends Controller
     public function store(Request $request)
     {
         $this->checkFinanceAdminPermission();
-    {
+        
         $validated = $request->validate([
             'type' => ['required', 'in:expense,adjustment,other_income'],
             'category' => ['nullable', 'string', 'max:255'],
@@ -165,7 +165,7 @@ class FinancialController extends Controller
     public function approve(FinancialRecord $financial)
     {
         $this->checkFinanceAdminPermission();
-    {
+        
         if ($financial->status !== 'pending_approval') {
             return redirect()->back()
                 ->with('error', 'This record cannot be approved.');

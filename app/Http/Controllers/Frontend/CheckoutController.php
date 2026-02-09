@@ -6,14 +6,46 @@ use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderConfirmationMail;
 
 class CheckoutController extends Controller
 {
     public function index()
     {
-        // In a real app you would load cart items similarly to CartController
-        return view('frontend.checkout');
+        $sessionId = session('cart_session_id');
+        $userId = auth()->id();
+
+        $query = Cart::with('product');
+        
+        if ($userId) {
+            $query->where('user_id', $userId);
+        } else {
+            $query->where('session_id', $sessionId);
+        }
+
+        $cartItems = $query->get();
+
+        if ($cartItems->isEmpty()) {
+            return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
+        }
+
+        // Calculate totals
+        $subtotal = $cartItems->sum(function ($item) {
+            return $item->quantity * ($item->product->price ?? 0);
+        });
+        
+        $shipping = 500; // Fixed shipping cost (can be made configurable)
+        $total = $subtotal + $shipping;
+
+        // Get saved addresses if user is logged in
+        $addresses = auth()->check() ? auth()->user()->addresses : collect();
+
+        return view('frontend.checkout', compact('cartItems', 'subtotal', 'shipping', 'total', 'addresses'));
     }
 
     public function store(Request $request)
@@ -21,37 +53,109 @@ class CheckoutController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email',
+            'phone' => 'required|string|max:20',
             'address' => 'required|string|max:500',
             'payment_method' => 'required|in:mpesa,paybill,card,cod',
+            'notes' => 'nullable|string|max:1000',
         ]);
 
-        // Basic example checkout flow
         $sessionId = session('cart_session_id');
-        $cartItems = Cart::with('product')->where('session_id', $sessionId)->get();
-        $total = $cartItems->sum(function ($item) {
-            return $item->quantity * ($item->product->price ?? 0);
-        });
+        $userId = auth()->id();
 
-        $order = Order::create([
-            'user_id' => auth()->id(),
-            'total' => $total,
-            'status' => 'pending',
-            'payment_method' => $request->input('payment_method', 'cod'),
-            'shipping_address' => $request->input('address'),
-        ]);
-
-        foreach ($cartItems as $item) {
-            OrderItem::create([
-                'order_id' => $order->id,
-                'product_id' => $item->product_id,
-                'quantity' => $item->quantity,
-                'price' => $item->product->price ?? 0,
-            ]);
+        $query = Cart::with('product');
+        
+        if ($userId) {
+            $query->where('user_id', $userId);
+        } else {
+            $query->where('session_id', $sessionId);
         }
 
-        Cart::where('session_id', $sessionId)->delete();
+        $cartItems = $query->get();
 
-        return redirect()->route('home')->with('success', 'Order placed successfully.');
+        if ($cartItems->isEmpty()) {
+            return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
+        }
+
+        // Validate stock availability before processing
+        foreach ($cartItems as $item) {
+            if (!$item->product || $item->product->status !== 'active') {
+                return back()->withErrors(['error' => "Product '{$item->product->name}' is no longer available."])->withInput();
+            }
+            if ($item->product->stock < $item->quantity) {
+                return back()->withErrors(['error' => "Insufficient stock for '{$item->product->name}'. Only {$item->product->stock} available."])->withInput();
+            }
+        }
+
+        // Calculate totals
+        $subtotal = $cartItems->sum(function ($item) {
+            return $item->quantity * ($item->product->price ?? 0);
+        });
+        
+        $shipping = 500; // Fixed shipping cost
+        $total = $subtotal + $shipping;
+
+        // Use database transaction to ensure data consistency
+        try {
+            DB::beginTransaction();
+
+            // Create order
+            $order = Order::create([
+                'user_id' => $userId,
+                'total' => $total,
+                'status' => 'pending',
+                'payment_method' => $request->input('payment_method', 'cod'),
+                'payment_status' => $request->input('payment_method') === 'cod' ? 'pending' : 'pending',
+                'shipping_address' => $request->input('address'),
+                'phone' => $request->input('phone'),
+                'notes' => $request->input('notes'),
+            ]);
+
+            // Create order items and deduct stock
+            foreach ($cartItems as $item) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item->product_id,
+                    'quantity' => $item->quantity,
+                    'price' => $item->product->price ?? 0,
+                ]);
+
+                // Deduct stock
+                $product = Product::find($item->product_id);
+                if ($product) {
+                    $product->stock -= $item->quantity;
+                    $product->save();
+                }
+            }
+
+            // Clear cart
+            Cart::where('session_id', $sessionId)
+                ->orWhere('user_id', $userId)
+                ->delete();
+
+            DB::commit();
+
+            // Send order confirmation email
+            try {
+                Mail::to($request->email)->send(new OrderConfirmationMail($order));
+            } catch (\Exception $e) {
+                Log::warning('Failed to send order confirmation email: ' . $e->getMessage());
+            }
+
+            return redirect()
+                ->route('account.orders')
+                ->with('success', "Order placed successfully! Order #{$order->order_number}");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Checkout error: ' . $e->getMessage(), [
+                'user_id' => $userId,
+                'session_id' => $sessionId,
+                'error' => $e->getTraceAsString(),
+            ]);
+
+            return back()
+                ->withErrors(['error' => 'An error occurred while processing your order. Please try again.'])
+                ->withInput();
+        }
     }
 }
 

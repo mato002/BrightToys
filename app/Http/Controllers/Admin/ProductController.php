@@ -12,11 +12,14 @@ use Illuminate\Support\Str;
 class ProductController extends Controller
 {
     /**
-     * Check if user has permission to access store management.
+     * Check if user has permission to access store management (view only for partners).
      */
-    protected function checkStoreAdminPermission()
+    protected function checkStoreAdminPermission($allowPartners = false)
     {
         $user = auth()->user();
+        if ($allowPartners && $user->is_partner) {
+            return; // Partners can view
+        }
         if (!$user->isSuperAdmin() && !$user->hasAdminRole('store_admin')) {
             abort(403, 'You do not have permission to access this resource.');
         }
@@ -24,8 +27,8 @@ class ProductController extends Controller
 
     public function index()
     {
-        $this->checkStoreAdminPermission();
-    {
+        $this->checkStoreAdminPermission(true); // Allow partners to view
+        
         $query = Product::with('category');
 
         if ($search = request('q')) {
@@ -55,7 +58,7 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request)
     {
         $this->checkStoreAdminPermission();
-    {
+        
         $data = $request->validated();
         
         // Handle image upload
@@ -107,6 +110,7 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
+        $this->checkStoreAdminPermission(true); // Allow partners to view
         $product->load('category', 'orderItems.order');
 
         return view('admin.products.show', compact('product'));
@@ -114,12 +118,14 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
+        $this->checkStoreAdminPermission();
         $categories = Category::all();
         return view('admin.products.edit', compact('product', 'categories'));
     }
 
     public function update(UpdateProductRequest $request, Product $product)
     {
+        $this->checkStoreAdminPermission();
         $data = $request->validated();
         
         // Handle image upload
@@ -277,10 +283,10 @@ class ProductController extends Controller
             $html = view('admin.reports.products', compact('products', 'totalProducts', 'totalValue', 'lowStock'))->render();
             
             $dompdf = new \Dompdf\Dompdf();
+            $dompdf->getOptions()->set('isRemoteEnabled', true);
+            $dompdf->getOptions()->set('isHtml5ParserEnabled', true);
             $dompdf->loadHtml($html);
             $dompdf->setPaper('A4', 'landscape');
-            $dompdf->setOption('isRemoteEnabled', true);
-            $dompdf->setOption('isHtml5ParserEnabled', true);
             $dompdf->render();
             
             return $dompdf->stream('products_report_' . date('Y-m-d_His') . '.pdf', ['Attachment' => false]);

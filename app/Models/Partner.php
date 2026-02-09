@@ -34,5 +34,13 @@ class Partner extends Model
     {
         return $this->hasMany(FinancialRecord::class);
     }
+
+    /**
+     * Projects created by this partner
+     */
+    public function createdProjects()
+    {
+        return $this->hasMany(Project::class, 'created_by');
+    }
 }
 

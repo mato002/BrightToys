@@ -42,7 +42,7 @@
             @if($user->orders->isEmpty())
                 <p class="text-xs text-slate-500">No orders for this customer yet.</p>
             @else
-                <div class="overflow-x-auto text-xs">
+                <div class="overflow-x-auto admin-table-scroll text-xs">
                     <table class="min-w-full">
                         <thead class="bg-slate-50 text-[11px] text-slate-500 uppercase tracking-wide">
                         <tr>

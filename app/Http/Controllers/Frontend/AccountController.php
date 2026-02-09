@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
 use Illuminate\Http\Request;
 
 class AccountController extends Controller
@@ -34,6 +35,101 @@ class AccountController extends Controller
         $orders = $query->latest()->paginate(10)->withQueryString();
 
         return view('frontend.account.orders', compact('user', 'orders'));
+    }
+
+    public function trackOrder(Order $order)
+    {
+        $user = auth()->user();
+        
+        // Ensure user owns this order
+        if ($order->user_id !== $user->id) {
+            abort(403, 'You do not have permission to view this order.');
+        }
+
+        $order->load('items.product');
+        
+        return view('frontend.account.track-order', compact('order'));
+    }
+
+    public function invoice(Order $order)
+    {
+        $user = auth()->user();
+        
+        // Ensure user owns this order
+        if ($order->user_id !== $user->id) {
+            abort(403, 'You do not have permission to view this invoice.');
+        }
+
+        $order->load('items.product', 'user');
+        
+        try {
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+
+            $html = view('frontend.account.invoice', compact('order'))->render();
+            
+            $dompdf = new \Dompdf\Dompdf();
+            $dompdf->getOptions()->set('isRemoteEnabled', true);
+            $dompdf->getOptions()->set('isHtml5ParserEnabled', true);
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+            
+            return $dompdf->stream('invoice_' . $order->order_number . '.pdf', ['Attachment' => false]);
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Failed to generate invoice: ' . $e->getMessage()]);
+        }
+    }
+
+    public function cancelOrder(Request $request, Order $order)
+    {
+        $user = auth()->user();
+        
+        // Ensure user owns this order
+        if ($order->user_id !== $user->id) {
+            abort(403, 'You do not have permission to cancel this order.');
+        }
+
+        // Only allow cancellation if order is pending or processing
+        if (!in_array($order->status, ['pending', 'processing'])) {
+            return back()->withErrors(['error' => 'This order cannot be cancelled.']);
+        }
+
+        try {
+            \Illuminate\Support\Facades\DB::beginTransaction();
+
+            // Update order status
+            $order->status = 'cancelled';
+            $order->save();
+
+            // Restore stock
+            foreach ($order->items as $item) {
+                if ($item->product) {
+                    $item->product->stock += $item->quantity;
+                    $item->product->save();
+                }
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            // Send email notification
+            try {
+                \Illuminate\Support\Facades\Mail::to($user->email)
+                    ->send(new \App\Mail\OrderStatusUpdateMail($order, 'processing', 'cancelled'));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to send cancellation email: ' . $e->getMessage());
+            }
+
+            return redirect()
+                ->route('account.orders')
+                ->with('success', 'Order cancelled successfully. Stock has been restored.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Order cancellation error: ' . $e->getMessage());
+
+            return back()->withErrors(['error' => 'Failed to cancel order. Please contact support.']);
+        }
     }
 
     public function addresses()
