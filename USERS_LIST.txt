@@ -1,0 +1,228 @@
+==========================================
+BRIGHTTOYS E-COMMERCE - USERS LIST
+==========================================
+
+ADMIN USERS
+==========================================
+
+1. Super Administrator
+   Email: superadmin@brighttoys.com
+   Password: password123
+   Role: Super Admin (Full Access)
+   Admin Roles: super_admin
+   Is Admin: Yes
+   Is Partner: No
+
+2. Finance Administrator
+   Email: finance@brighttoys.com
+   Password: password123
+   Role: Finance Admin
+   Admin Roles: finance_admin
+   Is Admin: Yes
+   Is Partner: No
+
+3. Store Administrator
+   Email: store@brighttoys.com
+   Password: password123
+   Role: Store Admin
+   Admin Roles: store_admin
+   Is Admin: Yes
+   Is Partner: No
+
+4. Multi Role Admin
+   Email: multirole@brighttoys.com
+   Password: password123
+   Role: Finance Admin + Store Admin
+   Admin Roles: finance_admin, store_admin
+   Is Admin: Yes
+   Is Partner: No
+
+5. Admin User (Factory Created)
+   Email: admin@example.com
+   Password: password
+   Role: Admin (Basic)
+   Admin Roles: None assigned
+   Is Admin: Yes
+   Is Partner: No
+
+==========================================
+PARTNER USERS (10 Partners)
+==========================================
+
+All partners have:
+- Password: password123
+- Role: Partner (Investor)
+- Is Admin: No
+- Is Partner: Yes
+- Ownership: 10% each
+
+1. Partner One
+   Email: partner1@brighttoys.com
+   Password: password123
+
+2. Partner Two
+   Email: partner2@brighttoys.com
+   Password: password123
+
+3. Partner Three
+   Email: partner3@brighttoys.com
+   Password: password123
+
+4. Partner Four
+   Email: partner4@brighttoys.com
+   Password: password123
+
+5. Partner Five
+   Email: partner5@brighttoys.com
+   Password: password123
+
+6. Partner Six
+   Email: partner6@brighttoys.com
+   Password: password123
+
+7. Partner Seven
+   Email: partner7@brighttoys.com
+   Password: password123
+
+8. Partner Eight
+   Email: partner8@brighttoys.com
+   Password: password123
+
+9. Partner Nine
+   Email: partner9@brighttoys.com
+   Password: password123
+
+10. Partner Ten
+    Email: partner10@brighttoys.com
+    Password: password123
+
+==========================================
+REGULAR CUSTOMER USERS (Factory Generated)
+==========================================
+
+These users were created by the factory seeder.
+All have password: password
+Role: Customer (Regular User)
+Is Admin: No
+Is Partner: No
+
+1. Jaida Beatty
+   Email: dennis.hickle@example.net
+   Password: password
+
+2. Dr. Baylee Fritsch V
+   Email: eliezer54@example.net
+   Password: password
+
+3. Emmanuelle VonRueden
+   Email: concepcion40@example.net
+   Password: password
+
+4. Prof. Tomas Harris I
+   Email: ernie87@example.org
+   Password: password
+
+5. Minerva Howe
+   Email: koch.era@example.org
+   Password: password
+
+6. Rosetta Macejkovic
+   Email: jared51@example.org
+   Password: password
+
+7. Francisca Willms
+   Email: aaliyah.romaguera@example.org
+   Password: password
+
+8. Hilma Ullrich
+   Email: javonte71@example.org
+   Password: password
+
+9. Lori Kozey III
+   Email: anader@example.com
+   Password: password
+
+10. Elena Kuvalis
+    Email: quinten56@example.net
+    Password: password
+
+==========================================
+QUICK REFERENCE
+==========================================
+
+ADMIN LOGINS:
+- Super Admin: superadmin@brighttoys.com / password123
+- Finance Admin: finance@brighttoys.com / password123
+- Store Admin: store@brighttoys.com / password123
+- Multi Role: multirole@brighttoys.com / password123
+- Basic Admin: admin@example.com / password
+
+PARTNER LOGINS:
+- partner1@brighttoys.com through partner10@brighttoys.com
+- All use password: password123
+
+CUSTOMER LOGINS:
+- Various emails from example.net/org/com domains
+- All use password: password
+
+==========================================
+ROLE PERMISSIONS SUMMARY
+==========================================
+
+SUPER ADMIN:
+- Full access to everything
+- Can manage all admin roles
+- Can access all sections
+
+FINANCE ADMIN:
+- Dashboard
+- Admins (create/edit)
+- Partners
+- Financial Records
+- Documents
+- Activity Logs
+- Profile & Settings
+
+STORE ADMIN:
+- Dashboard
+- Products
+- Categories
+- Orders
+- Customers
+- Support Tickets
+- Profile & Settings
+
+MULTI ROLE ADMIN:
+- All Finance Admin permissions
+- All Store Admin permissions
+
+PARTNER:
+- Partner Dashboard
+- Financial Records (view only)
+- Contributions (create/view)
+- Projects (view/manage)
+- Documents (view)
+- Activity Logs (view)
+- Profile
+
+CUSTOMER:
+- Shop/Browse products
+- Add to cart
+- Checkout
+- View orders
+- Track orders
+- Manage addresses
+- Wishlist
+- Account profile
+
+==========================================
+NOTES
+==========================================
+
+- All test users are created by seeders
+- Passwords are hashed in database (shown here are plain text for testing)
+- Partners are investors who also have admin access
+- Regular customers can only access frontend features
+- Admin users have restricted access based on their roles
+
+==========================================
