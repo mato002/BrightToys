@@ -279,7 +279,7 @@
                             </span>
                             <span class="font-medium sidebar-label">Activity</span>
                         </a>
-                        <a href="{{ route('admin.dashboard.report') }}" class="group flex items-center px-3 py-2.5 rounded-xl transition text-amber-100/90 hover:bg-amber-800/60 hover:text-white">
+                        <a href="{{ route('partner.reports') }}" class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('partner.reports') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
                             <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                     <path d="M16 18l-4-4-4 4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>

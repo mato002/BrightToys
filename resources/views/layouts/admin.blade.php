@@ -164,6 +164,18 @@
                     $isSuperAdmin = $user->isSuperAdmin();
                     $hasStoreAdmin = $user->hasAdminRole('store_admin');
                     $hasFinanceAdmin = $user->hasAdminRole('finance_admin');
+                    $hasChairman = $user->hasAdminRole('chairman');
+
+                    // Permission-based navigation flags so users only see what they can actually access
+                    $canViewPartners   = $user->hasPermission('contributions.approve') || $user->hasPermission('contributions.create');
+                    $canViewProjects   = $user->hasPermission('projects.create') || $user->hasPermission('projects.update') || $user->hasPermission('projects.activate');
+                    $canViewFinancial  = $user->hasPermission('financial.records.view');
+                    $canViewDocuments  = $user->hasPermission('documents.upload') || $user->hasPermission('documents.approve');
+                    $canViewLoans      = $user->hasPermission('loans.view');
+                    $canViewMembers    = $hasChairman || $isSuperAdmin; // chairman leads membership
+                    $canViewActivity   = $user->isSuperAdmin() || $hasFinanceAdmin; // activity logs are audit-level
+
+                    $hasPartnershipNav = $canViewMembers || $canViewPartners || $canViewProjects || $canViewFinancial || $canViewDocuments || $canViewLoans || $canViewActivity;
                 @endphp
 
                 {{-- Overview Section --}}
@@ -272,7 +284,7 @@
                 @endif
 
                 {{-- Partnership Section --}}
-                @if($isSuperAdmin || $hasFinanceAdmin)
+                @if($hasPartnershipNav)
                 <div class="nav-group mb-2">
                     <button type="button" class="nav-group-toggle w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-emerald-200/80 hover:bg-emerald-800/60 hover:text-emerald-50 transition sidebar-section-label" data-group="partnership">
                         <span class="text-[11px] font-medium uppercase tracking-[0.18em]">Partnership</span>
@@ -281,61 +293,97 @@
                         </svg>
                     </button>
                     <div class="nav-group-content hidden pl-2 mt-1 space-y-1" data-content="partnership">
-                        <a href="{{ route('admin.partners.index') }}"
-                           class="group flex items-center px-3 py-2.5 rounded-xl transition
-                                  {{ request()->routeIs('admin.partners.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
-                            <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path d="M9 11l3 3L22 4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </span>
-                            <span class="font-medium sidebar-label">Partners</span>
-                        </a>
-                        <a href="{{ route('admin.projects.index') }}"
-                           class="group flex items-center px-3 py-2.5 rounded-xl transition
-                                  {{ request()->routeIs('admin.projects.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
-                            <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path d="M4 7l8-4 8 4-8 4-8-4z" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M4 17l8 4 8-4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M4 7v10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M20 7v10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </span>
-                            <span class="font-medium sidebar-label">Projects</span>
-                        </a>
-                        <a href="{{ route('admin.financial.contributions') }}"
-                           class="group flex items-center px-3 py-2.5 rounded-xl transition
-                                  {{ request()->routeIs('admin.financial.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
-                            <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </span>
-                            <span class="font-medium sidebar-label">Financial</span>
-                        </a>
-                        <a href="{{ route('admin.documents.index') }}"
-                           class="group flex items-center px-3 py-2.5 rounded-xl transition
-                                  {{ request()->routeIs('admin.documents.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
-                            <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </span>
-                            <span class="font-medium sidebar-label">Documents</span>
-                        </a>
-                        <a href="{{ route('admin.activity-logs.index') }}"
-                           class="group flex items-center px-3 py-2.5 rounded-xl transition
-                                  {{ request()->routeIs('admin.activity-logs.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
-                            <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <circle cx="12" cy="12" r="10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M12 6v6l4 2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </span>
-                            <span class="font-medium sidebar-label">Activity Logs</span>
-                        </a>
+                        @if($canViewMembers)
+                            <a href="{{ route('admin.members.index') }}"
+                               class="group flex items-center px-3 py-2.5 rounded-xl transition
+                                      {{ request()->routeIs('admin.members.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
+                                <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4z" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M4 20a8 8 0 0 1 16 0" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <span class="font-medium sidebar-label">Members</span>
+                            </a>
+                        @endif
+                        @if($canViewPartners)
+                            <a href="{{ route('admin.partners.index') }}"
+                               class="group flex items-center px-3 py-2.5 rounded-xl transition
+                                      {{ request()->routeIs('admin.partners.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
+                                <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M9 11l3 3L22 4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <span class="font-medium sidebar-label">Partners</span>
+                            </a>
+                        @endif
+                        @if($canViewProjects)
+                            <a href="{{ route('admin.projects.index') }}"
+                               class="group flex items-center px-3 py-2.5 rounded-xl transition
+                                      {{ request()->routeIs('admin.projects.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
+                                <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M4 7l8-4 8 4-8 4-8-4z" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M4 17l8 4 8-4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M4 7v10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M20 7v10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <span class="font-medium sidebar-label">Projects</span>
+                            </a>
+                        @endif
+                        @if($canViewFinancial)
+                            <a href="{{ route('admin.financial.index') }}"
+                               class="group flex items-center px-3 py-2.5 rounded-xl transition
+                                      {{ request()->routeIs('admin.financial.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
+                                <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <span class="font-medium sidebar-label">Financial</span>
+                            </a>
+                        @endif
+                        @if($canViewDocuments)
+                            <a href="{{ route('admin.documents.index') }}"
+                               class="group flex items-center px-3 py-2.5 rounded-xl transition
+                                      {{ request()->routeIs('admin.documents.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
+                                <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <span class="font-medium sidebar-label">Documents</span>
+                            </a>
+                        @endif
+                        @if($canViewLoans)
+                            <a href="{{ route('admin.loans.index') }}"
+                               class="group flex items-center px-3 py-2.5 rounded-xl transition
+                                      {{ request()->routeIs('admin.loans.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
+                                <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M4 6h16v12H4z" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M4 10h16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <span class="font-medium sidebar-label">Loans</span>
+                            </a>
+                        @endif
+                        @if($canViewActivity)
+                            <a href="{{ route('admin.activity-logs.index') }}"
+                               class="group flex items-center px-3 py-2.5 rounded-xl transition
+                                      {{ request()->routeIs('admin.activity-logs.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
+                                <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <circle cx="12" cy="12" r="10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M12 6v6l4 2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <span class="font-medium sidebar-label">Activity Logs</span>
+                            </a>
+                        @endif
                     </div>
                 </div>
                 @endif

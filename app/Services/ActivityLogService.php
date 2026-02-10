@@ -13,6 +13,14 @@ class ActivityLogService
     public static function log(string $action, $subject = null, array $details = []): ActivityLog
     {
         $request = request();
+        $user = Auth::user();
+
+        // Enrich details with traceability info
+        if ($user) {
+            $details = array_merge([
+                'user_roles' => $user->relationLoaded('adminRoles') ? $user->adminRoles->pluck('name')->all() : $user->adminRoles()->pluck('name')->all(),
+            ], $details);
+        }
 
         return ActivityLog::create([
             'user_id' => Auth::id(),

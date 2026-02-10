@@ -396,4 +396,63 @@ class DashboardController extends Controller
             'projectedEarnings'
         ));
     }
+
+    /**
+     * High-level reports view for partners (read-only, built from existing dashboard data).
+     */
+    public function reports()
+    {
+        $user = Auth::user();
+        $partner = $user->partner;
+
+        if (! $partner) {
+            abort(403, 'You are not associated with a partner account.');
+        }
+
+        // Reuse the main dashboard metrics for a reports-focused page.
+        $totalRevenue = Order::where('status', 'completed')->sum('total');
+        $totalExpenses = FinancialRecord::where('type', 'expense')
+            ->where('status', 'approved')
+            ->where('is_archived', false)
+            ->sum('amount');
+        $netProfit = $totalRevenue - $totalExpenses;
+
+        $revenueLast6Months = collect(range(5, 0))->map(function ($monthsAgo) {
+            $date = now()->subMonths($monthsAgo);
+            $monthRevenue = Order::where('status', 'completed')
+                ->whereYear('created_at', $date->year)
+                ->whereMonth('created_at', $date->month)
+                ->sum('total');
+            return [
+                'month' => $date->format('M Y'),
+                'revenue' => $monthRevenue,
+            ];
+        });
+
+        $expenseCategories = FinancialRecord::where('type', 'expense')
+            ->where('status', 'approved')
+            ->where('is_archived', false)
+            ->selectRaw('category, SUM(amount) as total')
+            ->groupBy('category')
+            ->orderByDesc('total')
+            ->limit(10)
+            ->get();
+
+        $records = FinancialRecord::with(['creator', 'approver'])
+            ->where('is_archived', false)
+            ->where('status', 'approved')
+            ->latest('occurred_at')
+            ->limit(20)
+            ->get();
+
+        return view('partner.reports', compact(
+            'partner',
+            'totalRevenue',
+            'totalExpenses',
+            'netProfit',
+            'revenueLast6Months',
+            'expenseCategories',
+            'records'
+        ));
+    }
 }

@@ -8,13 +8,16 @@ class FinancialRecord extends Model
 {
     protected $fillable = [
         'type',
+        'fund_type',
         'category',
         'amount',
         'currency',
+        'paid_from',
         'occurred_at',
         'description',
         'order_id',
         'partner_id',
+        'project_id',
         'status',
         'created_by',
         'approved_by',
@@ -39,6 +42,11 @@ class FinancialRecord extends Model
     public function partner()
     {
         return $this->belongsTo(Partner::class);
+    }
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class);
     }
 
     public function creator()

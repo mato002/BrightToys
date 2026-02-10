@@ -31,6 +31,19 @@
         <div class="space-y-4 lg:col-span-1">
             <div class="bg-white border rounded-2xl p-5 shadow-sm shadow-emerald-50">
                 <div class="flex items-center gap-3 mb-4">
+                    @php
+                        $user->loadMissing('adminRoles');
+                        $roleLabel = 'Customer';
+                        if ($user->is_admin) {
+                            if ($user->isSuperAdmin()) {
+                                $roleLabel = 'Super Administrator';
+                            } elseif ($user->adminRoles->isNotEmpty()) {
+                                $roleLabel = $user->adminRoles->pluck('display_name')->implode(' · ');
+                            } else {
+                                $roleLabel = 'Administrator';
+                            }
+                        }
+                    @endphp
                     <div class="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center text-lg font-semibold">
                         {{ strtoupper(substr($user->name ?? 'A', 0, 1)) }}
                     </div>
@@ -39,7 +52,7 @@
                         <p class="text-xs text-slate-500">{{ $user->email }}</p>
                         <div class="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] text-emerald-700 border border-emerald-100">
                             <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                            Super admin
+                            {{ $roleLabel }}
                         </div>
                     </div>
                 </div>
@@ -90,7 +103,7 @@
                     </div>
                     <div>
                         <p class="text-[11px] text-slate-500 mb-1">Role</p>
-                        <p class="font-medium text-slate-900">Administrator</p>
+                        <p class="font-medium text-slate-900">{{ $roleLabel }}</p>
                     </div>
                 </div>
             </div>

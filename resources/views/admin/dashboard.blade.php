@@ -147,6 +147,71 @@
                 <canvas id="statusChart" style="max-height: 208px;"></canvas>
             </div>
         </div>
+
+        {{-- Group Financial Snapshot --}}
+        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h2 class="text-sm font-semibold text-slate-900">Group Financial Snapshot</h2>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Contributions, welfare, assets and net worth.</p>
+                </div>
+            </div>
+            <div class="p-4 text-[11px] text-slate-700 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span>Total Investment Contributions</span>
+                    <span class="font-semibold text-slate-900">
+                        Ksh {{ number_format($groupFinancials['total_contributions_investment'] ?? 0, 0) }}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span>Welfare Balance</span>
+                    <span class="font-semibold text-emerald-700">
+                        Ksh {{ number_format($groupFinancials['welfare_balance'] ?? 0, 0) }}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span>Investment Wallets Total</span>
+                    <span class="font-semibold text-slate-900">
+                        Ksh {{ number_format($groupFinancials['investment_wallet_total'] ?? 0, 0) }}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span>Outstanding Loans (Principal + Interest)</span>
+                    <span class="font-semibold text-red-600">
+                        Ksh {{ number_format(
+                            ($groupFinancials['loan_principal_outstanding'] ?? 0) + ($groupFinancials['loan_interest_outstanding'] ?? 0),
+                            0
+                        ) }}
+                    </span>
+                </div>
+                <div class="pt-2 mt-2 border-t border-slate-100 space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span>Assets – Land</span>
+                        <span class="font-semibold text-slate-900">
+                            Ksh {{ number_format($groupFinancials['assets']['land'] ?? 0, 0) }}
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span>Assets – Toy Shop</span>
+                        <span class="font-semibold text-slate-900">
+                            Ksh {{ number_format($groupFinancials['assets']['toy_shop'] ?? 0, 0) }}
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span>Assets – Inventory</span>
+                        <span class="font-semibold text-slate-900">
+                            Ksh {{ number_format($groupFinancials['assets']['inventory'] ?? 0, 0) }}
+                        </span>
+                    </div>
+                </div>
+                <div class="pt-2 mt-2 border-t border-slate-100 flex items-center justify-between">
+                    <span>Net Worth (Assets - Liabilities)</span>
+                    <span class="font-semibold text-emerald-700">
+                        Ksh {{ number_format($groupFinancials['net_worth'] ?? 0, 0) }}
+                    </span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="grid lg:grid-cols-3 gap-6">

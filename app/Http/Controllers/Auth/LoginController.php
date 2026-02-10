@@ -25,6 +25,11 @@ class LoginController extends Controller
 
             $user = Auth::user();
 
+            // Chairman: treat as admin-first, even though they are also a partner
+            if (($user->is_admin ?? false) && method_exists($user, 'hasAdminRole') && $user->hasAdminRole('chairman')) {
+                return redirect()->intended(route('admin.dashboard'));
+            }
+
             // Partners are admins with extra responsibilities,
             // but their primary home is the Partner Console.
             if ($user->is_partner ?? false) {

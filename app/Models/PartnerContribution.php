@@ -9,6 +9,7 @@ class PartnerContribution extends Model
     protected $fillable = [
         'partner_id',
         'type',
+        'fund_type',
         'amount',
         'currency',
         'contributed_at',

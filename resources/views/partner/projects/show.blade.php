@@ -66,6 +66,18 @@
                 <div>
                     <h2 class="text-xl font-semibold text-slate-900">{{ $project->name }}</h2>
                     <p class="text-sm text-slate-500 capitalize">{{ $project->type }} Project</p>
+
+                    @php $mix = $project->capital_mix; @endphp
+                    @if($mix['total'] > 0)
+                        <p class="mt-1 text-xs text-slate-500">
+                            Capital structure: <span class="font-semibold text-slate-900">{{ $mix['equity'] }}% equity</span> ·
+                            <span class="font-semibold text-slate-900">{{ $mix['debt'] }}% debt</span>
+                        </p>
+                    @else
+                        <p class="mt-1 text-xs text-amber-600">
+                            Capital structure not yet configured.
+                        </p>
+                    @endif
                 </div>
             </div>
             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
@@ -86,10 +98,76 @@
                 <p class="text-xs text-slate-500 mb-1">Project Type</p>
                 <p class="text-sm font-semibold text-slate-900 capitalize">{{ $project->type }}</p>
             </div>
+
             <div class="border border-slate-100 rounded-lg p-4">
                 <p class="text-xs text-slate-500 mb-1">Status</p>
                 <p class="text-sm font-semibold text-slate-900">{{ $project->is_active ? 'Active' : 'Inactive' }}</p>
             </div>
+        </div>
+
+        <div class="border border-slate-100 rounded-lg p-4 mb-6">
+            <p class="text-xs font-semibold text-slate-900 mb-2">Capital & Funding Structure</p>
+            @php $funding = $project->funding; @endphp
+
+            @if($funding)
+                <div class="grid md:grid-cols-2 gap-3 text-xs">
+                    <div class="space-y-1">
+                        <p class="text-[11px] text-slate-500 uppercase">Member Capital</p>
+                        <p class="flex items-center justify-between">
+                            <span class="text-slate-500">Amount</span>
+                            <span class="font-semibold text-slate-900">
+                                Ksh {{ number_format($funding->member_capital_amount, 0) }}
+                            </span>
+                        </p>
+                        @if($funding->member_capital_date)
+                            <p class="flex items-center justify-between">
+                                <span class="text-slate-500">Date</span>
+                                <span class="font-medium text-slate-900">
+                                    {{ $funding->member_capital_date->format('M d, Y') }}
+                                </span>
+                            </p>
+                        @endif
+                        @if($funding->member_capital_source)
+                            <p class="flex items-center justify-between">
+                                <span class="text-slate-500">Source</span>
+                                <span class="font-medium text-slate-900">
+                                    {{ $funding->member_capital_source }}
+                                </span>
+                            </p>
+                        @endif
+                    </div>
+
+                    <div class="space-y-1">
+                        <p class="text-[11px] text-slate-500 uppercase">Loan / Debt</p>
+                        @if($funding->has_loan)
+                            <p class="flex items-center justify-between">
+                                <span class="text-slate-500">Lender</span>
+                                <span class="font-medium text-slate-900">{{ $funding->lender_name ?? 'N/A' }}</span>
+                            </p>
+                            <p class="flex items-center justify-between">
+                                <span class="text-slate-500">Loan Amount</span>
+                                <span class="font-semibold text-slate-900">
+                                    Ksh {{ number_format($funding->loan_amount ?? 0, 0) }}
+                                </span>
+                            </p>
+                            <p class="flex items-center justify-between">
+                                <span class="text-slate-500">Outstanding</span>
+                                <span class="font-semibold text-slate-900">
+                                    Ksh {{ number_format($funding->outstanding_balance ?? 0, 0) }}
+                                </span>
+                            </p>
+                        @else
+                            <p class="text-xs text-slate-500">
+                                No loan on this project (equity only).
+                            </p>
+                        @endif
+                    </div>
+                </div>
+            @else
+                <p class="text-xs text-slate-500">
+                    Capital & funding details have not been set up yet.
+                </p>
+            @endif
         </div>
 
         @if($project->url || $project->route_name)

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\FinancialOverviewService;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -21,6 +22,9 @@ class DashboardController extends Controller
             'completed_orders' => Order::where('status', 'completed')->count(),
             'today_revenue' => Order::whereDate('created_at', Carbon::today())->sum('total'),
         ];
+
+        // Group-level financial snapshot (contributions, welfare, net worth, etc.)
+        $groupFinancials = FinancialOverviewService::getGroupSnapshot();
 
         // Sales last 7 days for line chart
         $salesLast7Days = collect(range(6, 0))->map(function ($daysAgo) {
@@ -52,6 +56,7 @@ class DashboardController extends Controller
             'topProducts' => $topProducts,
             'salesLast7Days' => $salesLast7Days,
             'statusCounts' => $statusCounts,
+            'groupFinancials' => $groupFinancials,
         ]);
     }
 

@@ -97,7 +97,21 @@ class ProductController extends Controller
             session(['recently_viewed' => $viewed]);
         }
 
-        return view('frontend.product', compact('product', 'related', 'recentlyViewed'));
+        // Get approved reviews with pagination
+        $reviews = $product->approvedReviews()
+            ->with('user')
+            ->latest()
+            ->paginate(5);
+
+        // Check if user has already reviewed
+        $hasReviewed = false;
+        if (auth()->check()) {
+            $hasReviewed = Review::where('product_id', $product->id)
+                ->where('user_id', auth()->id())
+                ->exists();
+        }
+
+        return view('frontend.product', compact('product', 'related', 'recentlyViewed', 'reviews', 'hasReviewed'));
     }
 
     public function category(string $slug)

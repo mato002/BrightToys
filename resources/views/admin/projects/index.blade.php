@@ -19,8 +19,10 @@
                class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
         <select name="status" class="border border-slate-200 rounded px-3 py-2 text-sm">
             <option value="">All Statuses</option>
+            <option value="planning" {{ request('status') === 'planning' ? 'selected' : '' }}>Planning</option>
             <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
-            <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactive</option>
+            <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
+            <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspended</option>
         </select>
         <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded text-xs">
             Filter
@@ -43,6 +45,7 @@
                         <th class="px-4 py-3 text-left text-xs font-semibold text-slate-700">Created By</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-slate-700">Assigned Users</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-slate-700">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-700">Capital Mix</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-slate-700">Actions</th>
                     </tr>
                 </thead>
@@ -53,6 +56,12 @@
                                 <div class="font-medium text-slate-900">{{ $project->name }}</div>
                                 @if($project->description)
                                     <div class="text-xs text-slate-500 mt-0.5">{{ Str::limit($project->description, 50) }}</div>
+                                @endif
+                                @if($project->objective)
+                                    <div class="text-[11px] text-slate-400 mt-0.5">
+                                        <span class="font-semibold">Objective:</span>
+                                        {{ Str::limit($project->objective, 60) }}
+                                    </div>
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-slate-600 capitalize">{{ $project->type }}</td>
@@ -81,10 +90,29 @@
                                 @endif
                             </td>
                             <td class="px-4 py-3">
-                                <span class="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-medium
-                                    {{ $project->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600' }}">
-                                    {{ $project->is_active ? 'Active' : 'Inactive' }}
-                                </span>
+                                <div class="flex flex-col gap-1">
+                                    <span class="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-medium
+                                        @if(($project->status ?? 'planning') === 'active') bg-emerald-100 text-emerald-700
+                                        @elseif(($project->status ?? 'planning') === 'completed') bg-blue-100 text-blue-700
+                                        @elseif(($project->status ?? 'planning') === 'suspended') bg-amber-100 text-amber-700
+                                        @else bg-slate-100 text-slate-600 @endif">
+                                        {{ ucfirst($project->status ?? 'planning') }}
+                                    </span>
+                                    <span class="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-medium
+                                        {{ $project->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-500' }}">
+                                        {{ $project->is_active ? 'Linked Active' : 'Not Active' }}
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-xs text-slate-600">
+                                @php $mix = $project->capital_mix; @endphp
+                                @if($mix['total'] > 0)
+                                    <span class="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                        {{ $mix['equity'] }}% equity / {{ $mix['debt'] }}% debt
+                                    </span>
+                                @else
+                                    <span class="text-slate-400">Not set</span>
+                                @endif
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2">

@@ -18,6 +18,8 @@ use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
+use App\Http\Controllers\Admin\LoanController;
+use App\Http\Controllers\MemberOnboardingController;
 
 // Frontend
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -26,6 +28,10 @@ Route::get('/new-arrivals', [HomeController::class, 'newArrivals'])->name('front
 Route::get('/shop', [FrontProductController::class, 'index'])->name('shop.index');
 Route::get('/category/{slug}', [FrontProductController::class, 'category'])->name('frontend.category');
 Route::get('/product/{slug}', [FrontProductController::class, 'show'])->name('product.show');
+
+// Reviews
+Route::post('/product/{product}/review', [\App\Http\Controllers\Frontend\ReviewController::class, 'store'])->name('review.store')->middleware('auth');
+Route::post('/review/{review}/helpful', [\App\Http\Controllers\Frontend\ReviewController::class, 'helpful'])->name('review.helpful');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add/{id}', [CartController::class, 'add'])->name('cart.add');
@@ -81,6 +87,12 @@ Route::get('/contact', [PageController::class, 'contact'])->name('pages.contact'
 Route::post('/contact', [PageController::class, 'submitContact'])->name('pages.contact.submit');
 Route::get('/policies', [PageController::class, 'policies'])->name('pages.policies');
 
+// Member onboarding (public, token-based)
+Route::middleware('guest')->group(function () {
+    Route::get('/onboarding/{token}', [MemberOnboardingController::class, 'show'])->name('onboarding.show');
+    Route::post('/onboarding/{token}', [MemberOnboardingController::class, 'submit'])->name('onboarding.submit');
+});
+
 // Admin
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -104,6 +116,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/users/report', [AdminUserController::class, 'report'])->name('users.report');
     
     Route::resource('admins', \App\Http\Controllers\Admin\AdminController::class);
+    Route::resource('members', \App\Http\Controllers\Admin\MemberController::class)->only(['index', 'create', 'store', 'show']);
 
     Route::get('/profile', [AdminProfileController::class, 'index'])->name('profile');
     Route::get('/profile/edit', [AdminProfileController::class, 'edit'])->name('profile.edit');
@@ -125,11 +138,28 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/support-tickets/export', [SupportTicketController::class, 'export'])->name('support-tickets.export');
     Route::get('/support-tickets/report', [SupportTicketController::class, 'report'])->name('support-tickets.report');
 
+    // Reviews Management
+    Route::get('/reviews', [\App\Http\Controllers\Admin\ReviewController::class, 'index'])->name('reviews.index');
+    Route::post('/reviews/{review}/approve', [\App\Http\Controllers\Admin\ReviewController::class, 'approve'])->name('reviews.approve');
+    Route::post('/reviews/{review}/reject', [\App\Http\Controllers\Admin\ReviewController::class, 'reject'])->name('reviews.reject');
+    Route::delete('/reviews/{review}', [\App\Http\Controllers\Admin\ReviewController::class, 'destroy'])->name('reviews.destroy');
+
     // Partnership Management
     Route::resource('partners', \App\Http\Controllers\Admin\PartnerController::class);
     
     // Projects Management
     Route::resource('projects', \App\Http\Controllers\Admin\ProjectController::class);
+    Route::post('/projects/{project}/activate', [\App\Http\Controllers\Admin\ProjectController::class, 'activate'])
+        ->name('projects.activate');
+
+    // Project Assets (per-project investments like land, stock, equipment)
+    Route::resource('project-assets', \App\Http\Controllers\Admin\ProjectAssetController::class)
+        ->only(['create', 'store', 'edit', 'update', 'destroy']);
+
+    // Loans Management
+    Route::resource('loans', LoanController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+    Route::post('/loans/{loan}/repayments', [LoanController::class, 'storeRepayment'])->name('loans.repayments.store');
+    Route::post('/loans/{loan}/repayments/{repayment}/reconcile', [LoanController::class, 'reconcileRepayment'])->name('loans.repayments.reconcile');
     
     // Financial Management
     Route::prefix('financial')->name('financial.')->group(function () {
@@ -199,5 +229,6 @@ Route::prefix('partner')->name('partner.')->middleware(['auth', 'partner'])->gro
     Route::get('/documents/{document}/download', [\App\Http\Controllers\Partner\DocumentController::class, 'download'])->name('documents.download');
     Route::get('/activity', [\App\Http\Controllers\Partner\ActivityController::class, 'index'])->name('activity');
     Route::get('/profile', [\App\Http\Controllers\Partner\ProfileController::class, 'index'])->name('profile');
+    Route::get('/reports', [\App\Http\Controllers\Partner\DashboardController::class, 'reports'])->name('reports');
 });
 

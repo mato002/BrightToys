@@ -46,5 +46,10 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,
             OrderSeeder::class,
         ]);
+
+        // Sample members for onboarding demo
+        $this->call([
+            MemberSeeder::class,
+        ]);
     }
 }

@@ -19,7 +19,8 @@ class DocumentController extends Controller
         if ($allowPartners && $user->is_partner) {
             return; // Partners can view
         }
-        if (!$user->isSuperAdmin() && !$user->hasAdminRole('finance_admin')) {
+        // Allow Super Admin, Finance Admin and Chairman to manage documents
+        if (! $user->isSuperAdmin() && ! $user->hasAdminRole('finance_admin') && ! $user->hasAdminRole('chairman')) {
             abort(403, 'You do not have permission to access this resource.');
         }
     }

@@ -19,7 +19,8 @@ class PartnerContributionController extends Controller
         if ($allowPartners && $user->is_partner) {
             return; // Partners can view
         }
-        if (!$user->isSuperAdmin() && !$user->hasAdminRole('finance_admin')) {
+        // Use permissions and also allow chairman as finance leader
+        if (! $user->hasPermission('financial.records.view') && ! $user->hasAdminRole('chairman')) {
             abort(403, 'You do not have permission to access this resource.');
         }
     }

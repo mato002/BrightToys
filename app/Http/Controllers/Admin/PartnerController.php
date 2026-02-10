@@ -19,7 +19,8 @@ class PartnerController extends Controller
         if ($allowPartners && $user->is_partner) {
             return; // Partners can view
         }
-        if (!$user->isSuperAdmin() && !$user->hasAdminRole('finance_admin')) {
+        // Allow Super Admin, Finance Admin and Chairman to access partnership management
+        if (!$user->isSuperAdmin() && !$user->hasAdminRole('finance_admin') && !$user->hasAdminRole('chairman')) {
             abort(403, 'You do not have permission to access this resource.');
         }
     }
@@ -38,7 +39,27 @@ class PartnerController extends Controller
             });
         }
 
-        $partners = $query->latest()->paginate(20)->withQueryString();
+        if ($status = request('status')) {
+            $query->where('status', $status);
+        }
+
+        if ($ownership = request('ownership')) {
+            if ($ownership === 'with_ownership') {
+                $query->whereHas('ownerships');
+            } elseif ($ownership === 'without_ownership') {
+                $query->whereDoesntHave('ownerships');
+            }
+        }
+
+        if ($linked = request('linked')) {
+            if ($linked === 'with_user') {
+                $query->whereNotNull('user_id');
+            } elseif ($linked === 'without_user') {
+                $query->whereNull('user_id');
+            }
+        }
+
+        $partners = $query->orderBy('name')->paginate(20)->withQueryString();
 
         return view('admin.partners.index', compact('partners'));
     }

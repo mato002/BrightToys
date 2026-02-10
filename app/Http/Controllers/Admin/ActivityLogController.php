@@ -17,7 +17,8 @@ class ActivityLogController extends Controller
         if ($allowPartners && $user->is_partner) {
             return; // Partners can view
         }
-        if (!$user->isSuperAdmin() && !$user->hasAdminRole('finance_admin')) {
+        // Restrict to Super Admin and Finance Admin only
+        if (! $user->isSuperAdmin() && ! $user->hasAdminRole('finance_admin')) {
             abort(403, 'You do not have permission to access this resource.');
         }
     }

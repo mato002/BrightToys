@@ -7,7 +7,9 @@ use App\Models\FinancialRecord;
 use App\Models\FinancialRecordDocument;
 use App\Models\Order;
 use App\Models\Partner;
+use App\Models\Project;
 use App\Services\ActivityLogService;
+use App\Services\ApprovalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -22,7 +24,7 @@ class FinancialRecordController extends Controller
         if ($allowPartners && $user->is_partner) {
             return; // Partners can view
         }
-        if (!$user->isSuperAdmin() && !$user->hasAdminRole('finance_admin')) {
+        if (! $user->hasPermission('financial.records.view')) {
             abort(403, 'You do not have permission to access this resource.');
         }
     }
@@ -81,27 +83,34 @@ class FinancialRecordController extends Controller
 
     public function create()
     {
-        $this->checkFinancePermission();
+        if (! auth()->user()->hasPermission('financial.records.create')) {
+            abort(403, 'You do not have permission to create financial records.');
+        }
         $partners = Partner::where('status', 'active')->orderBy('name')->get();
         $orders = Order::latest()->take(50)->get(['id', 'order_number', 'total', 'created_at']);
-        return view('admin.financial.create', compact('partners', 'orders'));
+        $projects = Project::orderBy('name')->get(['id', 'name']);
+        return view('admin.financial.create', compact('partners', 'orders', 'projects'));
     }
 
     public function store(Request $request)
     {
-        $this->checkFinancePermission();
+        if (! auth()->user()->hasPermission('financial.records.create')) {
+            abort(403, 'You do not have permission to create financial records.');
+        }
 
         $validated = $request->validate([
             'type' => ['required', 'in:expense,adjustment,other_income'],
             'category' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'currency' => ['nullable', 'string', 'max:3'],
+            'paid_from' => ['nullable', 'string', 'max:255'],
             'occurred_at' => ['required', 'date'],
             'description' => ['required', 'string'],
             'order_id' => ['nullable', 'exists:orders,id'],
             'partner_id' => ['nullable', 'exists:partners,id'],
-            'receipts' => ['nullable', 'array'],
-            'receipts.*' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'], // 10MB max
+            'project_id' => ['nullable', 'exists:projects,id'],
+            'documents' => ['nullable', 'array'],
+            'documents.*' => ['file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'], // 10MB max
         ]);
 
         $record = FinancialRecord::create([
@@ -109,17 +118,22 @@ class FinancialRecordController extends Controller
             'category' => $validated['category'],
             'amount' => $validated['amount'],
             'currency' => $validated['currency'] ?? 'KES',
+            'paid_from' => $validated['paid_from'] ?? null,
             'occurred_at' => $validated['occurred_at'],
             'description' => $validated['description'],
             'order_id' => $validated['order_id'] ?? null,
             'partner_id' => $validated['partner_id'] ?? null,
+            'project_id' => $validated['project_id'] ?? null,
             'status' => 'pending_approval',
             'created_by' => auth()->id(),
         ]);
 
-        // Handle receipt uploads
-        if ($request->hasFile('receipts')) {
-            foreach ($request->file('receipts') as $file) {
+        // Ensure an approval workflow exists for this record
+        ApprovalService::ensureApproval('financial_record.approve', $record, auth()->user());
+
+        // Handle receipt/uploads
+        if ($request->hasFile('documents')) {
+            foreach ($request->file('documents') as $file) {
                 $path = $file->store('financial-receipts', 'public');
                 
                 FinancialRecordDocument::create([
@@ -148,30 +162,43 @@ class FinancialRecordController extends Controller
 
     public function approve(Request $request, FinancialRecord $financialRecord)
     {
-        $this->checkFinancePermission();
+        if (! auth()->user()->hasPermission('financial.records.approve')) {
+            abort(403, 'You do not have permission to approve financial records.');
+        }
 
         if ($financialRecord->status !== 'pending_approval') {
             return redirect()->back()
                 ->with('error', 'Only pending records can be approved.');
         }
 
-        $financialRecord->update([
-            'status' => 'approved',
-            'approved_by' => auth()->id(),
-            'approved_at' => now(),
-        ]);
+        $approval = ApprovalService::ensureApproval('financial_record.approve', $financialRecord, $financialRecord->creator);
+        $approval = ApprovalService::approve(auth()->user(), $approval, $request->input('comment'));
 
-        ActivityLogService::logFinancial('approved', $financialRecord, [
-            'approved_by' => auth()->user()->name,
-        ]);
+        // When the aggregated approval passes its threshold, mark the record as approved
+        if ($approval->status === 'approved') {
+            $financialRecord->update([
+                'status' => 'approved',
+                'approved_by' => auth()->id(),
+                'approved_at' => now(),
+            ]);
+
+            ActivityLogService::logFinancial('approved', $financialRecord, [
+                'approved_by' => auth()->user()->name,
+            ]);
+
+            return redirect()->back()
+                ->with('success', 'Financial record approved successfully.');
+        }
 
         return redirect()->back()
-            ->with('success', 'Financial record approved successfully.');
+            ->with('success', 'Your approval has been recorded. Waiting for additional approvers.');
     }
 
     public function reject(Request $request, FinancialRecord $financialRecord)
     {
-        $this->checkFinancePermission();
+        if (! auth()->user()->hasPermission('financial.records.approve')) {
+            abort(403, 'You do not have permission to reject financial records.');
+        }
 
         if ($financialRecord->status !== 'pending_approval') {
             return redirect()->back()

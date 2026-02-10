@@ -11,7 +11,7 @@ class ProfileController extends Controller
 {
     public function index()
     {
-        $user = auth()->user();
+        $user = auth()->user()->load('adminRoles');
 
         return view('admin.profile.index', compact('user'));
     }

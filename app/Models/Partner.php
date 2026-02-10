@@ -30,6 +30,11 @@ class Partner extends Model
         return $this->hasMany(PartnerContribution::class);
     }
 
+    public function members()
+    {
+        return $this->hasMany(Member::class);
+    }
+
     public function financialRecords()
     {
         return $this->hasMany(FinancialRecord::class);

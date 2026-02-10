@@ -79,6 +79,14 @@ class User extends Authenticatable
         return $this->hasOne(Partner::class);
     }
 
+    public function member()
+    {
+        return $this->hasOne(Member::class);
+    }
+
+    /**
+     * All admin roles attached to this user.
+     */
     public function isSuperAdmin(): bool
     {
         if (!$this->is_admin) {
@@ -105,6 +113,34 @@ class User extends Authenticatable
         }
         
         return $this->adminRoles->contains('name', $role);
+    }
+
+    /**
+     * Check if user has a given permission (via any of their roles).
+     */
+    public function hasPermission(string $permission): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        if (!$this->is_admin) {
+            return false;
+        }
+
+        if (!$this->relationLoaded('adminRoles')) {
+            $this->load('adminRoles.permissions');
+        } else {
+            $this->loadMissing('adminRoles.permissions');
+        }
+
+        foreach ($this->adminRoles as $role) {
+            if ($role->permissions->contains('name', $permission)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
