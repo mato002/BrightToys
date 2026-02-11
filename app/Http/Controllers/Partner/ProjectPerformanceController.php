@@ -24,9 +24,12 @@ class ProjectPerformanceController extends Controller
             abort(403, 'You are not associated with a partner account.');
         }
 
-        // Only the creator can view performance
-        if ($project->created_by !== $partner->id) {
-            abort(403, 'You can only view performance of projects you created.');
+        // For shared ecommerce project, allow all partners to view performance
+        if (!($project->route_name === 'home' || $project->type === 'ecommerce')) {
+            // For other projects, only the creator can view performance
+            if ($project->created_by !== $partner->id) {
+                abort(403, 'You can only view performance of projects you created.');
+            }
         }
 
         // Get project-specific data
@@ -99,9 +102,12 @@ class ProjectPerformanceController extends Controller
             abort(403, 'You are not associated with a partner account.');
         }
 
-        // Only the creator can view finances
-        if ($project->created_by !== $partner->id) {
-            abort(403, 'You can only view finances of projects you created.');
+        // For shared ecommerce project, allow all partners to view finances
+        if (!($project->route_name === 'home' || $project->type === 'ecommerce')) {
+            // For other projects, only the creator can view finances
+            if ($project->created_by !== $partner->id) {
+                abort(403, 'You can only view finances of projects you created.');
+            }
         }
 
         // Determine period for revenue/expense view

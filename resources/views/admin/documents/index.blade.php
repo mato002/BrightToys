@@ -20,6 +20,8 @@
             <option value="agreement" {{ request('type') === 'agreement' ? 'selected' : '' }}>Agreement</option>
             <option value="report" {{ request('type') === 'report' ? 'selected' : '' }}>Report</option>
             <option value="policy" {{ request('type') === 'policy' ? 'selected' : '' }}>Policy</option>
+            <option value="meeting_minutes" {{ request('type') === 'meeting_minutes' ? 'selected' : '' }}>Meeting Minutes</option>
+            <option value="resolution" {{ request('type') === 'resolution' ? 'selected' : '' }}>Resolution</option>
             <option value="other" {{ request('type') === 'other' ? 'selected' : '' }}>Other</option>
         </select>
         <select name="visibility" class="border border-slate-200 rounded px-3 py-2 text-sm">

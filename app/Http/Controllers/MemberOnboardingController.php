@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Member;
+use App\Models\Partner; // Members and Partners are the same
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -13,7 +13,7 @@ class MemberOnboardingController extends Controller
      */
     public function show(string $token)
     {
-        $member = Member::where('onboarding_token', $token)
+        $member = Partner::where('onboarding_token', $token)
             ->where(function ($q) {
                 $q->whereNull('onboarding_token_expires_at')
                   ->orWhere('onboarding_token_expires_at', '>=', now());
@@ -28,7 +28,7 @@ class MemberOnboardingController extends Controller
      */
     public function submit(Request $request, string $token)
     {
-        $member = Member::where('onboarding_token', $token)
+        $member = Partner::where('onboarding_token', $token)
             ->where(function ($q) {
                 $q->whereNull('onboarding_token_expires_at')
                   ->orWhere('onboarding_token_expires_at', '>=', now());

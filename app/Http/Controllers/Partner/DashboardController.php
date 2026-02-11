@@ -7,6 +7,7 @@ use App\Models\FinancialRecord;
 use App\Models\PartnerContribution;
 use App\Models\Order;
 use App\Services\ActivityLogService;
+use App\Services\MonthlyContributionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -23,6 +24,9 @@ class DashboardController extends Controller
         if (!$partner) {
             abort(403, 'You are not associated with a partner account.');
         }
+
+        // Load entry contribution and payment plan
+        $partner->load(['entryContribution.paymentPlan.installments']);
 
         // Get current ownership
         $currentOwnership = $partner->ownerships()
@@ -165,6 +169,28 @@ class DashboardController extends Controller
             ? (($thisMonthRevenue - $lastMonthRevenue) / $lastMonthRevenue) * 100 
             : 0;
 
+        // Entry contribution data
+        $entryContribution = $partner->entryContribution;
+        $paymentPlan = $entryContribution?->paymentPlan;
+        $installments = $paymentPlan?->installments ?? collect();
+        
+        // Update installment statuses and calculate penalties
+        $installments->each(function ($installment) {
+            $installment->updateStatus();
+        });
+        
+        // Refresh installments after status updates
+        $installments = $paymentPlan?->installments()->orderBy('installment_number')->get() ?? collect();
+        
+        $overdueInstallments = $installments->whereIn('status', ['overdue', 'missed']);
+        $upcomingInstallments = $installments->where('status', 'pending')
+            ->where('due_date', '>=', now())
+            ->where('due_date', '<=', now()->addDays(30))
+            ->sortBy('due_date');
+
+        // Monthly 55,000 contributions (welfare + investment)
+        $monthlyContribution = MonthlyContributionService::forPartner($partner);
+
         return view('partner.dashboard', compact(
             'partner',
             'currentOwnership',
@@ -188,7 +214,13 @@ class DashboardController extends Controller
             'ytdExpenses',
             'ytdProfit',
             'ytdPartnerShare',
-            'revenueGrowth'
+            'revenueGrowth',
+            'entryContribution',
+            'paymentPlan',
+            'installments',
+            'overdueInstallments',
+            'upcomingInstallments',
+            'monthlyContribution'
         ));
     }
 
@@ -242,6 +274,9 @@ class DashboardController extends Controller
         $query = PartnerContribution::where('partner_id', $partner->id)
             ->where('is_archived', false);
 
+        if ($fundType = request('fund_type')) {
+            $query->where('fund_type', $fundType);
+        }
         if ($type = request('type')) {
             $query->where('type', $type);
         }
@@ -290,6 +325,7 @@ class DashboardController extends Controller
 
         $validated = $request->validate([
             'type' => ['required', 'in:contribution,withdrawal'],
+            'fund_type' => ['required_if:type,contribution', 'in:welfare,investment'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'currency' => ['nullable', 'string', 'max:3'],
             'contributed_at' => ['required', 'date'],
@@ -301,6 +337,9 @@ class DashboardController extends Controller
             'partner_id' => $partner->id,
             'type' => $validated['type'],
             'amount' => $validated['amount'],
+            'fund_type' => $validated['type'] === 'contribution'
+                ? ($validated['fund_type'] ?? 'investment')
+                : 'investment',
             'currency' => $validated['currency'] ?? 'KES',
             'contributed_at' => $validated['contributed_at'],
             'reference' => $validated['reference'] ?? null,

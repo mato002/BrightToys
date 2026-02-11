@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
@@ -11,9 +12,47 @@ class ProfileController extends Controller
 {
     public function index()
     {
-        $user = auth()->user()->load('adminRoles');
+        $user = auth()->user();
+        
+        // Load all relevant relationships
+        $user->load([
+            'adminRoles.permissions',
+            'partner.ownerships',
+            'partner.contributions' => function($q) {
+                $q->latest()->limit(5);
+            },
+            'orders' => function($q) {
+                $q->latest()->limit(5);
+            },
+        ]);
 
-        return view('admin.profile.index', compact('user'));
+        // Get partner info if user is a partner
+        $partner = $user->partner;
+        $currentOwnership = null;
+        if ($partner) {
+            $currentOwnership = $partner->ownerships()
+                ->where('effective_from', '<=', now())
+                ->where(function($q) {
+                    $q->whereNull('effective_to')->orWhere('effective_to', '>=', now());
+                })
+                ->first();
+        }
+
+        // Get recent activity logs for this user
+        $recentActivity = ActivityLog::where('user_id', $user->id)
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        // Calculate stats
+        $stats = [
+            'total_orders' => $user->orders()->count(),
+            'total_contributions' => $partner ? $partner->contributions()->where('status', 'approved')->count() : 0,
+            'total_activity' => ActivityLog::where('user_id', $user->id)->count(),
+            'account_age_days' => $user->created_at->diffInDays(now()),
+        ];
+
+        return view('admin.profile.index', compact('user', 'partner', 'currentOwnership', 'recentActivity', 'stats'));
     }
 
     public function edit()

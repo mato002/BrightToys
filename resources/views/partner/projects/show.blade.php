@@ -14,12 +14,6 @@
                 <h1 class="text-lg font-semibold">{{ $project->name }}</h1>
             </div>
 
-            @if($isMyProject ?? false)
-                <a href="{{ route('partner.projects.manage.edit', $project) }}"
-                   class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-4 py-2 rounded-lg">
-                    Edit Project
-                </a>
-            @endif
         </div>
         <p class="text-xs text-slate-500">
             Project details, management shortcuts and access information.
@@ -184,7 +178,7 @@
         @else
             <div class="mb-6 border border-amber-100 bg-amber-50 rounded-lg p-4">
                 <p class="text-xs text-amber-800 font-semibold mb-1">⚠️ Project Not Yet Developed</p>
-                <p class="text-sm text-amber-700">This project is in planning phase. Add a URL or route name in the edit page when it's ready to launch.</p>
+                <p class="text-sm text-amber-700">This project is in planning phase. Contact management when it's ready to launch.</p>
             </div>
         @endif
 
@@ -203,30 +197,17 @@
                 </a>
             @endif
 
-            @if($isMyProject ?? false)
-                <div class="grid grid-cols-2 gap-2">
-                    <a href="{{ route('partner.projects.performance', $project) }}"
-                       class="text-center bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-3 py-2 rounded-lg">
-                        Performance
-                    </a>
-                    <a href="{{ route('partner.projects.finances', $project) }}"
-                       class="text-center bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-lg">
-                        Finances
-                    </a>
-                </div>
-
-                <form action="{{ route('partner.projects.manage.destroy', $project) }}"
-                      method="POST"
-                      class="flex justify-end"
-                      data-confirm="Delete this project?">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit"
-                            class="inline-flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-4 py-2 rounded-lg">
-                        Delete Project
-                    </button>
-                </form>
-            @endif
+            {{-- Project Performance & Finances (available to all partners) --}}
+            <div class="grid grid-cols-2 gap-2">
+                <a href="{{ route('partner.projects.performance', $project) }}"
+                   class="text-center bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-3 py-2 rounded-lg">
+                    Performance
+                </a>
+                <a href="{{ route('partner.projects.finances', $project) }}"
+                   class="text-center bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-lg">
+                    Finances
+                </a>
+            </div>
 
             <a href="{{ route('partner.projects.index') }}" 
                class="inline-flex items-center justify-center gap-2 border border-slate-200 text-slate-700 hover:bg-slate-50 text-sm font-semibold px-6 py-2.5 rounded-lg transition-colors w-full">

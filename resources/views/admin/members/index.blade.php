@@ -76,7 +76,7 @@
                         <th class="px-4 py-2 text-left text-xs font-semibold text-slate-700">Email</th>
                         <th class="px-4 py-2 text-left text-xs font-semibold text-slate-700">Phone</th>
                         <th class="px-4 py-2 text-left text-xs font-semibold text-slate-700">Status</th>
-                        <th class="px-4 py-2 text-left text-xs font-semibold text-slate-700">Linked Partner</th>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-slate-700">Approval Doc</th>
                         <th class="px-4 py-2 text-left text-xs font-semibold text-slate-700">Onboarding</th>
                         <th class="px-4 py-2 text-left text-xs font-semibold text-slate-700">Actions</th>
                     </tr>
@@ -95,8 +95,15 @@
                                     {{ ucfirst($member->status) }}
                                 </span>
                             </td>
-                            <td class="px-4 py-2 text-slate-700">
-                                {{ optional($member->partner)->name ?? '—' }}
+                            <td class="px-4 py-2 text-xs text-slate-600">
+                                @if($member->approvalDocument)
+                                    <a href="{{ route('admin.documents.show', $member->approvalDocument) }}" 
+                                       class="text-emerald-600 hover:text-emerald-700 underline">
+                                        {{ Str::limit($member->approvalDocument->title, 30) }}
+                                    </a>
+                                @else
+                                    <span class="text-amber-600">Missing</span>
+                                @endif
                             </td>
                             <td class="px-4 py-2 text-xs text-slate-600">
                                 @if($member->biodata_completed_at)

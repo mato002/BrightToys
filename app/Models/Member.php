@@ -9,6 +9,7 @@ class Member extends Model
     protected $fillable = [
         'user_id',
         'partner_id',
+        'approval_document_id',
         'name',
         'email',
         'phone',
@@ -42,6 +43,11 @@ class Member extends Model
     public function wallets()
     {
         return $this->hasMany(MemberWallet::class);
+    }
+
+    public function approvalDocument()
+    {
+        return $this->belongsTo(Document::class, 'approval_document_id');
     }
 }
 

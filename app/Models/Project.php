@@ -10,6 +10,35 @@ class Project extends Model
     public const TYPES = ['ecommerce', 'land', 'business', 'trading', 'other'];
     public const STATUSES = ['planning', 'active', 'completed', 'suspended'];
 
+    /**
+     * Get display label for a project type
+     */
+    public static function getTypeLabel(string $type): string
+    {
+        $labels = [
+            'ecommerce' => 'E-Commerce',
+            'land' => 'Land / Real Estate',
+            'business' => 'Business',
+            'trading' => 'Trading / Imports',
+            'other' => 'Other',
+        ];
+
+        return $labels[$type] ?? ucfirst($type);
+    }
+
+    /**
+     * Get all project types with their labels
+     */
+    public static function getTypesWithLabels(): array
+    {
+        return array_map(function ($type) {
+            return [
+                'value' => $type,
+                'label' => self::getTypeLabel($type),
+            ];
+        }, self::TYPES);
+    }
+
     protected $fillable = [
         'name',
         'slug',

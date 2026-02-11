@@ -72,7 +72,7 @@ class DocumentController extends Controller
         $this->checkFinancePermission();
 
         $validated = $request->validate([
-            'type' => ['required', 'in:agreement,report,policy,other'],
+            'type' => ['required', 'in:agreement,report,policy,meeting_minutes,resolution,other'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'visibility' => ['required', 'in:internal_admin,partners,public_link'],

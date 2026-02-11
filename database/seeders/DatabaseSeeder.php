@@ -51,5 +51,10 @@ class DatabaseSeeder extends Seeder
         $this->call([
             MemberSeeder::class,
         ]);
+
+        // Penalty rates for payment plans
+        $this->call([
+            PenaltyRateSeeder::class,
+        ]);
     }
 }

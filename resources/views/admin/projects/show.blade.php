@@ -40,6 +40,16 @@
                    class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-4 py-2 rounded-lg">
                     Edit
                 </a>
+                <form action="{{ route('admin.projects.sync-metrics', $project) }}"
+                      method="POST"
+                      class="inline-block"
+                      title="Sync key metrics from external systems (e.g. toy shop e-commerce)">
+                    @csrf
+                    <button type="submit"
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg">
+                        Sync Metrics
+                    </button>
+                </form>
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
                     {{ $project->is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-50 text-slate-700 border border-slate-100' }}">
                     {{ $project->is_active ? 'Active' : 'Inactive' }}
@@ -57,8 +67,14 @@
                     </div>
                     <div class="flex justify-between">
                         <dt class="text-slate-500">Type</dt>
-                        <dd class="font-medium text-slate-900 capitalize">{{ $project->type }}</dd>
+                        <dd class="font-medium text-slate-900">{{ \App\Models\Project::getTypeLabel($project->type) }}</dd>
                     </div>
+                    @if($project->objective)
+                        <div class="mt-3 pt-3 border-t border-slate-100">
+                            <dt class="text-slate-500 mb-1">Objective</dt>
+                            <dd class="font-medium text-slate-900 text-sm">{{ $project->objective }}</dd>
+                        </div>
+                    @endif
                     <div class="flex justify-between">
                         <dt class="text-slate-500">Color Theme</dt>
                         <dd class="font-medium text-slate-900 capitalize">{{ $project->color }}</dd>
@@ -361,6 +377,77 @@
                 </p>
             @endif
         </div>
+
+        @php $kpi = $project->kpi; @endphp
+        @if($kpi)
+            <div class="mt-6 pt-6 border-t border-slate-100">
+                <h3 class="text-sm font-semibold text-slate-900 mb-3">KPIs & Performance Targets</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    @if($project->type === 'land')
+                        <div>
+                            <h4 class="text-xs font-semibold text-slate-700 mb-2 uppercase tracking-wide">Land / Real Estate KPIs</h4>
+                            <dl class="space-y-2 text-sm">
+                                @if($kpi->target_annual_value_growth_pct)
+                                    <div class="flex justify-between">
+                                        <dt class="text-slate-500">Target Annual Value Growth</dt>
+                                        <dd class="font-medium text-slate-900">{{ number_format($kpi->target_annual_value_growth_pct, 1) }}%</dd>
+                                    </div>
+                                @endif
+                                @if($kpi->expected_holding_period_years)
+                                    <div class="flex justify-between">
+                                        <dt class="text-slate-500">Expected Holding Period</dt>
+                                        <dd class="font-medium text-slate-900">{{ number_format($kpi->expected_holding_period_years, 1) }} years</dd>
+                                    </div>
+                                @endif
+                                @if($kpi->minimum_acceptable_roi_pct)
+                                    <div class="flex justify-between">
+                                        <dt class="text-slate-500">Minimum Acceptable ROI</dt>
+                                        <dd class="font-medium text-slate-900">{{ number_format($kpi->minimum_acceptable_roi_pct, 1) }}%</dd>
+                                    </div>
+                                @endif
+                            </dl>
+                        </div>
+                    @endif
+                    @if(in_array($project->type, ['ecommerce', 'business', 'trading']))
+                        <div>
+                            <h4 class="text-xs font-semibold text-slate-700 mb-2 uppercase tracking-wide">Operating Business KPIs</h4>
+                            <dl class="space-y-2 text-sm">
+                                @if($kpi->monthly_revenue_target)
+                                    <div class="flex justify-between">
+                                        <dt class="text-slate-500">Monthly Revenue Target</dt>
+                                        <dd class="font-medium text-slate-900">Ksh {{ number_format($kpi->monthly_revenue_target, 0) }}</dd>
+                                    </div>
+                                @endif
+                                @if($kpi->gross_margin_target_pct)
+                                    <div class="flex justify-between">
+                                        <dt class="text-slate-500">Gross Margin Target</dt>
+                                        <dd class="font-medium text-slate-900">{{ number_format($kpi->gross_margin_target_pct, 1) }}%</dd>
+                                    </div>
+                                @endif
+                                @if($kpi->operating_expense_ratio_target_pct)
+                                    <div class="flex justify-between">
+                                        <dt class="text-slate-500">Operating Expense Ratio Target</dt>
+                                        <dd class="font-medium text-slate-900">{{ number_format($kpi->operating_expense_ratio_target_pct, 1) }}%</dd>
+                                    </div>
+                                @endif
+                                @if($kpi->break_even_revenue)
+                                    <div class="flex justify-between">
+                                        <dt class="text-slate-500">Break-even Revenue</dt>
+                                        <dd class="font-medium text-slate-900">Ksh {{ number_format($kpi->break_even_revenue, 0) }}</dd>
+                                    </div>
+                                @endif
+                                @if($kpi->loan_coverage_ratio_target)
+                                    <div class="flex justify-between">
+                                        <dt class="text-slate-500">Loan Coverage Ratio Target</dt>
+                                        <dd class="font-medium text-slate-900">{{ number_format($kpi->loan_coverage_ratio_target, 2) }}</dd>
+                                    </div>
+                                @endif
+                            </dl>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
 
         @if($project->description)
             <div class="mt-6 pt-6 border-t border-slate-100">

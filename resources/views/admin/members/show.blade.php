@@ -61,10 +61,6 @@
                 <p class="font-semibold text-slate-900">{{ $member->phone ?? '—' }}</p>
             </div>
             <div>
-                <p class="text-slate-500 text-[11px] mb-1">Linked Partner</p>
-                <p class="font-semibold text-slate-900">{{ optional($member->partner)->name ?? '—' }}</p>
-            </div>
-            <div>
                 <p class="text-slate-500 text-[11px] mb-1">Date of Birth</p>
                 <p class="font-semibold text-slate-900">
                     {{ optional($member->date_of_birth)->format('M d, Y') ?? '—' }}
@@ -86,6 +82,27 @@
                        class="text-[11px] text-emerald-600 hover:text-emerald-700 underline">
                         View uploaded ID
                     </a>
+                </div>
+            @endif
+            @if($member->approvalDocument)
+                <div class="md:col-span-3">
+                    <p class="text-slate-500 text-[11px] mb-1">Approval Document</p>
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('admin.documents.show', $member->approvalDocument) }}"
+                           class="text-sm font-semibold text-emerald-600 hover:text-emerald-700 underline">
+                            {{ $member->approvalDocument->title }}
+                        </a>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] bg-blue-50 text-blue-700 border border-blue-100">
+                            {{ ucfirst(str_replace('_', ' ', $member->approvalDocument->type)) }}
+                        </span>
+                        <a href="{{ route('admin.documents.download', $member->approvalDocument) }}"
+                           class="text-[10px] text-slate-500 hover:text-slate-700 underline">
+                            Download
+                        </a>
+                    </div>
+                    @if($member->approvalDocument->description)
+                        <p class="text-xs text-slate-600 mt-1">{{ $member->approvalDocument->description }}</p>
+                    @endif
                 </div>
             @endif
         </div>

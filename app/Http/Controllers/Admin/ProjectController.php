@@ -8,6 +8,7 @@ use App\Models\ProjectFunding;
 use App\Models\ProjectKpi;
 use App\Models\User;
 use App\Services\ActivityLogService;
+use App\Services\ExternalProjectMetricsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
@@ -381,5 +382,24 @@ class ProjectController extends Controller
 
         return redirect()->route('admin.projects.edit', $project)
             ->with('success', 'Project activated successfully.');
+    }
+
+    /**
+     * Sync project KPIs and financial summaries from an external system (e.g. toy shop e-commerce).
+     * This does not change permissions; only users with project access (finance/leadership) can do this.
+     */
+    public function syncMetrics(Project $project, ExternalProjectMetricsService $service)
+    {
+        $this->checkFinancePermission();
+
+        $ok = $service->syncProjectMetrics($project);
+
+        if (! $ok) {
+            return redirect()->route('admin.projects.show', $project)
+                ->with('error', 'Failed to sync metrics from external system. Check API configuration and logs.');
+        }
+
+        return redirect()->route('admin.projects.show', $project)
+            ->with('success', 'Project metrics synced from external system.');
     }
 }

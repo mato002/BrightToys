@@ -32,17 +32,6 @@
                     @enderror
                 </div>
 
-                <div>
-                    <label for="slug" class="block text-xs font-semibold text-slate-700 mb-1">
-                        Slug
-                    </label>
-                    <input type="text" id="slug" name="slug" value="{{ old('slug', $project->slug) }}"
-                           class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                    @error('slug')
-                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
                 <div class="md:col-span-2">
                     <label for="description" class="block text-xs font-semibold text-slate-700 mb-1">
                         Description
@@ -75,12 +64,7 @@
                             required>
                         @foreach($types as $type)
                             <option value="{{ $type }}" {{ old('type', $project->type) === $type ? 'selected' : '' }}>
-                                @if($type === 'land') Land / Real Estate
-                                @elseif($type === 'business') Business
-                                @elseif($type === 'trading') Trading / Imports
-                                @elseif($type === 'other') Other
-                                @else E-Commerce
-                                @endif
+                                {{ \App\Models\Project::getTypeLabel($type) }}
                             </option>
                         @endforeach
                     </select>
@@ -107,67 +91,6 @@
                     @enderror
                 </div>
 
-                <div>
-                    <label for="color" class="block text-xs font-semibold text-slate-700 mb-1">
-                        Color Theme <span class="text-red-500">*</span>
-                    </label>
-                    <select id="color" name="color" required
-                            class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                        <option value="emerald" {{ old('color', $project->color) === 'emerald' ? 'selected' : '' }}>Emerald</option>
-                        <option value="blue" {{ old('color', $project->color) === 'blue' ? 'selected' : '' }}>Blue</option>
-                        <option value="amber" {{ old('color', $project->color) === 'amber' ? 'selected' : '' }}>Amber</option>
-                        <option value="purple" {{ old('color', $project->color) === 'purple' ? 'selected' : '' }}>Purple</option>
-                        <option value="red" {{ old('color', $project->color) === 'red' ? 'selected' : '' }}>Red</option>
-                        <option value="indigo" {{ old('color', $project->color) === 'indigo' ? 'selected' : '' }}>Indigo</option>
-                    </select>
-                    @error('color')
-                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label for="url" class="block text-xs font-semibold text-slate-700 mb-1">
-                        External URL
-                    </label>
-                    <input type="url" id="url" name="url" value="{{ old('url', $project->url) }}"
-                           class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                    @error('url')
-                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label for="route_name" class="block text-xs font-semibold text-slate-700 mb-1">
-                        Laravel Route Name
-                    </label>
-                    <input type="text" id="route_name" name="route_name" value="{{ old('route_name', $project->route_name) }}"
-                           class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                    @error('route_name')
-                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label for="icon" class="block text-xs font-semibold text-slate-700 mb-1">
-                        Icon Class (FontAwesome)
-                    </label>
-                    <input type="text" id="icon" name="icon" value="{{ old('icon', $project->icon) }}"
-                           class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                    @error('icon')
-                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label for="sort_order" class="block text-xs font-semibold text-slate-700 mb-1">
-                        Sort Order
-                    </label>
-                    <input type="number" id="sort_order" name="sort_order" value="{{ old('sort_order', $project->sort_order) }}" min="0"
-                           class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                    @error('sort_order')
-                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
 
                 {{-- Capital & Funding Structure --}}
                 <div class="md:col-span-2 mt-4 pt-4 border-t border-slate-100">
@@ -313,6 +236,13 @@
                      $loanRequirements = $funding ? $funding->loanRequirements()->orderBy('due_date')->get() : collect();
                  @endphp
 
+                 {{-- Loan Requirements & Compliance Tracking --}}
+                 @php
+                     $funding = $project->funding;
+                     $loanRequirements = $funding ? $funding->loanRequirements()->orderBy('due_date')->get() : collect();
+                     $officers = \App\Models\User::where('is_admin', true)->orderBy('name')->get(['id', 'name']);
+                 @endphp
+
                  @if($funding && $funding->has_loan)
                      <div class="md:col-span-2 mt-6 pt-6 border-t border-slate-100">
                          <h3 class="text-xs font-semibold text-slate-900 mb-2">Loan Requirements & Compliance</h3>
@@ -320,86 +250,123 @@
                              Track all conditions tied to this loan (e.g. insurance, land charge, registration, statements, milestones, reporting).
                          </p>
 
-                         <div class="mb-4 overflow-x-auto">
-                             <table class="min-w-full text-xs">
-                                 <thead class="bg-slate-50 border border-slate-100">
-                                     <tr>
-                                         <th class="px-3 py-2 text-left font-semibold text-slate-700">Requirement</th>
-                                         <th class="px-3 py-2 text-left font-semibold text-slate-700">Responsible</th>
-                                         <th class="px-3 py-2 text-left font-semibold text-slate-700">Status</th>
-                                         <th class="px-3 py-2 text-left font-semibold text-slate-700">Due</th>
-                                         <th class="px-3 py-2 text-left font-semibold text-slate-700">Last Change</th>
-                                     </tr>
-                                 </thead>
-                                 <tbody class="divide-y divide-slate-100">
-                                     @forelse($loanRequirements as $requirement)
+                         @if($loanRequirements->count() > 0)
+                             <div class="mb-4 overflow-x-auto">
+                                 <table class="min-w-full text-xs">
+                                     <thead class="bg-slate-50 border border-slate-100">
                                          <tr>
-                                             <td class="px-3 py-2">
-                                                 <div class="font-medium text-slate-900">{{ $requirement->name }}</div>
-                                                 @if($requirement->notes)
-                                                     <div class="text-[11px] text-slate-500 mt-0.5">
-                                                         {{ \Illuminate\Support\Str::limit($requirement->notes, 80) }}
-                                                     </div>
-                                                 @endif
-                                             </td>
-                                             <td class="px-3 py-2">
-                                                 @if($requirement->responsibleOfficer)
-                                                     <span class="text-slate-800">{{ $requirement->responsibleOfficer->name }}</span>
-                                                 @else
-                                                     <span class="text-slate-400">Unassigned</span>
-                                                 @endif
-                                             </td>
-                                             <td class="px-3 py-2">
-                                                 @php
-                                                     $status = $requirement->status;
-                                                 @endphp
-                                                 <span class="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-medium
-                                                     @if($status === 'approved') bg-emerald-100 text-emerald-700
-                                                     @elseif($status === 'submitted') bg-blue-100 text-blue-700
-                                                     @else bg-amber-100 text-amber-700 @endif">
-                                                     {{ ucfirst($status) }}
-                                                 </span>
-                                             </td>
-                                             <td class="px-3 py-2">
-                                                 @if($requirement->due_date)
-                                                     <span class="text-slate-800">
-                                                         {{ $requirement->due_date->format('M d, Y') }}
+                                             <th class="px-3 py-2 text-left font-semibold text-slate-700">Requirement</th>
+                                             <th class="px-3 py-2 text-left font-semibold text-slate-700">Responsible</th>
+                                             <th class="px-3 py-2 text-left font-semibold text-slate-700">Status</th>
+                                             <th class="px-3 py-2 text-left font-semibold text-slate-700">Due</th>
+                                             <th class="px-3 py-2 text-left font-semibold text-slate-700">Last Change</th>
+                                         </tr>
+                                     </thead>
+                                     <tbody class="divide-y divide-slate-100">
+                                         @foreach($loanRequirements as $requirement)
+                                             <tr>
+                                                 <td class="px-3 py-2">
+                                                     <div class="font-medium text-slate-900">{{ $requirement->name }}</div>
+                                                     @if($requirement->notes)
+                                                         <div class="text-[11px] text-slate-500 mt-0.5">
+                                                             {{ \Illuminate\Support\Str::limit($requirement->notes, 80) }}
+                                                         </div>
+                                                     @endif
+                                                 </td>
+                                                 <td class="px-3 py-2">
+                                                     @if($requirement->responsibleOfficer)
+                                                         <span class="text-slate-800">{{ $requirement->responsibleOfficer->name }}</span>
+                                                     @else
+                                                         <span class="text-slate-400">Unassigned</span>
+                                                     @endif
+                                                 </td>
+                                                 <td class="px-3 py-2">
+                                                     @php $status = $requirement->status; @endphp
+                                                     <span class="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-medium
+                                                         @if($status === 'approved') bg-emerald-100 text-emerald-700
+                                                         @elseif($status === 'submitted') bg-blue-100 text-blue-700
+                                                         @else bg-amber-100 text-amber-700 @endif">
+                                                         {{ ucfirst($status) }}
                                                      </span>
-                                                 @else
-                                                     <span class="text-slate-400">Not set</span>
-                                                 @endif
-                                             </td>
-                                             <td class="px-3 py-2 text-slate-500">
-                                                 @if($requirement->approved_at)
-                                                     <span>Approved {{ $requirement->approved_at->diffForHumans() }}</span>
-                                                 @elseif($requirement->submitted_at)
-                                                     <span>Submitted {{ $requirement->submitted_at->diffForHumans() }}</span>
-                                                 @else
-                                                     <span class="text-slate-400">Created {{ $requirement->created_at->diffForHumans() }}</span>
-                                                 @endif
-                                             </td>
-                                         </tr>
-                                     @empty
-                                         <tr>
-                                             <td colspan="5" class="px-3 py-4 text-center text-slate-400">
-                                                 No loan conditions captured yet.
-                                             </td>
-                                         </tr>
-                                     @endforelse
-                                 </tbody>
-                             </table>
-                         </div>
+                                                 </td>
+                                                 <td class="px-3 py-2">
+                                                     @if($requirement->due_date)
+                                                         <span class="text-slate-800">{{ $requirement->due_date->format('M d, Y') }}</span>
+                                                     @else
+                                                         <span class="text-slate-400">Not set</span>
+                                                     @endif
+                                                 </td>
+                                                 <td class="px-3 py-2 text-slate-500">
+                                                     @if($requirement->approved_at)
+                                                         <span>Approved {{ $requirement->approved_at->diffForHumans() }}</span>
+                                                     @elseif($requirement->submitted_at)
+                                                         <span>Submitted {{ $requirement->submitted_at->diffForHumans() }}</span>
+                                                     @else
+                                                         <span class="text-slate-400">Created {{ $requirement->created_at->diffForHumans() }}</span>
+                                                     @endif
+                                                 </td>
+                                             </tr>
+                                         @endforeach
+                                     </tbody>
+                                 </table>
+                             </div>
+                         @endif
 
-                         <div class="bg-slate-50 border border-dashed border-slate-200 rounded-md p-3">
-                             <p class="text-[11px] font-semibold text-slate-700 mb-2">Add New Requirement</p>
-                             <p class="text-[11px] text-slate-500 mb-2">
-                                 Use this project edit form to capture new conditions; in a later step we can add inline create/update actions.
+                         <div class="mb-4">
+                             <p class="text-[11px] font-semibold text-slate-700 mb-2">Add New Requirements</p>
+                             <div class="overflow-x-auto">
+                                 <table class="min-w-full text-xs">
+                                     <thead class="bg-slate-50 border border-slate-100">
+                                         <tr>
+                                             <th class="px-3 py-2 text-left font-semibold text-slate-700">Requirement</th>
+                                             <th class="px-3 py-2 text-left font-semibold text-slate-700">Responsible Officer</th>
+                                             <th class="px-3 py-2 text-left font-semibold text-slate-700">Due Date</th>
+                                             <th class="px-3 py-2 text-left font-semibold text-slate-700">Notes</th>
+                                         </tr>
+                                     </thead>
+                                     <tbody class="divide-y divide-slate-100">
+                                         @for($i = 0; $i < 3; $i++)
+                                             <tr>
+                                                 <td class="px-3 py-2">
+                                                     <input type="text"
+                                                            name="requirements[{{ $i }}][name]"
+                                                            value="{{ old('requirements.'.$i.'.name') }}"
+                                                            placeholder="e.g. Insurance cover, Land title charge"
+                                                            class="border border-slate-200 rounded w-full px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                                 </td>
+                                                 <td class="px-3 py-2">
+                                                     <select name="requirements[{{ $i }}][responsible_user_id]"
+                                                             class="border border-slate-200 rounded w-full px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                                         <option value="">Select officer</option>
+                                                         @foreach($officers as $officer)
+                                                             <option value="{{ $officer->id }}"
+                                                                 {{ old('requirements.'.$i.'.responsible_user_id') == $officer->id ? 'selected' : '' }}>
+                                                                 {{ $officer->name }}
+                                                             </option>
+                                                         @endforeach
+                                                     </select>
+                                                 </td>
+                                                 <td class="px-3 py-2">
+                                                     <input type="date"
+                                                            name="requirements[{{ $i }}][due_date]"
+                                                            value="{{ old('requirements.'.$i.'.due_date') }}"
+                                                            class="border border-slate-200 rounded w-full px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                                 </td>
+                                                 <td class="px-3 py-2">
+                                                     <input type="text"
+                                                            name="requirements[{{ $i }}][notes]"
+                                                            value="{{ old('requirements.'.$i.'.notes') }}"
+                                                            placeholder="Optional notes / reference to documents"
+                                                            class="border border-slate-200 rounded w-full px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                                 </td>
+                                             </tr>
+                                         @endfor
+                                     </tbody>
+                                 </table>
+                             </div>
+                             <p class="mt-2 text-[11px] text-slate-500">
+                                 Leave blank if you don't want to add new requirements. Existing requirements are shown above.
                              </p>
-                             <ul class="list-disc list-inside text-[11px] text-slate-500">
-                                 <li>Examples: Insurance cover, Land title charge, Business registration, Bank statements, Milestone sign-offs, Financial reports.</li>
-                                 <li>Each requirement should have a clear owner, due date, and status.</li>
-                                 <li>Upload supporting documents under Documents and reference them in the notes.</li>
-                             </ul>
                          </div>
                      </div>
                  @endif
@@ -491,6 +458,127 @@
                                        class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
                                        placeholder="e.g., 1.2 (NOI / debt service)">
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Expenses & Assets Checklist --}}
+                <div class="md:col-span-2 mt-6 pt-6 border-t border-slate-100">
+                    <h3 class="text-xs font-semibold text-slate-900 mb-2">Expenses & Assets Tracking (What to plan for)</h3>
+                    <p class="text-[11px] text-slate-500 mb-3">
+                        When you activate this project, make sure key expenses and acquired assets are recorded so partners see real numbers, not guesses.
+                    </p>
+
+                    <div class="grid md:grid-cols-2 gap-4 text-[11px] text-slate-600">
+                        <div class="bg-slate-50 border border-dashed border-slate-200 rounded-md p-3">
+                            <p class="font-semibold text-slate-800 mb-1">Expenses to record (via Financial module)</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Purchases (stock, materials, equipment)</li>
+                                <li>Construction or setup costs</li>
+                                <li>Logistics & shipping</li>
+                                <li>Taxes & statutory fees</li>
+                                <li>Operating expenses (rent, salaries, utilities)</li>
+                                <li>Attach receipts / invoices under financial records.</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-slate-50 border border-dashed border-slate-200 rounded-md p-3">
+                            <p class="font-semibold text-slate-800 mb-1">Assets to capture (via Project Assets)</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Land parcels or buildings (with title documents)</li>
+                                <li>Opening stock / inventory</li>
+                                <li>Key equipment or fixtures</li>
+                                <li>Acquisition cost & date acquired</li>
+                                <li>Current estimated value</li>
+                                <li>Attach supporting documents (title deed, invoices).</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <p class="mt-3 text-[11px] text-slate-500">
+                        Use the Financial and Project Assets sections to link all expenses and assets back to this project.
+                    </p>
+                </div>
+
+                {{-- Advanced Settings --}}
+                <div class="md:col-span-2 mt-6 pt-6 border-t border-slate-100">
+                    <h3 class="text-xs font-semibold text-slate-900 mb-2">Advanced Settings</h3>
+                    <p class="text-[11px] text-slate-500 mb-3">
+                        Optional configuration for display and navigation.
+                    </p>
+
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="slug" class="block text-xs font-semibold text-slate-700 mb-1">
+                                Slug
+                            </label>
+                            <input type="text" id="slug" name="slug" value="{{ old('slug', $project->slug) }}"
+                                   class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            @error('slug')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="color" class="block text-xs font-semibold text-slate-700 mb-1">
+                                Color Theme <span class="text-red-500">*</span>
+                            </label>
+                            <select id="color" name="color" required
+                                    class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                <option value="emerald" {{ old('color', $project->color) === 'emerald' ? 'selected' : '' }}>Emerald</option>
+                                <option value="blue" {{ old('color', $project->color) === 'blue' ? 'selected' : '' }}>Blue</option>
+                                <option value="amber" {{ old('color', $project->color) === 'amber' ? 'selected' : '' }}>Amber</option>
+                                <option value="purple" {{ old('color', $project->color) === 'purple' ? 'selected' : '' }}>Purple</option>
+                                <option value="red" {{ old('color', $project->color) === 'red' ? 'selected' : '' }}>Red</option>
+                                <option value="indigo" {{ old('color', $project->color) === 'indigo' ? 'selected' : '' }}>Indigo</option>
+                            </select>
+                            @error('color')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="url" class="block text-xs font-semibold text-slate-700 mb-1">
+                                External URL
+                            </label>
+                            <input type="url" id="url" name="url" value="{{ old('url', $project->url) }}"
+                                   class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            @error('url')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="route_name" class="block text-xs font-semibold text-slate-700 mb-1">
+                                Laravel Route Name
+                            </label>
+                            <input type="text" id="route_name" name="route_name" value="{{ old('route_name', $project->route_name) }}"
+                                   class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            @error('route_name')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="icon" class="block text-xs font-semibold text-slate-700 mb-1">
+                                Icon Class (FontAwesome)
+                            </label>
+                            <input type="text" id="icon" name="icon" value="{{ old('icon', $project->icon) }}"
+                                   class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            @error('icon')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="sort_order" class="block text-xs font-semibold text-slate-700 mb-1">
+                                Sort Order
+                            </label>
+                            <input type="number" id="sort_order" name="sort_order" value="{{ old('sort_order', $project->sort_order) }}" min="0"
+                                   class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            @error('sort_order')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
                 </div>

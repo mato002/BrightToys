@@ -34,8 +34,13 @@
                 <option value="agreement" {{ old('type') === 'agreement' ? 'selected' : '' }}>Agreement</option>
                 <option value="report" {{ old('type') === 'report' ? 'selected' : '' }}>Report</option>
                 <option value="policy" {{ old('type') === 'policy' ? 'selected' : '' }}>Policy</option>
+                <option value="meeting_minutes" {{ old('type') === 'meeting_minutes' ? 'selected' : '' }}>Meeting Minutes</option>
+                <option value="resolution" {{ old('type') === 'resolution' ? 'selected' : '' }}>Resolution</option>
                 <option value="other" {{ old('type') === 'other' ? 'selected' : '' }}>Other</option>
             </select>
+            <p class="text-[10px] text-slate-500 mt-1">
+                Use "Meeting Minutes" or "Resolution" for member approval documents.
+            </p>
         </div>
 
         <div>

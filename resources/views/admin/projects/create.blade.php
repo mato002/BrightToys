@@ -64,12 +64,7 @@
                         <option value="">Select type</option>
                         @foreach($types as $type)
                             <option value="{{ $type }}" {{ old('type', 'ecommerce') === $type ? 'selected' : '' }}>
-                                @if($type === 'land') Land / Real Estate
-                                @elseif($type === 'business') Business
-                                @elseif($type === 'trading') Trading / Imports
-                                @elseif($type === 'other') Other
-                                @else E-Commerce
-                                @endif
+                                {{ \App\Models\Project::getTypeLabel($type) }}
                             </option>
                         @endforeach
                     </select>

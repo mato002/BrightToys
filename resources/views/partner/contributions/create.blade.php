@@ -68,6 +68,21 @@
                         </p>
                     </div>
 
+                    <div id="fund_type_wrapper">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                            Account / Fund Type <span class="text-red-500">*</span>
+                        </label>
+                        <select name="fund_type"
+                                class="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                            <option value="investment" {{ old('fund_type', 'investment') === 'investment' ? 'selected' : '' }}>Investment Account</option>
+                            <option value="welfare" {{ old('fund_type') === 'welfare' ? 'selected' : '' }}>Welfare Account</option>
+                        </select>
+                        <p class="text-xs text-slate-500 mt-2">
+                            Choose whether this contribution goes to your <strong>Investment</strong> account or the <strong>Welfare</strong> fund.
+                            Withdrawals always reduce your overall balance and are not tagged to a fund.
+                        </p>
+                    </div>
+
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
                             Amount <span class="text-red-500">*</span>

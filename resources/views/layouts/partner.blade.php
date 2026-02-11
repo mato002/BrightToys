@@ -270,6 +270,16 @@
                             </span>
                             <span class="font-medium sidebar-label">Documents</span>
                         </a>
+                        <a href="{{ route('partner.voting.index') }}" class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('partner.voting.*') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                            <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M8 12h8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M12 8v8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <span class="font-medium sidebar-label">Voting</span>
+                        </a>
                         <a href="{{ route('partner.activity') }}" class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('partner.activity*') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
                             <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">

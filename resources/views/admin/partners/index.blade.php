@@ -53,6 +53,19 @@
             </div>
         </div>
 
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-3">
+            <div>
+                <label class="block text-[11px] font-medium text-slate-600 mb-1">Onboarding state</label>
+                <select name="onboarding"
+                        class="border border-slate-200 rounded w-full px-2 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500">
+                    <option value="">All</option>
+                    <option value="link_active" {{ request('onboarding') === 'link_active' ? 'selected' : '' }}>Link active</option>
+                    <option value="expired" {{ request('onboarding') === 'expired' ? 'selected' : '' }}>Link expired</option>
+                    <option value="completed" {{ request('onboarding') === 'completed' ? 'selected' : '' }}>Onboarding completed</option>
+                </select>
+            </div>
+        </div>
+
         <div class="mt-3 flex items-center gap-2">
             <button type="submit"
                     class="inline-flex items-center px-3 py-2 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold">
@@ -81,6 +94,7 @@
                         <th class="px-4 py-3 text-left text-xs font-semibold text-slate-700">Ownership</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-slate-700">Linked User</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-slate-700">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-700">Onboarding</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-slate-700">Actions</th>
                     </tr>
                 </thead>
@@ -124,6 +138,22 @@
                                     {{ ucfirst($partner->status) }}
                                 </span>
                             </td>
+                            <td class="px-4 py-3 text-xs text-slate-600">
+                                @if($partner->biodata_completed_at)
+                                    <span class="text-emerald-600">Biodata completed {{ $partner->biodata_completed_at->diffForHumans() }}</span>
+                                @elseif($partner->onboarding_token && $partner->onboarding_token_expires_at && $partner->onboarding_token_expires_at->isFuture())
+                                    <button type="button"
+                                            class="text-emerald-600 hover:text-emerald-700 underline"
+                                            onclick="navigator.clipboard.writeText('{{ url('/onboarding/'.$partner->onboarding_token) }}'); alert('Onboarding link copied to clipboard!');">
+                                        Copy link
+                                    </button>
+                                    <div class="text-[10px] text-slate-500 mt-1">Expires {{ $partner->onboarding_token_expires_at->diffForHumans() }}</div>
+                                @elseif($partner->onboarding_token && $partner->onboarding_token_expires_at && $partner->onboarding_token_expires_at->isPast())
+                                    <span class="text-red-600">Link expired</span>
+                                @else
+                                    <span class="text-slate-400">—</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2">
                                     <a href="{{ route('admin.partners.show', $partner) }}"
@@ -135,7 +165,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-4 py-8 text-center text-slate-500 text-sm">
+                            <td colspan="6" class="px-4 py-8 text-center text-slate-500 text-sm">
                                 No partners found.
                             </td>
                         </tr>

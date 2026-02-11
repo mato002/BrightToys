@@ -7,13 +7,9 @@
             <div>
                 <h1 class="text-lg font-semibold">Projects</h1>
                 <p class="text-xs text-slate-500">
-                    Access and manage all partnership projects including the e-commerce platform.
+                    View all partnership projects including the e-commerce platform. Project management is handled by administration.
                 </p>
             </div>
-            <a href="{{ route('partner.projects.manage') }}"
-               class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-4 py-2 rounded-lg">
-                Manage My Projects
-            </a>
         </div>
     </div>
 
@@ -63,11 +59,6 @@
                                         @if($project->description)
                                             <p class="text-[11px] text-slate-500 line-clamp-1">{{ $project->description }}</p>
                                         @endif
-                                        @if($isMyProject)
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100 mt-1">
-                                                My Project
-                                            </span>
-                                        @endif
                                     </div>
                                 </div>
                             </td>
@@ -96,20 +87,14 @@
                                        class="inline-flex items-center px-2 py-1 rounded border border-slate-200 text-slate-600 hover:bg-slate-50">
                                         View
                                     </a>
-                                    @if($isMyProject)
-                                        <a href="{{ route('partner.projects.manage.edit', $project) }}"
-                                           class="inline-flex items-center px-2 py-1 rounded bg-amber-500 hover:bg-amber-600 text-white">
-                                            Edit
-                                        </a>
-                                        <a href="{{ route('partner.projects.performance', $project) }}"
-                                           class="inline-flex items-center px-2 py-1 rounded bg-emerald-500 hover:bg-emerald-600 text-white">
-                                            Perf.
-                                        </a>
-                                        <a href="{{ route('partner.projects.finances', $project) }}"
-                                           class="inline-flex items-center px-2 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white">
-                                            Finances
-                                        </a>
-                                    @endif
+                                    <a href="{{ route('partner.projects.performance', $project) }}"
+                                       class="inline-flex items-center px-2 py-1 rounded bg-emerald-500 hover:bg-emerald-600 text-white">
+                                        Perf.
+                                    </a>
+                                    <a href="{{ route('partner.projects.finances', $project) }}"
+                                       class="inline-flex items-center px-2 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white">
+                                        Finances
+                                    </a>
                                     @if($project->url || $project->route_name)
                                         <a href="{{ route('partner.projects.redirect', $project) }}" target="_blank"
                                            class="inline-flex items-center px-2 py-1 rounded border border-slate-200 text-slate-600 hover:bg-slate-50">

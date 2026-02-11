@@ -76,7 +76,7 @@ class ProjectAssetController extends Controller
         ActivityLogService::log('project_asset_created', $asset, $data);
 
         return redirect()
-            ->route('partner.projects.finances', $asset->project_id)
+            ->route('admin.projects.show', $asset->project_id)
             ->with('success', 'Project asset recorded successfully.');
     }
 
@@ -134,7 +134,7 @@ class ProjectAssetController extends Controller
         ActivityLogService::log('project_asset_updated', $projectAsset, $data);
 
         return redirect()
-            ->route('partner.projects.finances', $projectAsset->project_id)
+            ->route('admin.projects.show', $projectAsset->project_id)
             ->with('success', 'Project asset updated successfully.');
     }
 
@@ -153,7 +153,7 @@ class ProjectAssetController extends Controller
         $projectAsset->delete();
 
         return redirect()
-            ->route('partner.projects.finances', $projectId)
+            ->route('admin.projects.show', $projectId)
             ->with('success', 'Project asset deleted successfully.');
     }
 }

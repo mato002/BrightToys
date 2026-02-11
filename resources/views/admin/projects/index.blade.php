@@ -64,7 +64,7 @@
                                     </div>
                                 @endif
                             </td>
-                            <td class="px-4 py-3 text-slate-600 capitalize">{{ $project->type }}</td>
+                            <td class="px-4 py-3 text-slate-600">{{ \App\Models\Project::getTypeLabel($project->type) }}</td>
                             <td class="px-4 py-3 text-xs text-slate-600">
                                 @if($project->creator)
                                     <span class="font-medium">{{ $project->creator->name }}</span>

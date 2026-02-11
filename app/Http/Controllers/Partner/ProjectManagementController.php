@@ -13,10 +13,25 @@ use Illuminate\Support\Str;
 class ProjectManagementController extends Controller
 {
     /**
+     * Restrict access to admins only.
+     * Partners can no longer create/manage projects - this is handled by admins only.
+     */
+    protected function ensureAdmin()
+    {
+        $user = Auth::user();
+        if (!$user->is_admin || (!$user->isSuperAdmin() && !$user->hasAdminRole('finance_admin') && !$user->hasAdminRole('chairman'))) {
+            abort(403, 'Only administrators can manage projects. Partners can view projects only.');
+        }
+    }
+
+    /**
      * Display a listing of projects created by the partner.
+     * NOTE: This controller is deprecated for partners. Project management is now admin-only.
      */
     public function index()
     {
+        $this->ensureAdmin();
+        
         $user = Auth::user();
         $partner = $user->partner;
 
@@ -35,9 +50,12 @@ class ProjectManagementController extends Controller
 
     /**
      * Show the form for creating a new project.
+     * NOTE: This is now admin-only. Partners cannot create projects.
      */
     public function create()
     {
+        $this->ensureAdmin();
+        
         $user = Auth::user();
         $partner = $user->partner;
 
@@ -55,9 +73,12 @@ class ProjectManagementController extends Controller
 
     /**
      * Store a newly created project.
+     * NOTE: This is now admin-only. Partners cannot create projects.
      */
     public function store(Request $request)
     {
+        $this->ensureAdmin();
+        
         $user = Auth::user();
         $partner = $user->partner;
 
@@ -122,15 +143,18 @@ class ProjectManagementController extends Controller
             'created_by_partner' => $partner->name,
         ]);
 
-        return redirect()->route('partner.projects.manage')
+        return redirect()->route('admin.projects.index')
             ->with('success', 'Project created successfully.');
     }
 
     /**
      * Show the form for editing the specified project.
+     * NOTE: This is now admin-only. Partners cannot edit projects.
      */
     public function edit(Project $project)
     {
+        $this->ensureAdmin();
+        
         $user = Auth::user();
         $partner = $user->partner;
 
@@ -155,9 +179,12 @@ class ProjectManagementController extends Controller
 
     /**
      * Update the specified project.
+     * NOTE: This is now admin-only. Partners cannot update projects.
      */
     public function update(Request $request, Project $project)
     {
+        $this->ensureAdmin();
+        
         $user = Auth::user();
         $partner = $user->partner;
 
@@ -216,15 +243,18 @@ class ProjectManagementController extends Controller
             'updated_by_partner' => $partner->name,
         ]);
 
-        return redirect()->route('partner.projects.manage')
+        return redirect()->route('admin.projects.index')
             ->with('success', 'Project updated successfully.');
     }
 
     /**
      * Remove the specified project.
+     * NOTE: This is now admin-only. Partners cannot delete projects.
      */
     public function destroy(Project $project)
     {
+        $this->ensureAdmin();
+        
         $user = Auth::user();
         $partner = $user->partner;
 
@@ -243,7 +273,7 @@ class ProjectManagementController extends Controller
 
         $project->delete();
 
-        return redirect()->route('partner.projects.manage')
+        return redirect()->route('admin.projects.index')
             ->with('success', 'Project deleted successfully.');
     }
 }

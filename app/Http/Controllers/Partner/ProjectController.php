@@ -33,13 +33,9 @@ class ProjectController extends Controller
 
         $project->load(['creator', 'assignedUsers']);
 
-        $user = auth()->user();
-        $partner = $user?->partner;
-        $isMyProject = $partner && $project->created_by === $partner->id;
-
-        // Always show an internal details page in the partner layout.
-        // Public / front-end view is handled via the dedicated redirect route.
-        return view('partner.projects.show', compact('project', 'isMyProject'));
+        // Partners can only view projects, not manage them
+        // Project management is handled by admins only
+        return view('partner.projects.show', compact('project'));
     }
 
     /**
@@ -54,7 +50,7 @@ class ProjectController extends Controller
         // If project has no URL yet, redirect to project details page
         if (!$project->url && !$project->route_name) {
             return redirect()->route('partner.projects.show', $project)
-                ->with('info', 'This project is not yet developed. Add a URL when it\'s ready.');
+                ->with('info', 'This project is not yet developed. Contact management when it\'s ready.');
         }
 
         return redirect($project->project_url);

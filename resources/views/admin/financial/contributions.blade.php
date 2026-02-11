@@ -72,6 +72,15 @@
                               class="border border-slate-200 rounded w-full px-3 py-2 text-sm"></textarea>
                 </div>
             </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1 text-slate-700">Fund Type (for contributions)</label>
+                    <select name="fund_type"
+                            class="border border-slate-200 rounded w-full px-3 py-2 text-sm">
+                        <option value="investment" selected>Investment</option>
+                        <option value="welfare">Welfare</option>
+                    </select>
+                </div>
+            </div>
             <div class="flex gap-2 pt-2">
                 <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-4 py-2 rounded">
                     Record Contribution
@@ -84,13 +93,24 @@
         </form>
     </div>
 
-    <form method="GET" class="mb-4 bg-white border border-slate-100 rounded-lg p-3 text-xs">
-        <select name="status" class="border border-slate-200 rounded px-3 py-2 text-sm">
-            <option value="">All Statuses</option>
-            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
-            <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
-            <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
-        </select>
+    <form method="GET" class="mb-4 bg-white border border-slate-100 rounded-lg p-3 text-xs flex flex-wrap gap-2 items-center">
+        <div>
+            <label class="block text-[10px] font-semibold mb-1 text-slate-700">Status</label>
+            <select name="status" class="border border-slate-200 rounded px-3 py-2 text-sm">
+                <option value="">All Statuses</option>
+                <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
+                <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-[10px] font-semibold mb-1 text-slate-700">Fund Type</label>
+            <select name="fund_type" class="border border-slate-200 rounded px-3 py-2 text-sm">
+                <option value="">All</option>
+                <option value="investment" {{ request('fund_type') === 'investment' ? 'selected' : '' }}>Investment</option>
+                <option value="welfare" {{ request('fund_type') === 'welfare' ? 'selected' : '' }}>Welfare</option>
+            </select>
+        </div>
         <button type="submit" class="ml-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded text-xs">
             Filter
         </button>

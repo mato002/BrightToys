@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Partner;
 use App\Models\PartnerContribution;
 use App\Services\ActivityLogService;
+use App\Services\ApprovalService;
+use App\Services\WalletService;
 use Illuminate\Http\Request;
 
 class PartnerContributionController extends Controller
@@ -34,6 +36,11 @@ class PartnerContributionController extends Controller
         // Filter by type
         if ($type = request('type')) {
             $query->where('type', $type);
+        }
+
+        // Filter by fund type (welfare / investment)
+        if ($fundType = request('fund_type')) {
+            $query->where('fund_type', $fundType);
         }
 
         // Filter by status
@@ -77,6 +84,7 @@ class PartnerContributionController extends Controller
         $validated = $request->validate([
             'partner_id' => ['required', 'exists:partners,id'],
             'type' => ['required', 'in:contribution,withdrawal,profit_distribution'],
+            'fund_type' => ['required_if:type,contribution', 'in:welfare,investment'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'currency' => ['nullable', 'string', 'max:3'],
             'contributed_at' => ['required', 'date'],
@@ -87,6 +95,9 @@ class PartnerContributionController extends Controller
         $contribution = PartnerContribution::create([
             'partner_id' => $validated['partner_id'],
             'type' => $validated['type'],
+            'fund_type' => $validated['type'] === 'contribution'
+                ? ($validated['fund_type'] ?? 'investment')
+                : 'investment',
             'amount' => $validated['amount'],
             'currency' => $validated['currency'] ?? 'KES',
             'contributed_at' => $validated['contributed_at'],
@@ -95,6 +106,9 @@ class PartnerContributionController extends Controller
             'status' => 'pending',
             'created_by' => auth()->id(),
         ]);
+
+        // Ensure approval workflow exists for this contribution
+        ApprovalService::ensureApproval('contribution.approve', $contribution, auth()->user());
 
         ActivityLogService::log('contribution_created', $contribution, $validated);
 
@@ -113,23 +127,40 @@ class PartnerContributionController extends Controller
     {
         $this->checkFinancePermission();
 
+        $user = auth()->user();
+        if (! $user->hasPermission('contributions.approve')) {
+            abort(403, 'You do not have permission to approve contributions.');
+        }
+
         if ($contribution->status !== 'pending') {
             return redirect()->back()
                 ->with('error', 'Only pending contributions can be approved.');
         }
 
-        $contribution->update([
-            'status' => 'approved',
-            'approved_by' => auth()->id(),
-            'approved_at' => now(),
-        ]);
+        // Use approval workflow (treasurer + chairman, etc.)
+        $approval = ApprovalService::ensureApproval('contribution.approve', $contribution, $contribution->creator);
+        $approval = ApprovalService::approve($user, $approval, $request->input('comment'));
 
-        ActivityLogService::log('contribution_approved', $contribution, [
-            'approved_by' => auth()->user()->name,
-        ]);
+        if ($approval->status === 'approved') {
+            $contribution->update([
+                'status' => 'approved',
+                'approved_by' => $user->id,
+                'approved_at' => now(),
+            ]);
+
+            // Post to member wallets / ledger
+            WalletService::applyContribution($contribution);
+
+            ActivityLogService::log('contribution_approved', $contribution, [
+                'approved_by' => $user->name,
+            ]);
+
+            return redirect()->back()
+                ->with('success', 'Contribution approved successfully.');
+        }
 
         return redirect()->back()
-            ->with('success', 'Contribution approved successfully.');
+            ->with('success', 'Your approval has been recorded. Waiting for additional approvers.');
     }
 
     public function reject(Request $request, PartnerContribution $contribution)

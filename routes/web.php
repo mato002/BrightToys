@@ -147,10 +147,41 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // Partnership Management
     Route::resource('partners', \App\Http\Controllers\Admin\PartnerController::class);
     
+    // Entry Contribution Payments
+    Route::post('/entry-contributions/{entryContribution}/payments', [\App\Http\Controllers\Admin\EntryContributionPaymentController::class, 'store'])
+        ->name('entry-contributions.payments.store');
+    Route::post('/installments/{installment}/payment', [\App\Http\Controllers\Admin\EntryContributionPaymentController::class, 'recordInstallmentPayment'])
+        ->name('installments.payment.record');
+    
+    // Payment Reminders
+    Route::get('/payment-reminders', [\App\Http\Controllers\Admin\PaymentReminderController::class, 'index'])
+        ->name('payment-reminders.index');
+    
+    // Penalty Rates Management
+    Route::resource('penalty-rates', \App\Http\Controllers\Admin\PenaltyRateController::class)->except(['show', 'destroy']);
+    Route::post('/penalty-rates/{penaltyRate}/activate', [\App\Http\Controllers\Admin\PenaltyRateController::class, 'activate'])
+        ->name('penalty-rates.activate');
+    
+    // Penalty Adjustments (manual penalties, waivers, pauses)
+    Route::get('/penalties', [\App\Http\Controllers\Admin\PenaltyAdjustmentController::class, 'index'])->name('penalties.index');
+    Route::get('/penalties/create', [\App\Http\Controllers\Admin\PenaltyAdjustmentController::class, 'create'])->name('penalties.create');
+    Route::post('/penalties', [\App\Http\Controllers\Admin\PenaltyAdjustmentController::class, 'store'])->name('penalties.store');
+    Route::post('/penalties/{penaltyAdjustment}/approve', [\App\Http\Controllers\Admin\PenaltyAdjustmentController::class, 'approve'])->name('penalties.approve');
+    Route::post('/penalties/{penaltyAdjustment}/reject', [\App\Http\Controllers\Admin\PenaltyAdjustmentController::class, 'reject'])->name('penalties.reject');
+    
     // Projects Management
     Route::resource('projects', \App\Http\Controllers\Admin\ProjectController::class);
     Route::post('/projects/{project}/activate', [\App\Http\Controllers\Admin\ProjectController::class, 'activate'])
         ->name('projects.activate');
+    Route::post('/projects/{project}/sync-metrics', [\App\Http\Controllers\Admin\ProjectController::class, 'syncMetrics'])
+        ->name('projects.sync-metrics');
+
+    // Voting Topics (Chairperson)
+    Route::resource('voting-topics', \App\Http\Controllers\Admin\VotingTopicController::class);
+    Route::post('/voting-topics/{votingTopic}/open', [\App\Http\Controllers\Admin\VotingTopicController::class, 'open'])
+        ->name('voting-topics.open');
+    Route::post('/voting-topics/{votingTopic}/close', [\App\Http\Controllers\Admin\VotingTopicController::class, 'close'])
+        ->name('voting-topics.close');
 
     // Project Assets (per-project investments like land, stock, equipment)
     Route::resource('project-assets', \App\Http\Controllers\Admin\ProjectAssetController::class)
@@ -208,20 +239,12 @@ Route::prefix('partner')->name('partner.')->middleware(['auth', 'partner'])->gro
     Route::post('/contributions', [\App\Http\Controllers\Partner\DashboardController::class, 'storeContribution'])->name('contributions.store');
     Route::get('/earnings', [\App\Http\Controllers\Partner\DashboardController::class, 'earnings'])->name('earnings');
     
-    // Projects (viewing)
+    // Projects (view-only for partners - management is done by admins)
     Route::get('/projects', [\App\Http\Controllers\Partner\ProjectController::class, 'index'])->name('projects.index');
     Route::get('/projects/{project}', [\App\Http\Controllers\Partner\ProjectController::class, 'show'])->name('projects.show');
     Route::get('/projects/{project}/redirect', [\App\Http\Controllers\Partner\ProjectController::class, 'redirect'])->name('projects.redirect');
     
-    // Project Management (partners create/manage projects)
-    Route::get('/projects-manage', [\App\Http\Controllers\Partner\ProjectManagementController::class, 'index'])->name('projects.manage');
-    Route::get('/projects-manage/create', [\App\Http\Controllers\Partner\ProjectManagementController::class, 'create'])->name('projects.manage.create');
-    Route::post('/projects-manage', [\App\Http\Controllers\Partner\ProjectManagementController::class, 'store'])->name('projects.manage.store');
-    Route::get('/projects-manage/{project}/edit', [\App\Http\Controllers\Partner\ProjectManagementController::class, 'edit'])->name('projects.manage.edit');
-    Route::put('/projects-manage/{project}', [\App\Http\Controllers\Partner\ProjectManagementController::class, 'update'])->name('projects.manage.update');
-    Route::delete('/projects-manage/{project}', [\App\Http\Controllers\Partner\ProjectManagementController::class, 'destroy'])->name('projects.manage.destroy');
-    
-    // Project Performance & Finances (partners view their projects)
+    // Project Performance & Finances (partners can view their projects)
     Route::get('/projects/{project}/performance', [\App\Http\Controllers\Partner\ProjectPerformanceController::class, 'show'])->name('projects.performance');
     Route::get('/projects/{project}/finances', [\App\Http\Controllers\Partner\ProjectPerformanceController::class, 'finances'])->name('projects.finances');
     
@@ -229,6 +252,12 @@ Route::prefix('partner')->name('partner.')->middleware(['auth', 'partner'])->gro
     Route::get('/documents/{document}/download', [\App\Http\Controllers\Partner\DocumentController::class, 'download'])->name('documents.download');
     Route::get('/activity', [\App\Http\Controllers\Partner\ActivityController::class, 'index'])->name('activity');
     Route::get('/profile', [\App\Http\Controllers\Partner\ProfileController::class, 'index'])->name('profile');
+    Route::put('/profile', [\App\Http\Controllers\Partner\ProfileController::class, 'update'])->name('profile.update');
     Route::get('/reports', [\App\Http\Controllers\Partner\DashboardController::class, 'reports'])->name('reports');
+
+    // Weighted Voting (partners)
+    Route::get('/voting', [\App\Http\Controllers\Partner\VotingController::class, 'index'])->name('voting.index');
+    Route::get('/voting/{votingTopic}', [\App\Http\Controllers\Partner\VotingController::class, 'show'])->name('voting.show');
+    Route::post('/voting/{votingTopic}', [\App\Http\Controllers\Partner\VotingController::class, 'store'])->name('voting.store');
 });
 

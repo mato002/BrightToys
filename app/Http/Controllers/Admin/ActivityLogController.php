@@ -9,23 +9,24 @@ use Illuminate\Http\Request;
 class ActivityLogController extends Controller
 {
     /**
-     * Check if user has permission to access activity logs (view only for partners).
+     * Check if user has permission to access activity logs.
+     * Logs are view-only and restricted to oversight roles.
      */
-    protected function checkPermission($allowPartners = false)
+    protected function checkPermission(): void
     {
         $user = auth()->user();
-        if ($allowPartners && $user->is_partner) {
-            return; // Partners can view
-        }
-        // Restrict to Super Admin and Finance Admin only
-        if (! $user->isSuperAdmin() && ! $user->hasAdminRole('finance_admin')) {
+
+        // Oversight roles only: Super Admin, Finance Admin, Chairman
+        if (! $user->isSuperAdmin()
+            && ! $user->hasAdminRole('finance_admin')
+            && ! $user->hasAdminRole('chairman')) {
             abort(403, 'You do not have permission to access this resource.');
         }
     }
 
     public function index()
     {
-        $this->checkPermission(true); // Allow partners to view
+        $this->checkPermission();
 
         $query = ActivityLog::with(['user']);
 
@@ -58,7 +59,7 @@ class ActivityLogController extends Controller
 
     public function show(ActivityLog $activityLog)
     {
-        $this->checkPermission(true); // Allow partners to view
+        $this->checkPermission();
         $activityLog->load(['user']);
         return view('admin.activity-logs.show', compact('activityLog'));
     }
