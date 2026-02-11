@@ -157,7 +157,12 @@ class FinancialRecordController extends Controller
     {
         $this->checkFinancePermission(true); // Allow partners to view
         $financialRecord->load(['order', 'partner', 'creator', 'approver', 'archiver', 'documents.uploader']);
-        return view('admin.financial.show', compact('financialRecord'));
+
+        // The Blade view expects a $financial variable (for backward compatibility),
+        // so we pass the model under that name.
+        $financial = $financialRecord;
+
+        return view('admin.financial.show', compact('financial'));
     }
 
     public function approve(Request $request, FinancialRecord $financialRecord)
