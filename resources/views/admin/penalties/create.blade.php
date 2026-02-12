@@ -16,7 +16,7 @@
     </div>
 
     <form action="{{ route('admin.penalties.store') }}" method="POST"
-          class="bg-white border border-slate-100 rounded-lg p-6 text-sm space-y-4 shadow-sm max-w-xl">
+          class="bg-white border border-slate-100 rounded-lg p-6 text-sm space-y-4 shadow-sm max-w-3xl w-full">
         @csrf
 
         @if($errors->any())

@@ -14,7 +14,7 @@
     </div>
 
     <form action="{{ route('admin.financial.store') }}" method="POST" enctype="multipart/form-data" 
-          class="bg-white border border-slate-100 rounded-lg p-4 text-sm space-y-4 shadow-sm max-w-2xl">
+          class="bg-white border border-slate-100 rounded-lg p-4 text-sm space-y-4 shadow-sm max-w-4xl w-full">
         @csrf
         
         @if($errors->any())

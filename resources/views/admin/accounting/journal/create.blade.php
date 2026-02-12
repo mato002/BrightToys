@@ -17,7 +17,7 @@
     </div>
 
     <form action="{{ route('admin.accounting.journal.store') }}" method="POST" id="journal-form"
-          class="bg-white border border-slate-100 rounded-lg p-6 text-sm space-y-4 shadow-sm max-w-3xl">
+          class="bg-white border border-slate-100 rounded-lg p-6 text-sm space-y-4 shadow-sm max-w-5xl w-full">
         @csrf
         
         @if($errors->any())

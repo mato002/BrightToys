@@ -16,7 +16,7 @@
         </div>
     </div>
 
-    <div class="bg-white border border-slate-100 rounded-lg p-4 text-sm mb-4 max-w-2xl">
+    <div class="bg-white border border-slate-100 rounded-lg p-4 text-sm mb-4 max-w-5xl w-full">
         <form method="GET" class="grid md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-xs font-semibold mb-1 text-slate-700">Ledger Account to Run</label>
