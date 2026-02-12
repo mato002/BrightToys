@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'About Us - BrightToys')
+@section('title', 'About Us - Otto Investments')
 
 @section('content')
     {{-- Hero section --}}
@@ -12,7 +12,7 @@
         <div class="absolute inset-0 bg-gradient-to-br from-pink-100/80 via-amber-50/80 to-sky-100/80"></div>
         
         <div class="container mx-auto px-4 lg:px-8 text-center relative z-10">
-            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-3">Welcome to BrightToys</h1>
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-3">Welcome to Otto Investments</h1>
             <p class="text-base md:text-lg text-slate-600 max-w-2xl mx-auto">
                 Kenya's trusted destination for safe, fun, and educational toys that spark imagination and support every child's growth journey.
             </p>
@@ -28,7 +28,7 @@
                     <h2 class="text-2xl font-bold text-slate-900 mb-4">Our Story</h2>
                     <div class="space-y-4 text-sm md:text-base text-slate-700 leading-relaxed">
                         <p>
-                            BrightToys was born from a simple belief: every child deserves access to high-quality toys that are not just fun, but also safe, age-appropriate, and designed to support their development.
+                            Otto Investments is dedicated to providing transparent investment management and partnership opportunities with clear financial tracking and reporting.
                         </p>
                         <p>
                             Founded in Kenya, we understand the unique needs of families across the country. We carefully curate our collection, working with trusted brands and suppliers to bring you toys that meet international safety standards while celebrating the joy of play.

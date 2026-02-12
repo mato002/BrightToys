@@ -25,20 +25,20 @@ class LoginController extends Controller
 
             $user = Auth::user();
 
-            // Chairman: treat as admin-first, even though they are also a partner
-            if (($user->is_admin ?? false) && method_exists($user, 'hasAdminRole') && $user->hasAdminRole('chairman')) {
+            // Admins (including Chairman, Treasurer, Finance Admin, Store Admin, etc.)
+            // should always land on the admin console first, even if they are also partners.
+            // Use admin roles (chairman, finance_admin, etc.) in addition to the raw is_admin flag,
+            // because some admin users (e.g. Chairman) may have roles assigned even if is_admin
+            // was not explicitly set to true.
+            $hasAdminAccess = ($user->is_admin ?? false) || $user->adminRoles()->exists();
+
+            if ($hasAdminAccess) {
                 return redirect()->intended(route('admin.dashboard'));
             }
 
-            // Partners are admins with extra responsibilities,
-            // but their primary home is the Partner Console.
+            // Partners (non-admin) → Partner Console
             if ($user->is_partner ?? false) {
                 return redirect()->intended(route('partner.dashboard'));
-            }
-
-            // Pure admins (non-partner) → Admin dashboard
-            if ($user->is_admin ?? false) {
-                return redirect()->intended(route('admin.dashboard'));
             }
 
             // Regular customers → Customer account dashboard (with intended support)

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Cart - BrightToys')
+@section('title', 'Cart - Otto Investments')
 
 @section('content')
     <div class="container mx-auto px-4 lg:px-8 py-8">

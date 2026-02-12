@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', ($category->name ?? 'Category') . ' - BrightToys')
+@section('title', ($category->name ?? 'Category') . ' - Otto Investments')
 
 @section('content')
     {{-- Hero section --}}

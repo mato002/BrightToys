@@ -1,0 +1,132 @@
+@extends('layouts.admin')
+
+@section('page_title', 'Company Expenses')
+
+@section('content')
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-4">
+        <div>
+            <a href="{{ route('admin.accounting.dashboard') }}" class="text-emerald-600 hover:text-emerald-700 text-sm mb-2 inline-flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Back to Books of Account
+            </a>
+            <h1 class="text-lg font-semibold text-slate-900">
+                @if(request('month'))
+                    {{ Carbon\Carbon::parse(request('month'))->format('M Y') }} Expenses
+                @else
+                    Company Expenses
+                @endif
+            </h1>
+            <p class="text-xs text-slate-500">View and manage company expenses</p>
+        </div>
+        <div class="text-right">
+            <p class="text-xs text-slate-500 mb-1">Total</p>
+            <p class="text-lg font-semibold text-slate-900">KES {{ number_format($total, 2) }}</p>
+        </div>
+    </div>
+
+    {{-- Filters --}}
+    <form method="GET" class="mb-4 bg-white border border-slate-100 rounded-lg p-3 text-xs grid md:grid-cols-5 gap-3">
+        <div>
+            <label class="block text-[10px] font-semibold mb-1 text-slate-700">Year</label>
+            <select name="year" class="border border-slate-200 rounded px-3 py-2 text-sm w-full">
+                <option value="">All Years</option>
+                @foreach($years as $year)
+                    <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>{{ $year }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label class="block text-[10px] font-semibold mb-1 text-slate-700">Month</label>
+            <select name="month" class="border border-slate-200 rounded px-3 py-2 text-sm w-full">
+                <option value="">All Months</option>
+                @for($m = 1; $m <= 12; $m++)
+                    @php
+                        $monthDate = Carbon\Carbon::create(request('year', date('Y')), $m, 1);
+                        $monthValue = $monthDate->format('Y-m');
+                        $monthLabel = $monthDate->format('M Y');
+                    @endphp
+                    <option value="{{ $monthValue }}" {{ request('month') == $monthValue ? 'selected' : '' }}>
+                        {{ $monthLabel }}
+                    </option>
+                @endfor
+            </select>
+        </div>
+        <div>
+            <label class="block text-[10px] font-semibold mb-1 text-slate-700">Day</label>
+            <input type="date" name="day" value="{{ request('day') }}"
+                   class="border border-slate-200 rounded px-3 py-2 text-sm w-full">
+        </div>
+        <div>
+            <label class="block text-[10px] font-semibold mb-1 text-slate-700">Branch</label>
+            <select name="branch" class="border border-slate-200 rounded px-3 py-2 text-sm w-full">
+                <option value="">All Branches</option>
+                @foreach($branches as $branch)
+                    <option value="{{ $branch }}" {{ request('branch') == $branch ? 'selected' : '' }}>{{ $branch }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label class="block text-[10px] font-semibold mb-1 text-slate-700">Search Transaction</label>
+            <div class="flex gap-2">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Q Search Transaction"
+                       class="border border-slate-200 rounded px-3 py-2 text-sm flex-1 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500">
+                <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded text-xs">
+                    Search
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <div class="bg-white border border-slate-100 rounded-lg overflow-hidden">
+        <div class="overflow-x-auto admin-table-scroll">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-50 border-b border-slate-200 sticky top-0">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-700">Posted By</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-700">Trans Date</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-700">Amount</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-700">Credit</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-700">Debit</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-700">Refno</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-700">Trans Id</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @forelse($expenses as $expense)
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-4 py-3">
+                                <div class="text-slate-900 font-medium">{{ $expense->journalEntry->poster->name ?? $expense->journalEntry->creator->name ?? 'System' }}</div>
+                                <div class="text-xs text-slate-500">{{ $expense->journalEntry->posted_at ? $expense->journalEntry->posted_at->format('M d, H:i') : $expense->journalEntry->created_at->format('M d, H:i') }}</div>
+                            </td>
+                            <td class="px-4 py-3 text-slate-700">{{ $expense->transaction_date->format('d-m-Y') }}</td>
+                            <td class="px-4 py-3 font-semibold text-slate-900">{{ number_format($expense->amount, 2) }}</td>
+                            <td class="px-4 py-3 text-slate-500">—</td>
+                            <td class="px-4 py-3">
+                                <div class="text-xs text-slate-700">
+                                    <span class="font-medium">i. {{ $expense->account->name }} - KES {{ number_format($expense->amount, 2) }}</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-slate-600">{{ $expense->reference_number ?: '—' }}</td>
+                            <td class="px-4 py-3 text-slate-600 font-mono text-xs">{{ $expense->transaction_id }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="px-4 py-8 text-center text-slate-500 text-sm">
+                                No expenses found.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {{-- Pagination --}}
+    @if($expenses->hasPages())
+        <div class="mt-4">
+            {{ $expenses->links() }}
+        </div>
+    @endif
+@endsection

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Contact Us - BrightToys')
+@section('title', 'Contact Us - Otto Investments')
 
 @section('content')
     {{-- Hero section --}}

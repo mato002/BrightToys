@@ -4,7 +4,7 @@
     <div class="mb-4">
         <h1 class="text-lg font-semibold">Welcome, {{ $partner->name }}</h1>
         <p class="text-xs text-slate-500">
-            Comprehensive financial overview and business insights for your investment in BrightToys.
+            Comprehensive financial overview and business insights for your investment in Otto Investments.
         </p>
     </div>
 

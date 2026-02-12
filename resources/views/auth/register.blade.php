@@ -6,7 +6,7 @@
     <div class="bg-white border rounded-lg p-6 shadow-sm">
         <h1 class="text-2xl font-semibold mb-2 text-center">Create your account</h1>
         <p class="text-xs text-gray-600 mb-6 text-center">
-            Join BrightToys to track your orders, save your favourites and enjoy a smoother checkout.
+            Set up a reusable account you can use across projects to manage your activity and notifications.
         </p>
 
         @if($errors->any())

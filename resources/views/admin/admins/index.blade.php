@@ -6,7 +6,7 @@
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
         <div>
             <h1 class="text-lg font-semibold">Admins</h1>
-            <p class="text-xs text-slate-500">Manage admin accounts for BrightToys.</p>
+            <p class="text-xs text-slate-500">Manage admin accounts for Otto Investments.</p>
         </div>
         <a href="{{ route('admin.admins.create') }}"
            class="inline-flex items-center justify-center bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm">
@@ -87,7 +87,7 @@
                             </a>
                             @if($admin->id !== auth()->id())
                                 <form action="{{ route('admin.admins.destroy', $admin) }}" method="POST" class="inline"
-                                      onsubmit="return confirm('Are you sure you want to delete this admin?');">
+                                      data-confirm="Are you sure you want to delete this admin?">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="text-xs text-red-600 hover:text-red-700 font-medium">

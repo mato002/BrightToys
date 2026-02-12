@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
-@section('title', $product->name . ' - BrightToys')
+@section('title', $product->name . ' - Otto Investments')
 
 @section('meta_description')
-{{ Str::limit($product->description ?? 'Quality toy for children. Available at BrightToys Kenya.', 160) }}
+{{ Str::limit($product->description ?? 'Product available at Otto Investments.', 160) }}
 @endsection
 
 @section('meta_keywords')
@@ -11,7 +11,7 @@
 @endsection
 
 @section('og_title')
-{{ $product->name }} - BrightToys
+{{ $product->name }} - Otto Investments
 @endsection
 
 @section('og_description')
@@ -32,7 +32,7 @@
   "image": "{{ $product->image_url ? (str_starts_with($product->image_url, 'http') ? $product->image_url : asset('images/toys/' . $product->image_url)) : asset('images/toys/default.jpg') }}",
   "brand": {
     "@type": "Brand",
-    "name": "BrightToys"
+    "name": "Otto Investments"
   },
   "offers": {
     "@type": "Offer",
@@ -42,7 +42,7 @@
     "availability": "https://schema.org/{{ $product->stock > 0 ? 'InStock' : 'OutOfStock' }}",
     "seller": {
       "@type": "Organization",
-      "name": "BrightToys"
+      "name": "Otto Investments"
     }
   }
 }

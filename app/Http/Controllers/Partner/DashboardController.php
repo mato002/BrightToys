@@ -308,7 +308,15 @@ class DashboardController extends Controller
             abort(403, 'You are not associated with a partner account.');
         }
 
-        return view('partner.contributions.create', compact('partner'));
+        // Load current wallet balances so the partner can see their position
+        $wallets = $partner->wallets()
+            ->get()
+            ->keyBy('type');
+
+        $investmentBalance = $wallets[\App\Models\MemberWallet::TYPE_INVESTMENT]->balance ?? 0;
+        $welfareBalance = $wallets[\App\Models\MemberWallet::TYPE_WELFARE]->balance ?? 0;
+
+        return view('partner.contributions.create', compact('partner', 'investmentBalance', 'welfareBalance'));
     }
 
     /**
@@ -324,23 +332,20 @@ class DashboardController extends Controller
         }
 
         $validated = $request->validate([
-            'type' => ['required', 'in:contribution,withdrawal'],
-            'fund_type' => ['required_if:type,contribution', 'in:welfare,investment'],
             'amount' => ['required', 'numeric', 'min:0.01'],
-            'currency' => ['nullable', 'string', 'max:3'],
             'contributed_at' => ['required', 'date'],
             'reference' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
         ]);
 
+        // Partners only declare that they have deposited money; allocation to specific
+        // wallets (investment vs welfare) is done later by the treasurer during approval.
         $contribution = PartnerContribution::create([
             'partner_id' => $partner->id,
-            'type' => $validated['type'],
+            'type' => 'contribution',
             'amount' => $validated['amount'],
-            'fund_type' => $validated['type'] === 'contribution'
-                ? ($validated['fund_type'] ?? 'investment')
-                : 'investment',
-            'currency' => $validated['currency'] ?? 'KES',
+            'fund_type' => null, // to be allocated by treasurer
+            'currency' => 'KES',
             'contributed_at' => $validated['contributed_at'],
             'reference' => $validated['reference'] ?? null,
             'notes' => $validated['notes'] ?? null,

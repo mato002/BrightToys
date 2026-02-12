@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Partner;
 use App\Models\PartnerContribution;
 use App\Services\ActivityLogService;
+use App\Services\NotificationService;
 use App\Services\ApprovalService;
 use App\Services\WalletService;
 use Illuminate\Http\Request;
@@ -112,6 +113,22 @@ class PartnerContributionController extends Controller
 
         ActivityLogService::log('contribution_created', $contribution, $validated);
 
+        // Notify partner that their contribution has been recorded and is pending approval
+        if ($contribution->partner && $contribution->partner->user) {
+            NotificationService::notify(
+                $contribution->partner->user,
+                'contribution_recorded',
+                'Contribution recorded',
+                "A {$contribution->fund_type} contribution of {$contribution->amount} {$contribution->currency} has been recorded and is awaiting approval.",
+                [
+                    'partner_id' => $contribution->partner_id,
+                    'contribution_id' => $contribution->id,
+                    'status' => $contribution->status,
+                ],
+                'email'
+            );
+        }
+
         return redirect()->route('admin.financial.contributions')
             ->with('success', 'Contribution recorded. Awaiting approval.');
     }
@@ -120,7 +137,7 @@ class PartnerContributionController extends Controller
     {
         $this->checkFinancePermission(true); // Allow partners to view
         $contribution->load(['partner', 'creator', 'approver', 'archiver']);
-        return view('admin.financial.show', compact('contribution'));
+        return view('admin.financial.contributions-show', compact('contribution'));
     }
 
     public function approve(Request $request, PartnerContribution $contribution)
@@ -154,6 +171,22 @@ class PartnerContributionController extends Controller
             ActivityLogService::log('contribution_approved', $contribution, [
                 'approved_by' => $user->name,
             ]);
+
+            // Notify partner that their contribution has been approved
+            if ($contribution->partner && $contribution->partner->user) {
+                NotificationService::notify(
+                    $contribution->partner->user,
+                    'contribution_approved',
+                    'Contribution approved',
+                    "Your {$contribution->fund_type} contribution of {$contribution->amount} {$contribution->currency} has been approved.",
+                    [
+                        'partner_id' => $contribution->partner_id,
+                        'contribution_id' => $contribution->id,
+                        'status' => $contribution->status,
+                    ],
+                    'email'
+                );
+            }
 
             return redirect()->back()
                 ->with('success', 'Contribution approved successfully.');

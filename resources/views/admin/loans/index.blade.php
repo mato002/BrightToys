@@ -3,17 +3,38 @@
 @section('page_title', 'Loans')
 
 @section('content')
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-4">
         <div>
-            <h1 class="text-lg font-semibold">Loans</h1>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-500 mb-1">Financial</p>
+            <h1 class="text-lg font-semibold text-slate-900">Loans</h1>
             <p class="text-xs text-slate-500">Registered bank and SACCO loans linked to projects.</p>
         </div>
-        @if(auth()->user()->hasPermission('loans.create'))
-            <a href="{{ route('admin.loans.create') }}"
-               class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg">
-                Register Loan
-            </a>
-        @endif
+        <div class="flex flex-col md:flex-row gap-2 md:items-center">
+            <form method="GET" class="flex flex-col md:flex-row gap-2 text-xs">
+                <div class="flex items-center gap-2">
+                    <input type="text" name="q" value="{{ request('q') }}"
+                           placeholder="Search lender or project..."
+                           class="border border-slate-200 rounded px-3 py-1.5 text-xs w-full md:w-56 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500">
+                    <select name="status"
+                            class="border border-slate-200 rounded px-2 py-1.5 text-xs focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500">
+                        <option value="">All statuses</option>
+                        <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
+                        <option value="repaid" {{ request('status') === 'repaid' ? 'selected' : '' }}>Repaid</option>
+                        <option value="in_arrears" {{ request('status') === 'in_arrears' ? 'selected' : '' }}>In arrears</option>
+                    </select>
+                    <button type="submit"
+                            class="inline-flex items-center px-3 py-1.5 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white font-semibold">
+                        Filter
+                    </button>
+                </div>
+            </form>
+            @if(auth()->user()->hasPermission('loans.create'))
+                <a href="{{ route('admin.loans.create') }}"
+                   class="inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg">
+                    Register Loan
+                </a>
+            @endif
+        </div>
     </div>
 
     <div class="bg-white border border-slate-100 rounded-lg overflow-hidden">

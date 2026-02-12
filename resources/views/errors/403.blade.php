@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Access Denied - BrightToys')
+@section('title', 'Access Denied - Otto Investments')
 
 @section('content')
 <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 via-amber-50 to-sky-100 py-12 px-4">

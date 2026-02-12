@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\Loan;
 use Illuminate\Http\Request;
 
 class AccountController extends Controller
@@ -175,6 +176,76 @@ class AccountController extends Controller
 
         return redirect()->route('account.addresses')
             ->with('success', 'Address deleted successfully.');
+    }
+
+    public function loans()
+    {
+        $user = auth()->user();
+        
+        // Members can view all group loans (read-only)
+        $query = Loan::with(['project', 'schedules.repayments', 'repayments']);
+        
+        if ($status = request('status')) {
+            $query->where('status', $status);
+        }
+        
+        if ($search = request('search')) {
+            $query->where('lender_name', 'like', "%{$search}%");
+        }
+        
+        $loans = $query->latest()->paginate(10)->withQueryString();
+        
+        return view('frontend.account.loans', compact('user', 'loans'));
+    }
+
+    public function showLoan(Loan $loan)
+    {
+        $user = auth()->user();
+        
+        // Members can view loans in read-only mode
+        $loan->load(['project', 'schedules.repayments', 'repayments']);
+        
+        // Calculate outstanding balances (same logic as admin)
+        $totalPrincipalScheduled = $loan->schedules->sum('principal_due');
+        $totalInterestScheduled = $loan->schedules->sum('interest_due');
+        $totalScheduled = $totalPrincipalScheduled + $totalInterestScheduled;
+        $totalPaid = $loan->repayments->sum('amount_paid');
+        $principalPaid = $totalScheduled > 0 
+            ? ($totalPaid * ($totalPrincipalScheduled / $totalScheduled))
+            : 0;
+        $principalOutstanding = max(0, $totalPrincipalScheduled - $principalPaid);
+        $interestOutstanding = max(0, $totalInterestScheduled - ($totalPaid - $principalPaid));
+        $totalOutstanding = $principalOutstanding + $interestOutstanding;
+        
+        // Calculate remaining tenure
+        $startDate = $loan->start_date ?? $loan->created_at;
+        $monthsElapsed = $startDate->diffInMonths(now());
+        $remainingTenure = max(0, $loan->tenure_months - $monthsElapsed);
+        
+        // Calculate status
+        $status = 'active';
+        $overduePeriods = 0;
+        foreach ($loan->schedules as $schedule) {
+            $schedulePaid = $schedule->repayments->sum('amount_paid');
+            $isDue = $schedule->due_date->isPast();
+            if ($isDue && $schedulePaid < $schedule->total_due * 0.99) {
+                $overduePeriods++;
+            }
+        }
+        if ($totalOutstanding <= 0.01) {
+            $status = 'repaid';
+        } elseif ($overduePeriods > 0) {
+            $status = 'in_arrears';
+        }
+        
+        return view('frontend.account.loan-show', compact(
+            'loan',
+            'principalOutstanding',
+            'interestOutstanding',
+            'totalOutstanding',
+            'remainingTenure',
+            'status'
+        ));
     }
 }
 

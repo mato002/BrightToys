@@ -15,7 +15,7 @@
             </p>
             <a href="{{ route('home') }}"
                class="inline-flex items-center px-4 py-2 text-sm font-semibold rounded-lg bg-amber-500 hover:bg-amber-600 text-white">
-                Back to BrightToys
+                Back to Otto Investments
             </a>
         </div>
     </div>

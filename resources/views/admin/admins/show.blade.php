@@ -73,7 +73,7 @@
                     <p class="text-xs text-slate-500">Permanently delete this admin account. This action cannot be undone.</p>
                 </div>
                 <form action="{{ route('admin.admins.destroy', $admin) }}" method="POST"
-                      onsubmit="return confirm('Are you sure you want to delete this admin? This action cannot be undone.');">
+                      data-confirm="Are you sure you want to delete this admin? This action cannot be undone.">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-4 py-2 rounded shadow-sm">

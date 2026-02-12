@@ -3,9 +3,10 @@
 @section('page_title', 'Financial Records')
 
 @section('content')
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-4">
         <div>
-            <h1 class="text-lg font-semibold">Financial Records</h1>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-500 mb-1">Financial</p>
+            <h1 class="text-lg font-semibold text-slate-900">Financial Records</h1>
             <p class="text-xs text-slate-500">Manage expenses, income, and financial transactions.</p>
         </div>
         <div class="flex gap-2">
@@ -40,27 +41,44 @@
         </div>
     </div>
 
-    <form method="GET" class="mb-4 bg-white border border-slate-100 rounded-lg p-3 text-xs grid md:grid-cols-4 gap-3">
-        <select name="type" class="border border-slate-200 rounded px-3 py-2 text-sm">
-            <option value="">All Types</option>
-            <option value="expense" {{ request('type') === 'expense' ? 'selected' : '' }}>Expense</option>
-            <option value="adjustment" {{ request('type') === 'adjustment' ? 'selected' : '' }}>Adjustment</option>
-            <option value="other_income" {{ request('type') === 'other_income' ? 'selected' : '' }}>Other Income</option>
-        </select>
-        <select name="status" class="border border-slate-200 rounded px-3 py-2 text-sm">
-            <option value="">All Statuses</option>
-            <option value="pending_approval" {{ request('status') === 'pending_approval' ? 'selected' : '' }}>Pending</option>
-            <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
-            <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
-        </select>
-        <input type="date" name="from" value="{{ request('from') }}" placeholder="From date"
-               class="border border-slate-200 rounded px-3 py-2 text-sm">
-        <div class="flex gap-2">
-            <input type="date" name="to" value="{{ request('to') }}" placeholder="To date"
-                   class="border border-slate-200 rounded px-3 py-2 text-sm flex-1">
-            <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded text-xs">
-                Filter
-            </button>
+    <form method="GET" class="mb-4 bg-white border border-slate-100 rounded-lg p-3 text-xs grid md:grid-cols-5 gap-3">
+        <div>
+            <label class="block text-[10px] font-semibold mb-1 text-slate-700">Type</label>
+            <select name="type" class="border border-slate-200 rounded px-3 py-2 text-sm w-full">
+                <option value="">All Types</option>
+                <option value="expense" {{ request('type') === 'expense' ? 'selected' : '' }}>Expense</option>
+                <option value="adjustment" {{ request('type') === 'adjustment' ? 'selected' : '' }}>Adjustment</option>
+                <option value="other_income" {{ request('type') === 'other_income' ? 'selected' : '' }}>Other Income</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-[10px] font-semibold mb-1 text-slate-700">Status</label>
+            <select name="status" class="border border-slate-200 rounded px-3 py-2 text-sm w-full">
+                <option value="">All Statuses</option>
+                <option value="pending_approval" {{ request('status') === 'pending_approval' ? 'selected' : '' }}>Pending</option>
+                <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
+                <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-[10px] font-semibold mb-1 text-slate-700">From</label>
+            <input type="date" name="from" value="{{ request('from') }}"
+                   class="border border-slate-200 rounded px-3 py-2 text-sm w-full">
+        </div>
+        <div>
+            <label class="block text-[10px] font-semibold mb-1 text-slate-700">To</label>
+            <input type="date" name="to" value="{{ request('to') }}"
+                   class="border border-slate-200 rounded px-3 py-2 text-sm w-full">
+        </div>
+        <div>
+            <label class="block text-[10px] font-semibold mb-1 text-slate-700">Search</label>
+            <div class="flex gap-2">
+                <input type="text" name="q" value="{{ request('q') }}" placeholder="Search description or category..."
+                       class="border border-slate-200 rounded px-3 py-2 text-sm flex-1 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500">
+                <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded text-xs">
+                    Filter
+                </button>
+            </div>
         </div>
     </form>
 

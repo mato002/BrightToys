@@ -289,16 +289,14 @@
                             </span>
                             <span class="font-medium sidebar-label">Activity</span>
                         </a>
-                        <a href="{{ route('partner.reports') }}" class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('partner.reports') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                        <a href="{{ route('partner.notifications') }}" class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('partner.notifications') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
                             <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path d="M16 18l-4-4-4 4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M12 14V4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M21 10h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4v-6z" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M3 10h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H3v-6z" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </span>
-                            <span class="font-medium sidebar-label">Reports</span>
+                            <span class="font-medium sidebar-label">Notifications</span>
                         </a>
                     </div>
                 </div>
@@ -331,7 +329,7 @@
                     <span class="text-[10px]">↗</span>
                 </a>
                 <button type="button" onclick="window.open('https://odhiambo.netlify.app','_blank')" class="w-full text-left text-[11px] text-amber-300 hover:text-amber-100 hover:underline mt-1">
-                    © {{ date('Y') }} BrightToys Partner
+                    © {{ date('Y') }} Otto Investments Partner
                 </button>
             </div>
         </div>
@@ -351,7 +349,7 @@
                     <h1 class="text-sm md:text-base font-semibold text-slate-900 tracking-tight">
                         @yield('page_title', 'Partner Dashboard')
                     </h1>
-                    <p class="text-[11px] text-slate-400 hidden md:block">BrightToys partner overview</p>
+                    <p class="text-[11px] text-slate-400 hidden md:block">Otto Investments partner overview</p>
                 </div>
             </div>
             <div class="flex items-center space-x-3 relative">
@@ -394,7 +392,7 @@
         <footer class="px-4 md:px-6 py-3 text-[11px] text-slate-500 border-t border-slate-200 bg-white/80 backdrop-blur partner-footer">
             <div class="mx-auto max-w-6xl flex items-center justify-between">
                 <a href="https://odhiambo.netlify.app" target="_blank" class="hover:underline">
-                    © {{ date('Y') }} BrightToys Partner
+                    © {{ date('Y') }} Otto Investments Partner
                 </a>
                 <span class="hidden sm:inline text-slate-600">Investment overview dashboard</span>
             </div>

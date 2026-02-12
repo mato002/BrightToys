@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Confirmation - BrightToys</title>
+    <title>Order Confirmation - Otto Investments</title>
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
     <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
@@ -76,7 +76,7 @@
 
         <p style="margin: 20px 0 0; font-size: 12px; color: #94a3b8; text-align: center;">
             If you have any questions, please contact our support team.<br>
-            Thank you for shopping with BrightToys! 🎁
+            Thank you for your business with Otto Investments! 🎁
         </p>
     </div>
 </body>

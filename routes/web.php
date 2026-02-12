@@ -41,7 +41,7 @@ Route::delete('/cart/remove/{id}', [CartController::class, 'remove'])->name('car
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
-// Customer account (only for non-admin users)
+// Customer account (includes members and non-admin users)
 Route::middleware(['auth', 'customer'])->prefix('account')->name('account.')->group(function () {
     Route::get('/', [AccountController::class, 'profile'])->name('profile');
     Route::get('/orders', [AccountController::class, 'orders'])->name('orders');
@@ -51,6 +51,9 @@ Route::middleware(['auth', 'customer'])->prefix('account')->name('account.')->gr
     Route::get('/addresses', [AccountController::class, 'addresses'])->name('addresses');
     Route::post('/addresses', [AccountController::class, 'storeAddress'])->name('addresses.store');
     Route::delete('/addresses/{id}', [AccountController::class, 'destroyAddress'])->name('addresses.destroy');
+    // Loans (read-only for members)
+    Route::get('/loans', [AccountController::class, 'loans'])->name('loans');
+    Route::get('/loans/{loan}', [AccountController::class, 'showLoan'])->name('loans.show');
 });
 
 // Wishlist (requires authentication)
@@ -223,6 +226,51 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // Activity Logs
     Route::get('/activity-logs', [\App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
     Route::get('/activity-logs/{activityLog}', [\App\Http\Controllers\Admin\ActivityLogController::class, 'show'])->name('activity-logs.show');
+
+    // Accounting Module
+    Route::prefix('accounting')->name('accounting.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\AccountingController::class, 'dashboard'])->name('dashboard');
+        
+        // Journal Entries
+        Route::get('/journal/create', [\App\Http\Controllers\Admin\AccountingController::class, 'createJournal'])->name('journal.create');
+        Route::post('/journal', [\App\Http\Controllers\Admin\AccountingController::class, 'storeJournal'])->name('journal.store');
+        
+        // Posted Entries
+        Route::get('/posted-entries', [\App\Http\Controllers\Admin\AccountingController::class, 'postedEntries'])->name('posted-entries.index');
+        
+        // Chart of Accounts
+        Route::get('/chart-of-accounts', [\App\Http\Controllers\Admin\AccountingController::class, 'chartOfAccounts'])->name('chart-of-accounts.index');
+        Route::post('/chart-of-accounts/wallet-mappings', [\App\Http\Controllers\Admin\AccountingController::class, 'updateWalletMappings'])->name('chart-of-accounts.update-mappings');
+        
+        // Expenses
+        Route::get('/expenses', [\App\Http\Controllers\Admin\AccountingController::class, 'expenses'])->name('expenses.index');
+        
+        // General Ledger
+        Route::get('/ledger', [\App\Http\Controllers\Admin\AccountingController::class, 'ledger'])->name('ledger.index');
+        
+        // Reports
+        Route::get('/reports', [\App\Http\Controllers\Admin\AccountingController::class, 'reports'])->name('reports.index');
+        
+        // Budget
+        Route::get('/budget', [\App\Http\Controllers\Admin\AccountingController::class, 'budget'])->name('budget.index');
+        
+        // Assets
+        Route::get('/assets', [\App\Http\Controllers\Admin\AccountingController::class, 'assets'])->name('assets.index');
+        
+        // Reconciliation
+        Route::get('/reconciliation', [\App\Http\Controllers\Admin\AccountingController::class, 'reconciliation'])->name('reconciliation.index');
+        
+        // Payroll
+        Route::get('/payroll', [\App\Http\Controllers\Admin\AccountingController::class, 'payroll'])->name('payroll.index');
+
+        // High-level financial tracking dashboard
+        Route::get('/financial-overview', [\App\Http\Controllers\Admin\AccountingController::class, 'financialOverview'])
+            ->name('financial-overview');
+    });
+
+    // Notifications & Transparency
+    Route::get('/notifications-center', [\App\Http\Controllers\Admin\NotificationController::class, 'index'])
+        ->name('notifications.center');
 });
 
 // Project Management (for users assigned to projects)
@@ -253,7 +301,8 @@ Route::prefix('partner')->name('partner.')->middleware(['auth', 'partner'])->gro
     Route::get('/activity', [\App\Http\Controllers\Partner\ActivityController::class, 'index'])->name('activity');
     Route::get('/profile', [\App\Http\Controllers\Partner\ProfileController::class, 'index'])->name('profile');
     Route::put('/profile', [\App\Http\Controllers\Partner\ProfileController::class, 'update'])->name('profile.update');
-    Route::get('/reports', [\App\Http\Controllers\Partner\DashboardController::class, 'reports'])->name('reports');
+        Route::get('/reports', [\App\Http\Controllers\Partner\DashboardController::class, 'reports'])->name('reports');
+        Route::get('/notifications', [\App\Http\Controllers\Partner\NotificationController::class, 'index'])->name('notifications');
 
     // Weighted Voting (partners)
     Route::get('/voting', [\App\Http\Controllers\Partner\VotingController::class, 'index'])->name('voting.index');

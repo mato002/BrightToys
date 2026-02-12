@@ -3,26 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'BrightToys Store - Quality Toys for Kids in Kenya')</title>
+    <title>@yield('title', 'Otto Investments - Investment Management System')</title>
     
     {{-- SEO Meta Tags --}}
-    <meta name="description" content="@yield('meta_description', 'BrightToys - Kenya\'s premier online toy store. Quality toys for children of all ages. Free delivery, secure payments, and excellent customer service.')">
-    <meta name="keywords" content="@yield('meta_keywords', 'toys, kids toys, children toys, Kenya, online shopping, educational toys, baby toys')">
-    <meta name="author" content="BrightToys">
+    <meta name="description" content="@yield('meta_description', 'Otto Investments - Investment management and partnership system. Track contributions, projects, and financial records.')">
+    <meta name="keywords" content="@yield('meta_keywords', 'investments, partnerships, financial management, contributions, projects')">
+    <meta name="author" content="Otto Investments">
     <meta name="robots" content="index, follow">
     
     {{-- Open Graph / Facebook --}}
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:title" content="@yield('og_title', 'BrightToys - Quality Toys for Kids')">
-    <meta property="og:description" content="@yield('og_description', 'Kenya\'s premier online toy store. Quality toys for children of all ages.')">
+    <meta property="og:title" content="@yield('og_title', 'Otto Investments - Investment Management System')">
+    <meta property="og:description" content="@yield('og_description', 'Investment management and partnership system. Track contributions, projects, and financial records.')">
     <meta property="og:image" content="@yield('og_image', asset('images/toys/default.jpg'))">
     
     {{-- Twitter --}}
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="{{ url()->current() }}">
-    <meta name="twitter:title" content="@yield('twitter_title', 'BrightToys - Quality Toys for Kids')">
-    <meta name="twitter:description" content="@yield('twitter_description', 'Kenya\'s premier online toy store.')">
+    <meta name="twitter:title" content="@yield('twitter_title', 'Otto Investments - Investment Management System')">
+    <meta name="twitter:description" content="@yield('twitter_description', 'Investment management and partnership system.')">
     <meta name="twitter:image" content="@yield('twitter_image', asset('images/toys/default.jpg'))">
     
     @stack('meta')
@@ -52,7 +52,7 @@
     <header class="bg-white shadow-sm">
         <div class="container mx-auto flex items-center justify-between py-4 px-4">
             <a href="{{ route('home') }}" class="text-2xl font-bold tracking-wide">
-                BrightToys
+                Otto Investments
             </a>
 
             {{-- Main nav --}}
@@ -140,7 +140,7 @@
             </div>
 
             <div>
-                <h3 class="font-semibold mb-3">About BrightToys</h3>
+                <h3 class="font-semibold mb-3">About Otto Investments</h3>
                 <ul class="space-y-1">
                     <li><a href="{{ route('pages.about') }}" class="hover:underline">Our story</a></li>
                     <li><a href="{{ route('pages.about') }}" class="hover:underline">How we choose toys</a></li>
@@ -159,7 +159,7 @@
         </div>
 
         <div class="container mx-auto mt-8 px-4 flex flex-col md:flex-row items-center justify-between text-xs text-gray-400">
-            <p>© {{ date('Y') }} BrightToys. All rights reserved.</p>
+            <p>© {{ date('Y') }} Otto Investments. All rights reserved.</p>
             <div class="flex space-x-3 mt-2 md:mt-0">
                 <a href="https://twitter.com" target="_blank" rel="noopener" class="hover:text-white">Twitter</a>
                 <a href="https://facebook.com" target="_blank" rel="noopener" class="hover:text-white">Facebook</a>

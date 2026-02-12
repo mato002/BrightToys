@@ -26,8 +26,13 @@ class PartnerController extends Controller
         if ($allowPartners && $user->is_partner) {
             return; // Partners can view
         }
-        // Allow Super Admin, Finance Admin and Chairman to access partnership management
-        if (!$user->isSuperAdmin() && !$user->hasAdminRole('finance_admin') && !$user->hasAdminRole('chairman')) {
+        // Allow Super Admin, Finance Admin, Treasurer and Chairman to access partnership management
+        if (
+            ! $user->isSuperAdmin()
+            && ! $user->hasAdminRole('finance_admin')
+            && ! $user->hasAdminRole('treasurer')
+            && ! $user->hasAdminRole('chairman')
+        ) {
             abort(403, 'You do not have permission to access this resource.');
         }
     }

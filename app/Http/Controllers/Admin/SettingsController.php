@@ -31,7 +31,7 @@ class SettingsController extends Controller
                 ->with('adminRoles')
                 ->orderBy('name')
                 ->get();
-            $roles = AdminRole::orderBy('display_name')->get();
+            $roles = AdminRole::with('permissions')->orderBy('display_name')->get();
         }
 
         return view('admin.settings.index', compact('user', 'canManageRoles', 'adminUsers', 'roles'));

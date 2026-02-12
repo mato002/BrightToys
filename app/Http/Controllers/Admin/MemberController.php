@@ -10,6 +10,7 @@ use App\Models\EntryContribution;
 use App\Models\PaymentPlan;
 use App\Models\PaymentPlanInstallment;
 use App\Services\ActivityLogService;
+use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -186,7 +187,26 @@ class MemberController extends Controller
 
         ActivityLogService::log('member_created', $partner, $validated);
 
-        // TODO: send secure onboarding link via mail/SMS using $onboardingToken
+        // Create an in-app notification so the new member (once they activate) can see
+        // their onboarding record in their notification history. Email/SMS delivery can
+        // be wired later to this same notification data.
+        if ($partner->email) {
+            // We don't yet have a user account, so this will be re-linked after onboarding.
+            // For now we just log for the chairperson as a reminder.
+            $chair = Auth::user();
+            if ($chair) {
+                NotificationService::notify(
+                    $chair,
+                    'member_onboarding_started',
+                    'Member onboarding link generated',
+                    "Onboarding link created for {$partner->name}.",
+                    [
+                        'partner_id' => $partner->id,
+                        'onboarding_token' => $onboardingToken,
+                    ]
+                );
+            }
+        }
 
         return redirect()
             ->route('admin.members.index')

@@ -8,7 +8,7 @@
             <div>
                 <h1 class="text-2xl font-bold text-slate-900">Submit New Contribution</h1>
                 <p class="text-sm text-slate-600 mt-1">
-                    Request a capital contribution, withdrawal, or profit distribution. All submissions require admin approval.
+                    Record a deposit you have made. The treasurer will allocate it between investment and welfare accounts.
                 </p>
             </div>
             <a href="{{ route('partner.contributions') }}" 
@@ -18,6 +18,18 @@
                 </svg>
                 Back to Contributions
             </a>
+        </div>
+    </div>
+
+    {{-- Current Balances --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div class="bg-gradient-to-r from-emerald-50 to-emerald-100 border border-emerald-200 rounded-xl p-4">
+            <p class="text-xs font-semibold text-emerald-700 uppercase tracking-wide">Investment Balance</p>
+            <p class="mt-1 text-2xl font-bold text-emerald-900">Ksh {{ number_format($investmentBalance ?? 0, 2) }}</p>
+        </div>
+        <div class="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4">
+            <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide">Welfare Balance</p>
+            <p class="mt-1 text-2xl font-bold text-blue-900">Ksh {{ number_format($welfareBalance ?? 0, 2) }}</p>
         </div>
     </div>
 
@@ -55,44 +67,12 @@
 
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">
-                            Transaction Type <span class="text-red-500">*</span>
-                        </label>
-                        <select name="type" required
-                                class="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors">
-                            <option value="">Select transaction type...</option>
-                            <option value="contribution" {{ old('type') === 'contribution' ? 'selected' : '' }}>Contribution (Capital Investment)</option>
-                            <option value="withdrawal" {{ old('type') === 'withdrawal' ? 'selected' : '' }}>Withdrawal</option>
-                        </select>
-                        <p class="text-xs text-slate-500 mt-2">
-                            <strong>Contributions:</strong> Add capital to the business. <strong>Withdrawals:</strong> Remove capital from the business.
-                        </p>
-                    </div>
-
-                    <div id="fund_type_wrapper">
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">
-                            Account / Fund Type <span class="text-red-500">*</span>
-                        </label>
-                        <select name="fund_type"
-                                class="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
-                            <option value="investment" {{ old('fund_type', 'investment') === 'investment' ? 'selected' : '' }}>Investment Account</option>
-                            <option value="welfare" {{ old('fund_type') === 'welfare' ? 'selected' : '' }}>Welfare Account</option>
-                        </select>
-                        <p class="text-xs text-slate-500 mt-2">
-                            Choose whether this contribution goes to your <strong>Investment</strong> account or the <strong>Welfare</strong> fund.
-                            Withdrawals always reduce your overall balance and are not tagged to a fund.
-                        </p>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">
                             Amount <span class="text-red-500">*</span>
                         </label>
                         <div class="flex gap-3">
-                            <select name="currency" required
-                                    class="border border-slate-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
-                                <option value="KES" {{ old('currency', 'KES') === 'KES' ? 'selected' : '' }}>KES</option>
-                                <option value="USD" {{ old('currency') === 'USD' ? 'selected' : '' }}>USD</option>
-                            </select>
+                            <span class="inline-flex items-center rounded-lg bg-slate-100 px-3 text-xs font-semibold text-slate-700">
+                                KES
+                            </span>
                             <input type="number" name="amount" value="{{ old('amount') }}" step="0.01" min="0.01" required
                                    class="flex-1 border border-slate-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
                                    placeholder="0.00">
@@ -139,9 +119,11 @@
                                 </svg>
                             </div>
                             <div class="ml-3">
-                                <h3 class="text-sm font-semibold text-amber-800 mb-1">Approval Required</h3>
+                                <h3 class="text-sm font-semibold text-amber-800 mb-1">What Happens Next?</h3>
                                 <p class="text-sm text-amber-700">
-                                    This submission will be created with <strong>"Pending Approval"</strong> status. An administrator will review and approve or reject your request. You will be notified once a decision is made.
+                                    This submission will be created with <strong>Pending Approval</strong> status. The treasurer will
+                                    confirm the deposit and allocate it between <strong>Investment</strong> and <strong>Welfare</strong>
+                                    accounts based on your plan and current balances. You will be notified once it is processed.
                                 </p>
                             </div>
                         </div>

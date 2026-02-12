@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'My Account - BrightToys')</title>
+    <title>@yield('title', 'My Account - Otto Investments')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         /* Fixed sidebar layout + collapse behaviour */
@@ -124,6 +124,16 @@
                     </span>
                     <span class="font-medium sidebar-label">Addresses</span>
                 </a>
+                <a href="{{ route('account.loans') }}"
+                   class="group flex items-center px-3 py-2.5 rounded-xl transition
+                          {{ request()->routeIs('account.loans*') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                    <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        </svg>
+                    </span>
+                    <span class="font-medium sidebar-label">Group Loans</span>
+                </a>
 
                 <p class="px-3 mt-4 mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-amber-200/80 sidebar-section-label">
                     Shopping
@@ -175,7 +185,7 @@
                 <button type="button"
                         onclick="window.open('https://odhiambo.netlify.app','_blank')"
                         class="w-full text-left text-[11px] text-amber-300 hover:text-amber-100 hover:underline mt-1">
-                    © {{ date('Y') }} BrightToys
+                    © {{ date('Y') }} Otto Investments
                 </button>
             </div>
         </div>
@@ -274,7 +284,7 @@
         <footer class="px-4 md:px-6 py-3 text-[11px] text-slate-500 border-t border-slate-200 bg-white/80 backdrop-blur">
             <div class="mx-auto max-w-6xl flex items-center justify-between">
                 <a href="https://odhiambo.netlify.app" target="_blank" class="hover:underline">
-                    © {{ date('Y') }} BrightToys
+                    © {{ date('Y') }} Otto Investments
                 </a>
                 <span class="hidden sm:inline text-slate-600">Customer account dashboard</span>
             </div>

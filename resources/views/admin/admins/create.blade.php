@@ -6,7 +6,7 @@
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
         <div>
             <h1 class="text-lg font-semibold">Add Admin</h1>
-            <p class="text-xs text-slate-500">Create a new admin account for BrightToys.</p>
+            <p class="text-xs text-slate-500">Create a new admin account for Otto Investments.</p>
         </div>
         <a href="{{ route('admin.admins.index') }}" class="text-sm text-slate-600 hover:text-slate-800">
             Back to list

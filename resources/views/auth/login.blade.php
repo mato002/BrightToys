@@ -4,9 +4,9 @@
 
 @section('content')
     <div>
-        <h1 class="text-2xl font-semibold mb-2 text-slate-900 text-center">Welcome back</h1>
+        <h1 class="text-2xl font-semibold mb-2 text-slate-900 text-center">Sign in to your account</h1>
         <p class="text-xs text-slate-500 mb-6 text-center">
-            Sign in to access your account and continue shopping.
+            Use your email and password to access your dashboard, projects and account tools.
         </p>
 
         @if($errors->any())

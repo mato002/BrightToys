@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Home - BrightToys')
+@section('title', 'Home - Otto Investments')
 
 @section('content')
     {{-- Promotional Hero Banners (like Toyworld) --}}
@@ -334,7 +334,7 @@
                         @endforeach
                     </div>
                     <p class="text-sm text-slate-700 mb-4 italic">
-                        "My daughter loves the toys from BrightToys! The quality is amazing and the age recommendations are spot on. Shopping here gives me confidence that I'm choosing the right toys for her development."
+                        "Otto Investments has provided excellent investment opportunities and transparent financial management."
                     </p>
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-white font-semibold">

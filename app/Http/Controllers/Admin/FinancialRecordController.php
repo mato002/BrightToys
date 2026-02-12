@@ -10,6 +10,7 @@ use App\Models\Partner;
 use App\Models\Project;
 use App\Services\ActivityLogService;
 use App\Services\ApprovalService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -24,7 +25,15 @@ class FinancialRecordController extends Controller
         if ($allowPartners && $user->is_partner) {
             return; // Partners can view
         }
-        if (! $user->hasPermission('financial.records.view')) {
+        // Allow Super Admin, Finance Admin, Treasurer and Chairman to view finance records,
+        // even if granular permissions have not been explicitly seeded.
+        if (
+            ! $user->hasPermission('financial.records.view')
+            && ! $user->isSuperAdmin()
+            && ! $user->hasAdminRole('finance_admin')
+            && ! $user->hasAdminRole('treasurer')
+            && ! $user->hasAdminRole('chairman')
+        ) {
             abort(403, 'You do not have permission to access this resource.');
         }
     }
@@ -149,6 +158,26 @@ class FinancialRecordController extends Controller
 
         ActivityLogService::logFinancial('created', $record, $validated);
 
+        // Notify approvers (finance admins) that a new financial record needs approval
+        $approverUsers = \App\Models\User::where('is_admin', true)
+            ->whereHas('adminRoles', function ($q) {
+                $q->whereIn('name', ['finance_admin', 'super_admin']);
+            })->get();
+
+        foreach ($approverUsers as $approver) {
+            NotificationService::notify(
+                $approver,
+                'financial_record_created',
+                'Financial record awaiting approval',
+                "A {$record->type} record ({$record->category}) of {$record->amount} {$record->currency} is awaiting your approval.",
+                [
+                    'financial_record_id' => $record->id,
+                    'status' => $record->status,
+                ],
+                'email'
+            );
+        }
+
         return redirect()->route('admin.financial.index')
             ->with('success', 'Financial record created. Awaiting approval.');
     }
@@ -190,6 +219,22 @@ class FinancialRecordController extends Controller
             ActivityLogService::logFinancial('approved', $financialRecord, [
                 'approved_by' => auth()->user()->name,
             ]);
+
+            // Notify creator that their financial record has been approved
+            if ($financialRecord->creator && $financialRecord->creator->user) {
+                $user = $financialRecord->creator->user;
+                NotificationService::notify(
+                    $user,
+                    'financial_record_approved',
+                    'Financial record approved',
+                    "Your {$financialRecord->type} record ({$financialRecord->category}) of {$financialRecord->amount} {$financialRecord->currency} has been approved.",
+                    [
+                        'financial_record_id' => $financialRecord->id,
+                        'status' => $financialRecord->status,
+                    ],
+                    'email'
+                );
+            }
 
             return redirect()->back()
                 ->with('success', 'Financial record approved successfully.');

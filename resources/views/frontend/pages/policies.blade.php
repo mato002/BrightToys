@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Policies - BrightToys')
+@section('title', 'Policies - Otto Investments')
 
 @section('content')
     {{-- Hero section --}}
@@ -136,7 +136,7 @@
                     </div>
                     <div>
                         <h3 class="font-semibold text-slate-900 mb-2">Limitation of Liability</h3>
-                        <p>BrightToys is not liable for any indirect, incidental, or consequential damages arising from the use of products purchased from our store. Our liability is limited to the purchase price of the product.</p>
+                        <p>Otto Investments is not liable for any indirect, incidental, or consequential damages arising from the use of our services. Our liability is limited as per our terms and conditions.</p>
                     </div>
                 </div>
             </section>

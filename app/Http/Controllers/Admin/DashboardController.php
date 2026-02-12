@@ -6,62 +6,167 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Models\PartnerContribution;
+use App\Models\FinancialRecord;
+use App\Models\PenaltyAdjustment;
+use App\Models\VotingTopic;
+use App\Models\Approval;
+use App\Models\ApprovalDecision;
 use App\Services\FinancialOverviewService;
+use App\Services\ApprovalService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $stats = [
-            'products' => Product::count(),
-            'orders' => Order::count(),
-            'users' => User::count(),
-            'revenue' => Order::sum('total'),
-            'pending_orders' => Order::where('status', 'pending')->count(),
-            'completed_orders' => Order::where('status', 'completed')->count(),
-            'today_revenue' => Order::whereDate('created_at', Carbon::today())->sum('total'),
-        ];
+        $user = Auth::user();
+        $isChairman = $user->hasAdminRole('chairman');
 
         // Group-level financial snapshot (contributions, welfare, net worth, etc.)
+        // Always available for all admin users
         $groupFinancials = FinancialOverviewService::getGroupSnapshot();
 
-        // Sales last 7 days for line chart
-        $salesLast7Days = collect(range(6, 0))->map(function ($daysAgo) {
-            $date = Carbon::today()->subDays($daysAgo);
-            return [
-                'date' => $date->format('M d'),
-                'total' => Order::whereDate('created_at', $date)->sum('total'),
+        // E-commerce data (products, orders, customers, revenue) - only for non-chairman roles
+        $stats = null;
+        $salesLast7Days = null;
+        $statusCounts = null;
+        $recentOrders = null;
+        $topProducts = null;
+
+        if (!$isChairman) {
+            $stats = [
+                'products' => Product::count(),
+                'orders' => Order::count(),
+                'users' => User::count(),
+                'revenue' => Order::sum('total'),
+                'pending_orders' => Order::where('status', 'pending')->count(),
+                'completed_orders' => Order::where('status', 'completed')->count(),
+                'today_revenue' => Order::whereDate('created_at', Carbon::today())->sum('total'),
             ];
-        });
 
-        // Order status distribution for doughnut chart
-        $statusCounts = Order::selectRaw('status, COUNT(*) as count')
-            ->groupBy('status')
-            ->pluck('count', 'status');
+            // Sales last 7 days for line chart
+            $salesLast7Days = collect(range(6, 0))->map(function ($daysAgo) {
+                $date = Carbon::today()->subDays($daysAgo);
+                return [
+                    'date' => $date->format('M d'),
+                    'total' => Order::whereDate('created_at', $date)->sum('total'),
+                ];
+            });
 
-        $recentOrders = Order::with('user')
-            ->latest()
-            ->take(6)
-            ->get();
+            // Order status distribution for doughnut chart
+            $statusCounts = Order::selectRaw('status, COUNT(*) as count')
+                ->groupBy('status')
+                ->pluck('count', 'status');
 
-        $topProducts = Product::withCount('orderItems')
-            ->orderByDesc('order_items_count')
-            ->take(5)
-            ->get();
+            $recentOrders = Order::with('user')
+                ->latest()
+                ->take(6)
+                ->get();
+
+            $topProducts = Product::withCount('orderItems')
+                ->orderByDesc('order_items_count')
+                ->take(5)
+                ->get();
+        } else {
+            // Chairman-specific data
+            // Pending approvals
+            $pendingContributions = PartnerContribution::where('status', 'pending')
+                ->with(['partner', 'creator'])
+                ->latest('created_at')
+                ->take(5)
+                ->get();
+
+            $pendingFinancialRecords = FinancialRecord::where('status', 'pending_approval')
+                ->with(['creator', 'partner', 'project'])
+                ->latest('created_at')
+                ->take(5)
+                ->get();
+
+            $pendingPenalties = PenaltyAdjustment::where('status', 'pending')
+                ->with(['partner', 'creator'])
+                ->latest('created_at')
+                ->take(5)
+                ->get();
+
+            // Count pending approvals that Chairman can approve
+            $pendingApprovalCounts = [
+                'contributions' => PartnerContribution::where('status', 'pending')->count(),
+                'financial_records' => FinancialRecord::where('status', 'pending_approval')->count(),
+                'penalties' => PenaltyAdjustment::where('status', 'pending')->count(),
+            ];
+
+            // Voting topics
+            $openVotingTopics = VotingTopic::open()
+                ->withCount('votes')
+                ->orderBy('opens_at', 'desc')
+                ->take(5)
+                ->get();
+
+            $recentVotingTopics = VotingTopic::withCount('votes')
+                ->orderByDesc('created_at')
+                ->take(5)
+                ->get();
+
+            // Recent approval decisions by Chairman
+            $recentApprovalDecisions = ApprovalDecision::where('user_id', $user->id)
+                ->with(['approval.creator'])
+                ->latest()
+                ->take(10)
+                ->get();
+
+            // Approval statistics (last 30 days)
+            $approvalStats = [
+                'total_approved' => ApprovalDecision::where('user_id', $user->id)
+                    ->where('decision', 'approve')
+                    ->where('created_at', '>=', Carbon::now()->subDays(30))
+                    ->count(),
+                'total_rejected' => ApprovalDecision::where('user_id', $user->id)
+                    ->where('decision', 'reject')
+                    ->where('created_at', '>=', Carbon::now()->subDays(30))
+                    ->count(),
+                'pending_awaiting' => Approval::where('status', 'pending')
+                    ->whereHas('decisions', function($q) use ($user) {
+                        $q->where('user_id', '!=', $user->id);
+                    })
+                    ->whereDoesntHave('decisions', function($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    })
+                    ->count(),
+            ];
+        }
 
         return view('admin.dashboard', [
-            'stats' => $stats,
-            'recentOrders' => $recentOrders,
-            'topProducts' => $topProducts,
-            'salesLast7Days' => $salesLast7Days,
-            'statusCounts' => $statusCounts,
+            'stats' => $stats ?? null,
+            'recentOrders' => $recentOrders ?? null,
+            'topProducts' => $topProducts ?? null,
+            'salesLast7Days' => $salesLast7Days ?? null,
+            'statusCounts' => $statusCounts ?? null,
             'groupFinancials' => $groupFinancials,
+            'isChairman' => $isChairman,
+            // Chairman-specific data
+            'pendingContributions' => $pendingContributions ?? null,
+            'pendingFinancialRecords' => $pendingFinancialRecords ?? null,
+            'pendingPenalties' => $pendingPenalties ?? null,
+            'pendingApprovalCounts' => $pendingApprovalCounts ?? null,
+            'openVotingTopics' => $openVotingTopics ?? null,
+            'recentVotingTopics' => $recentVotingTopics ?? null,
+            'recentApprovalDecisions' => $recentApprovalDecisions ?? null,
+            'approvalStats' => $approvalStats ?? null,
         ]);
     }
 
     public function export()
     {
+        $user = Auth::user();
+        $isChairman = $user->hasAdminRole('chairman');
+
+        // Chairman should not have access to e-commerce export
+        if ($isChairman) {
+            abort(403, 'E-commerce data export is not available for your role.');
+        }
+
         $stats = [
             'products' => Product::count(),
             'orders' => Order::count(),
@@ -104,6 +209,14 @@ class DashboardController extends Controller
 
     public function report()
     {
+        $user = Auth::user();
+        $isChairman = $user->hasAdminRole('chairman');
+
+        // Chairman should not have access to e-commerce report
+        if ($isChairman) {
+            abort(403, 'E-commerce data report is not available for your role.');
+        }
+
         $stats = [
             'products' => Product::count(),
             'orders' => Order::count(),

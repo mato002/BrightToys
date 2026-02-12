@@ -97,7 +97,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>BrightToys</h1>
+        <h1>Otto Investments</h1>
         <p>Invoice #{{ $order->order_number }}</p>
         <p>Date: {{ $order->created_at->format('F d, Y') }}</p>
     </div>
@@ -168,7 +168,7 @@
 
     <div class="footer">
         <p>Thank you for your purchase!</p>
-        <p>BrightToys - Bringing joy to every child</p>
+        <p>Otto Investments - Investment Management System</p>
         <p>For inquiries, please contact our support team.</p>
     </div>
 </body>
