@@ -294,5 +294,54 @@ class ProductController extends Controller
             return redirect()->back()->with('error', 'Failed to generate report: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Handle bulk actions on products (delete, update status, etc.)
+     */
+    public function bulkAction(\Illuminate\Http\Request $request)
+    {
+        $this->checkStoreAdminPermission();
+
+        $request->validate([
+            'action' => 'required|string|in:delete,activate,deactivate,feature,unfeature',
+            'ids' => 'required|string', // JSON array of IDs
+        ]);
+
+        $ids = json_decode($request->ids, true);
+        
+        if (!is_array($ids) || empty($ids)) {
+            return redirect()->back()->with('error', 'No items selected.');
+        }
+
+        $products = Product::whereIn('id', $ids);
+        $count = $products->count();
+
+        switch ($request->action) {
+            case 'delete':
+                $products->delete();
+                $message = "{$count} product(s) deleted successfully.";
+                break;
+            case 'activate':
+                $products->update(['status' => 'active']);
+                $message = "{$count} product(s) activated.";
+                break;
+            case 'deactivate':
+                $products->update(['status' => 'inactive']);
+                $message = "{$count} product(s) deactivated.";
+                break;
+            case 'feature':
+                $products->update(['featured' => true]);
+                $message = "{$count} product(s) marked as featured.";
+                break;
+            case 'unfeature':
+                $products->update(['featured' => false]);
+                $message = "{$count} product(s) unfeatured.";
+                break;
+            default:
+                return redirect()->back()->with('error', 'Invalid action.');
+        }
+
+        return redirect()->route('admin.products.index')->with('success', $message);
+    }
 }
 

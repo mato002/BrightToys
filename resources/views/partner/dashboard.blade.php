@@ -39,6 +39,9 @@
                     Arrears: <span class="font-semibold text-amber-700">Ksh {{ number_format($mc['total_arrears'], 0) }}</span> ·
                     Penalties: <span class="font-semibold text-red-700">Ksh {{ number_format($mc['total_penalty'], 0) }}</span> ·
                     Months in arrears: <span class="font-semibold">{{ $mc['months_in_arrears'] }}</span>
+                    @if($mc['days_in_arrears'] > 0)
+                        · Days: <span class="font-semibold">{{ $mc['days_in_arrears'] }}</span>
+                    @endif
                 </div>
             </div>
         </div>
@@ -49,8 +52,14 @@
                     <tr>
                         <th class="px-3 py-2 text-left font-semibold text-slate-700">Month</th>
                         <th class="px-3 py-2 text-left font-semibold text-slate-700">Expected</th>
+                        <th class="px-3 py-2 text-left font-semibold text-slate-700">Accumulated Arrears</th>
+                        @if($mc['current'] && $mc['current']['is_current'])
+                            <th class="px-3 py-2 text-left font-semibold text-slate-700">Amount Paid</th>
+                            <th class="px-3 py-2 text-left font-semibold text-slate-700">Balance Expected</th>
+                        @else
                         <th class="px-3 py-2 text-left font-semibold text-slate-700">Paid</th>
                         <th class="px-3 py-2 text-left font-semibold text-slate-700">Arrear</th>
+                        @endif
                         <th class="px-3 py-2 text-left font-semibold text-slate-700">Penalty</th>
                         <th class="px-3 py-2 text-left font-semibold text-slate-700">Status</th>
                     </tr>
@@ -60,18 +69,57 @@
                         @php
                             $rowStatus = 'On time';
                             $badgeClass = 'bg-emerald-100 text-emerald-700';
+                            $statusNarration = '';
+                            
                             if($month['arrear'] > 0 && $month['is_past']) {
                                 $rowStatus = 'In arrears';
                                 $badgeClass = 'bg-amber-100 text-amber-700';
                             }
+                            
+                            // For current month, show detailed status
+                            if($month['is_current']) {
+                                if($month['accumulated_arrears'] > 0 || $month['arrear'] > 0) {
+                                    $rowStatus = 'In arrears';
+                                    $badgeClass = 'bg-amber-100 text-amber-700';
+                                    $penaltyRatePercent = $mc['config']['penalty_rate'] * 100;
+                                    $statusNarration = "You are {$mc['months_in_arrears']} month(s) in arrears ({$mc['days_in_arrears']} days). ";
+                                    if($mc['total_penalty'] > 0) {
+                                        $statusNarration .= "⚠️ Arrears are accumulating penalties at a high rate ({$penaltyRatePercent}%). Current penalty: Ksh " . number_format($mc['total_penalty'], 0) . ". ";
+                                    }
+                                    $statusNarration .= "Please clear your arrears immediately to avoid further penalties.";
+                                } else {
+                                    $statusNarration = "Current month payment is on track.";
+                                }
+                            }
                         @endphp
-                        <tr>
-                            <td class="px-3 py-2 font-medium text-slate-900">{{ $month['label'] }}</td>
+                        <tr class="{{ $month['is_current'] ? 'bg-amber-50/50' : '' }}">
+                            <td class="px-3 py-2 font-medium text-slate-900">
+                                {{ $month['label'] }}
+                                @if($month['is_current'])
+                                    <span class="ml-1 text-[10px] text-amber-600 font-semibold">(Current)</span>
+                                @endif
+                            </td>
                             <td class="px-3 py-2">Ksh {{ number_format($month['expected'], 0) }}</td>
+                            <td class="px-3 py-2 {{ $month['accumulated_arrears'] > 0 ? 'text-amber-700 font-semibold' : 'text-slate-400' }}">
+                                @if($month['accumulated_arrears'] > 0)
+                                    Ksh {{ number_format($month['accumulated_arrears'], 0) }}
+                                @else
+                                    —
+                                @endif
+                            </td>
+                            @if($month['is_current'])
+                                <td class="px-3 py-2 {{ $month['paid'] > 0 ? 'text-emerald-700 font-semibold' : 'text-slate-700' }}">
+                                    Ksh {{ number_format($month['paid'], 0) }}
+                                </td>
+                                <td class="px-3 py-2 {{ $month['balance_expected'] > 0 ? 'text-red-700 font-semibold' : 'text-slate-700' }}">
+                                    Ksh {{ number_format($month['balance_expected'] ?? 0, 0) }}
+                                </td>
+                            @else
                             <td class="px-3 py-2">Ksh {{ number_format($month['paid'], 0) }}</td>
                             <td class="px-3 py-2 {{ $month['arrear'] > 0 && $month['is_past'] ? 'text-amber-700 font-semibold' : 'text-slate-700' }}">
                                 Ksh {{ number_format($month['arrear'], 0) }}
                             </td>
+                            @endif
                             <td class="px-3 py-2 {{ $month['penalty'] > 0 ? 'text-red-700 font-semibold' : 'text-slate-400' }}">
                                 @if($month['penalty'] > 0)
                                     Ksh {{ number_format($month['penalty'], 0) }}
@@ -80,9 +128,14 @@
                                 @endif
                             </td>
                             <td class="px-3 py-2">
+                                <div class="space-y-1">
                                 <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium {{ $badgeClass }}">
                                     {{ $rowStatus }}
                                 </span>
+                                    @if($statusNarration)
+                                        <p class="text-[10px] text-slate-600 leading-tight max-w-xs">{{ $statusNarration }}</p>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @endforeach

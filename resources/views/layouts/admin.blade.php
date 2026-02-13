@@ -378,6 +378,17 @@
                                 </span>
                                 <span class="font-medium sidebar-label">Partners</span>
                             </a>
+                            <a href="{{ route('admin.financial.contributions') }}"
+                               class="group flex items-center px-3 py-2.5 rounded-xl transition
+                                      {{ request()->routeIs('admin.financial.contributions*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
+                                <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M9 12l2 2 4-4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke-width="1.6"/>
+                                    </svg>
+                                </span>
+                                <span class="font-medium sidebar-label">Review Contributions</span>
+                            </a>
                         @endif
                         @if($canViewProjects)
                             <a href="{{ route('admin.projects.index') }}"
@@ -429,6 +440,14 @@
                                         </svg>
                                     </span>
                                     <span class="font-medium sidebar-label">Penalty Rates</span>
+                                </a>
+                                <a href="{{ route('admin.monthly-contribution-penalty-rates.index') }}"
+                                   class="group flex items-center px-3 py-2.5 rounded-xl transition
+                                          {{ request()->routeIs('admin.monthly-contribution-penalty-rates.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
+                                    <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
+                                        <i class="fas fa-calendar-alt text-xs"></i>
+                                    </span>
+                                    <span class="font-medium sidebar-label">Monthly Contribution Rates</span>
                                 </a>
                             @endif
                         @endif

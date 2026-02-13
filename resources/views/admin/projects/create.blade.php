@@ -15,39 +15,36 @@
         <p class="text-xs text-slate-500">Add a new project that partners can access from their dashboard.</p>
     </div>
 
-    <div class="bg-white border border-slate-100 rounded-lg p-6">
-        <form action="{{ route('admin.projects.store') }}" method="POST" class="space-y-4">
+    <div class="card form-full-width">
+        <form action="{{ route('admin.projects.store') }}" method="POST" class="card-body space-y-6">
             @csrf
 
             <div class="grid md:grid-cols-2 gap-4">
                 <div>
-                    <label for="name" class="block text-xs font-semibold text-slate-700 mb-1">
-                        Project Name <span class="text-red-500">*</span>
+                    <label for="name" class="form-label">
+                        Project Name <span class="required">*</span>
                     </label>
-                    <input type="text" id="name" name="name" value="{{ old('name') }}" required
-                           class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    <input type="text" id="name" name="name" value="{{ old('name') }}" required>
                     @error('name')
                         <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div class="md:col-span-2">
-                    <label for="description" class="block text-xs font-semibold text-slate-700 mb-1">
+                    <label for="description" class="form-label">
                         Description
                     </label>
-                    <textarea id="description" name="description" rows="3"
-                              class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">{{ old('description') }}</textarea>
+                    <textarea id="description" name="description" rows="3">{{ old('description') }}</textarea>
                     @error('description')
                         <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div class="md:col-span-2">
-                    <label for="objective" class="block text-xs font-semibold text-slate-700 mb-1">
-                        Objective (Why this project exists) <span class="text-red-500">*</span>
+                    <label for="objective" class="form-label">
+                        Objective (Why this project exists) <span class="required">*</span>
                     </label>
                     <textarea id="objective" name="objective" rows="3"
-                              class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
                               placeholder="e.g. Capital appreciation, cash flow, diversification">{{ old('objective') }}</textarea>
                     @error('objective')
                         <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
@@ -55,12 +52,10 @@
                 </div>
 
                 <div>
-                    <label for="type" class="block text-xs font-semibold text-slate-700 mb-1">
-                        Project Type <span class="text-red-500">*</span>
+                    <label for="type" class="form-label">
+                        Project Type <span class="required">*</span>
                     </label>
-                    <select id="type" name="type"
-                            class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                            required>
+                    <select id="type" name="type" required>
                         <option value="">Select type</option>
                         @foreach($types as $type)
                             <option value="{{ $type }}" {{ old('type', 'ecommerce') === $type ? 'selected' : '' }}>
@@ -74,12 +69,10 @@
                 </div>
 
                 <div>
-                    <label for="status" class="block text-xs font-semibold text-slate-700 mb-1">
-                        Status <span class="text-red-500">*</span>
+                    <label for="status" class="form-label">
+                        Status <span class="required">*</span>
                     </label>
-                    <select id="status" name="status"
-                            class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                            required>
+                    <select id="status" name="status" required>
                         @foreach($statuses as $status)
                             <option value="{{ $status }}" {{ old('status', 'planning') === $status ? 'selected' : '' }}>
                                 {{ ucfirst($status) }}
@@ -109,37 +102,34 @@
                         </p>
 
                         <div class="mb-3">
-                            <label class="block text-xs font-medium text-slate-700 mb-1">
+                            <label class="form-label">
                                 Member Capital Injected (Ksh)
                             </label>
                             <input type="number" step="0.01" name="member_capital_amount"
-                                   value="{{ old('member_capital_amount') }}"
-                                   class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                   value="{{ old('member_capital_amount') }}">
                             @error('member_capital_amount')
                                 <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <div class="mb-3">
-                            <label class="block text-xs font-medium text-slate-700 mb-1">
+                            <label class="form-label">
                                 Capital Date
                             </label>
                             <input type="date" name="member_capital_date"
-                                   value="{{ old('member_capital_date') }}"
-                                   class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                   value="{{ old('member_capital_date') }}">
                             @error('member_capital_date')
                                 <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <div>
-                            <label class="block text-xs font-medium text-slate-700 mb-1">
+                            <label class="form-label">
                                 Source (Investment Pool)
                             </label>
                             <input type="text" name="member_capital_source"
                                    value="{{ old('member_capital_source') }}"
-                                   placeholder="e.g. Members investment pool"
-                                   class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                   placeholder="e.g. Members investment pool">
                             @error('member_capital_source')
                                 <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                             @enderror
@@ -161,24 +151,22 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="block text-xs font-medium text-slate-700 mb-1">
+                            <label class="form-label">
                                 Lender (Bank / SACCO)
                             </label>
                             <input type="text" name="lender_name"
-                                   value="{{ old('lender_name') }}"
-                                   class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                   value="{{ old('lender_name') }}">
                             @error('lender_name')
                                 <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <div class="mb-3">
-                            <label class="block text-xs font-medium text-slate-700 mb-1">
+                            <label class="form-label">
                                 Loan Amount (Ksh)
                             </label>
                             <input type="number" step="0.01" name="loan_amount"
-                                   value="{{ old('loan_amount') }}"
-                                   class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                   value="{{ old('loan_amount') }}">
                             @error('loan_amount')
                                 <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                             @enderror
@@ -450,13 +438,11 @@
                 </p>
             </div>
 
-            <div class="flex items-center gap-3 pt-4 border-t border-slate-100">
-                <button type="submit"
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg">
+            <div class="flex items-center gap-3 pt-4 border-t-2 border-slate-200">
+                <button type="submit" class="btn-primary">
                     Create Project
                 </button>
-                <a href="{{ route('admin.projects.index') }}"
-                   class="border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold px-4 py-2 rounded-lg">
+                <a href="{{ route('admin.projects.index') }}" class="btn-secondary">
                     Cancel
                 </a>
             </div>

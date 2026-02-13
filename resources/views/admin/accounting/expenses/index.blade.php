@@ -100,7 +100,7 @@
                                 <div class="text-slate-900 font-medium">{{ $expense->journalEntry->poster->name ?? $expense->journalEntry->creator->name ?? 'System' }}</div>
                                 <div class="text-xs text-slate-500">{{ $expense->journalEntry->posted_at ? $expense->journalEntry->posted_at->format('M d, H:i') : $expense->journalEntry->created_at->format('M d, H:i') }}</div>
                             </td>
-                            <td class="px-4 py-3 text-slate-700">{{ $expense->transaction_date->format('d-m-Y') }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $expense->journalEntry->transaction_date->format('d-m-Y') }}</td>
                             <td class="px-4 py-3 font-semibold text-slate-900">{{ number_format($expense->amount, 2) }}</td>
                             <td class="px-4 py-3 text-slate-500">—</td>
                             <td class="px-4 py-3">
@@ -108,8 +108,8 @@
                                     <span class="font-medium">i. {{ $expense->account->name }} - KES {{ number_format($expense->amount, 2) }}</span>
                                 </div>
                             </td>
-                            <td class="px-4 py-3 text-slate-600">{{ $expense->reference_number ?: '—' }}</td>
-                            <td class="px-4 py-3 text-slate-600 font-mono text-xs">{{ $expense->transaction_id }}</td>
+                            <td class="px-4 py-3 text-slate-600">{{ $expense->journalEntry->reference_number ?: '—' }}</td>
+                            <td class="px-4 py-3 text-slate-600 font-mono text-xs">{{ $expense->journalEntry->transaction_id }}</td>
                         </tr>
                     @empty
                         <tr>

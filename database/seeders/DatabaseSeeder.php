@@ -56,5 +56,10 @@ class DatabaseSeeder extends Seeder
         $this->call([
             PenaltyRateSeeder::class,
         ]);
+
+        // Accounting data for testing
+        $this->call([
+            AccountingSeeder::class,
+        ]);
     }
 }

@@ -67,22 +67,31 @@
         </div>
     </form>
 
+    {{-- Include bulk actions form --}}
+    @include('admin.partials.bulk-actions', ['route' => 'admin.orders.bulk'])
+
     <div class="bg-white border border-slate-100 rounded-lg overflow-x-auto admin-table-scroll text-sm shadow-sm">
         <table class="min-w-full">
             <thead class="bg-slate-50 text-xs text-slate-500 uppercase tracking-wide">
             <tr>
-                <th class="px-3 py-2 text-left">Order #</th>
+                <th class="px-3 py-2 w-12">
+                    <input type="checkbox" id="select-all" aria-label="Select all orders">
+                </th>
+                <th class="px-3 py-2 text-left" data-sortable data-column="id">Order #</th>
                 <th class="px-3 py-2 text-left">Customer</th>
                 <th class="px-3 py-2 text-left">Items</th>
-                <th class="px-3 py-2 text-left">Total</th>
-                <th class="px-3 py-2 text-left">Status</th>
-                <th class="px-3 py-2 text-left">Date</th>
+                <th class="px-3 py-2 text-left" data-sortable data-column="total">Total</th>
+                <th class="px-3 py-2 text-left" data-sortable data-column="status">Status</th>
+                <th class="px-3 py-2 text-left" data-sortable data-column="created_at">Date</th>
                 <th class="px-3 py-2 text-right">Actions</th>
             </tr>
             </thead>
             <tbody>
             @forelse($orders as $order)
                 <tr class="border-t border-slate-100 hover:bg-slate-50">
+                    <td class="px-3 py-2">
+                        <input type="checkbox" class="item-checkbox" value="{{ $order->id }}" aria-label="Select order {{ $order->id }}">
+                    </td>
                     <td class="px-3 py-2">
                         <div class="text-xs font-semibold text-slate-900">#{{ $order->id }}</div>
                     </td>
@@ -101,8 +110,9 @@
                             @class([
                                 'bg-amber-50 text-amber-700 border border-amber-100' => $order->status === 'pending',
                                 'bg-blue-50 text-blue-700 border border-blue-100' => $order->status === 'processing',
+                                'bg-indigo-50 text-indigo-700 border border-indigo-100' => $order->status === 'shipped',
+                                'bg-purple-50 text-purple-700 border border-purple-100' => $order->status === 'delivered',
                                 'bg-emerald-50 text-emerald-700 border border-emerald-100' => $order->status === 'completed',
-                                'bg-slate-50 text-slate-700 border border-slate-100' => $order->status === 'shipped',
                                 'bg-red-50 text-red-700 border border-red-100' => $order->status === 'cancelled',
                             ])>
                             {{ ucfirst($order->status) }}
@@ -118,7 +128,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="px-3 py-4 text-center text-slate-500 text-sm">No orders found.</td>
+                    <td colspan="8" class="px-3 py-4 text-center text-slate-500 text-sm">No orders found.</td>
                 </tr>
             @endforelse
             </tbody>

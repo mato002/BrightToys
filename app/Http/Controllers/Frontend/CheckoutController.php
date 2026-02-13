@@ -17,17 +17,28 @@ class CheckoutController extends Controller
 {
     public function index()
     {
-        $sessionId = session('cart_session_id');
-        $userId = auth()->id();
-
-        $query = Cart::with('product');
-        
-        if ($userId) {
-            $query->where('user_id', $userId);
-        } else {
-            $query->where('session_id', $sessionId);
+        // Ensure user is authenticated and is a customer (not partner or admin)
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'Please login to proceed to checkout.');
         }
 
+        $user = auth()->user();
+        
+        // Redirect partners and admins to their respective dashboards
+        if ($user->is_partner ?? false) {
+            return redirect()->route('partner.dashboard')
+                ->with('error', 'Partners cannot use the customer checkout. Please use the Partner Console.');
+        }
+        
+        if ($user->is_admin ?? false) {
+            return redirect()->route('admin.dashboard')
+                ->with('error', 'Admins cannot use the customer checkout. Please use the Admin Panel.');
+        }
+
+        $sessionId = session('cart_session_id');
+        $userId = $user->id;
+
+        $query = Cart::with('product')->where('user_id', $userId);
         $cartItems = $query->get();
 
         if ($cartItems->isEmpty()) {
@@ -42,14 +53,32 @@ class CheckoutController extends Controller
         $shipping = 500; // Fixed shipping cost (can be made configurable)
         $total = $subtotal + $shipping;
 
-        // Get saved addresses if user is logged in
-        $addresses = auth()->check() ? auth()->user()->addresses : collect();
+        // Get saved addresses
+        $addresses = $user->addresses;
 
         return view('frontend.checkout', compact('cartItems', 'subtotal', 'shipping', 'total', 'addresses'));
     }
 
     public function store(Request $request)
     {
+        // Ensure user is authenticated and is a customer
+        if (!auth()->check()) {
+            return redirect()->route('login')->with('error', 'Please login to complete checkout.');
+        }
+
+        $user = auth()->user();
+        
+        // Redirect partners and admins
+        if ($user->is_partner ?? false) {
+            return redirect()->route('partner.dashboard')
+                ->with('error', 'Partners cannot use the customer checkout.');
+        }
+        
+        if ($user->is_admin ?? false) {
+            return redirect()->route('admin.dashboard')
+                ->with('error', 'Admins cannot use the customer checkout.');
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email',
@@ -60,7 +89,7 @@ class CheckoutController extends Controller
         ]);
 
         $sessionId = session('cart_session_id');
-        $userId = auth()->id();
+        $userId = $user->id;
 
         $query = Cart::with('product');
         

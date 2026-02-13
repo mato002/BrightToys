@@ -142,11 +142,34 @@ class PartnerContributionController extends Controller
 
     public function approve(Request $request, PartnerContribution $contribution)
     {
-        $this->checkFinancePermission();
-
         $user = auth()->user();
-        if (! $user->hasPermission('contributions.approve')) {
-            abort(403, 'You do not have permission to approve contributions.');
+        
+        // Ensure user is an admin or has chairman role
+        // Note: Chairman might be a partner, so we check roles even if is_admin is false
+        $isAdmin = $user->is_admin ?? false;
+        $hasChairmanRole = false;
+        
+        // Load roles to check for chairman
+        if (!$user->relationLoaded('adminRoles')) {
+            $user->load('adminRoles');
+        }
+        $hasChairmanRole = $user->adminRoles->contains('name', 'chairman');
+        
+        if (!$isAdmin && !$hasChairmanRole) {
+            abort(403, 'Only administrators or users with chairman role can approve contributions.');
+        }
+        
+        // Check if user has permission to approve contributions
+        // Allow: super_admin, chairman role, users with contributions.approve permission, or users with financial.records.view permission
+        $hasPermission = $user->isSuperAdmin()
+                      || $hasChairmanRole
+                      || $user->hasPermission('contributions.approve')
+                      || $user->hasPermission('financial.records.view');
+        
+        if (! $hasPermission) {
+            // Load roles for debugging
+            $roleNames = $user->adminRoles->pluck('name')->implode(', ');
+            abort(403, "You do not have permission to approve contributions. Your roles: " . ($roleNames ?: 'none') . ". Required: chairman role, contributions.approve permission, or financial.records.view permission.");
         }
 
         if ($contribution->status !== 'pending') {
@@ -156,6 +179,22 @@ class PartnerContributionController extends Controller
 
         // Use approval workflow (treasurer + chairman, etc.)
         $approval = ApprovalService::ensureApproval('contribution.approve', $contribution, $contribution->creator);
+        
+        // Check if ApprovalService allows this user to approve
+        // If ApprovalService has stricter rules, we need to handle that
+        if (!ApprovalService::canApprove($user, $approval)) {
+            // Get the rule to provide better error message
+            $rule = \App\Models\ApprovalRule::where('action', 'contribution.approve')
+                ->where('enabled', true)
+                ->first();
+            
+            if ($rule && !empty($rule->required_roles)) {
+                abort(403, "Approval requires one of these roles: " . implode(', ', $rule->required_roles) . ". Your roles: " . ($user->adminRoles->pluck('name')->implode(', ') ?: 'none'));
+            }
+            
+            abort(403, "You are not allowed to approve this contribution according to the approval workflow rules.");
+        }
+        
         $approval = ApprovalService::approve($user, $approval, $request->input('comment'));
 
         if ($approval->status === 'approved') {
@@ -167,6 +206,10 @@ class PartnerContributionController extends Controller
 
             // Post to member wallets / ledger
             WalletService::applyContribution($contribution);
+
+            // Post to accounting system (books of accounts)
+            $accountingService = new \App\Services\AccountingRuleService();
+            $accountingService->postContribution($contribution);
 
             ActivityLogService::log('contribution_approved', $contribution, [
                 'approved_by' => $user->name,

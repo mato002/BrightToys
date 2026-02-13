@@ -293,11 +293,13 @@
                         <p class="text-sm text-amber-800">You have already reviewed this product.</p>
                     </div>
                 @endif
-            @else
+            @endauth
+
+            @guest
                 <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-8">
                     <p class="text-sm text-slate-600 mb-2">Please <a href="{{ route('login') }}" class="text-amber-600 hover:underline font-semibold">login</a> to write a review.</p>
                 </div>
-            @endauth
+            @endguest
 
             {{-- Reviews List --}}
             @if($reviews->count() > 0)
@@ -345,31 +347,35 @@
             @endif
         </div>
     </div>
+@endsection
 
-    <script>
-        // Rating selector interaction
-        document.addEventListener('DOMContentLoaded', function() {
-            const stars = document.querySelectorAll('.rating-star');
-            const ratingInputs = document.querySelectorAll('input[name="rating"]');
-            
-            stars.forEach(star => {
-                star.addEventListener('click', function() {
-                    const rating = this.dataset.rating;
-                    ratingInputs.forEach(input => {
-                        if (input.value <= rating) {
-                            input.checked = true;
-                        }
-                    });
-                    updateStarDisplay(rating);
+@push('scripts')
+<script>
+    // Rating selector interaction
+    document.addEventListener('DOMContentLoaded', function() {
+        const stars = document.querySelectorAll('.rating-star');
+        const ratingInputs = document.querySelectorAll('input[name="rating"]');
+        
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.dataset.rating;
+                ratingInputs.forEach(input => {
+                    if (input.value <= rating) {
+                        input.checked = true;
+                    }
                 });
-
-                star.addEventListener('mouseenter', function() {
-                    const rating = this.dataset.rating;
-                    updateStarDisplay(rating);
-                });
+                updateStarDisplay(rating);
             });
 
-            document.getElementById('rating-selector').addEventListener('mouseleave', function() {
+            star.addEventListener('mouseenter', function() {
+                const rating = this.dataset.rating;
+                updateStarDisplay(rating);
+            });
+        });
+
+        const ratingSelector = document.getElementById('rating-selector');
+        if (ratingSelector) {
+            ratingSelector.addEventListener('mouseleave', function() {
                 const checked = document.querySelector('input[name="rating"]:checked');
                 if (checked) {
                     updateStarDisplay(checked.value);
@@ -377,25 +383,26 @@
                     updateStarDisplay(0);
                 }
             });
+        }
 
-            function updateStarDisplay(rating) {
-                stars.forEach((star, index) => {
-                    const starRating = 5 - index;
-                    const icon = star.querySelector('i');
-                    if (starRating <= rating) {
-                        icon.classList.remove('far');
-                        icon.classList.add('fas');
-                        icon.classList.remove('text-slate-300');
-                        icon.classList.add('text-amber-400');
-                    } else {
-                        icon.classList.remove('fas');
-                        icon.classList.add('far');
-                        icon.classList.remove('text-amber-400');
-                        icon.classList.add('text-slate-300');
-                    }
-                });
-            }
-        });
-    </script>
-@endsection
+        function updateStarDisplay(rating) {
+            stars.forEach((star, index) => {
+                const starRating = 5 - index;
+                const icon = star.querySelector('i');
+                if (starRating <= rating) {
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                    icon.classList.remove('text-slate-300');
+                    icon.classList.add('text-amber-400');
+                } else {
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                    icon.classList.remove('text-amber-400');
+                    icon.classList.add('text-slate-300');
+                }
+            });
+        }
+    });
+</script>
+@endpush
 

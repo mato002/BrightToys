@@ -20,7 +20,7 @@
             </a>
             @auth
                 <div>
-                    <a href="{{ route('account.profile') }}" 
+                    <a href="{{ route('account.overview') }}" 
                        class="text-amber-600 hover:text-amber-700 font-medium">
                         Go to My Account →
                     </a>

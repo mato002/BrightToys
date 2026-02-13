@@ -55,17 +55,23 @@
         </div>
     </form>
 
+    {{-- Include bulk actions form --}}
+    @include('admin.partials.bulk-actions', ['route' => 'admin.products.bulk'])
+
     <div class="bg-white border border-slate-100 rounded-lg overflow-x-auto admin-table-scroll text-sm shadow-sm">
         <table class="min-w-full">
             <thead class="bg-slate-50 text-xs text-slate-500 uppercase tracking-wide">
             <tr>
+                <th class="px-3 py-2 w-12">
+                    <input type="checkbox" id="select-all" aria-label="Select all products">
+                </th>
                 <th class="px-3 py-2 text-left">Image</th>
-                <th class="px-3 py-2 text-left">Name</th>
-                <th class="px-3 py-2 text-left">SKU</th>
+                <th class="px-3 py-2 text-left" data-sortable data-column="name">Name</th>
+                <th class="px-3 py-2 text-left" data-sortable data-column="sku">SKU</th>
                 <th class="px-3 py-2 text-left">Category</th>
-                <th class="px-3 py-2 text-left">Price</th>
-                <th class="px-3 py-2 text-left">Stock</th>
-                <th class="px-3 py-2 text-left">Status</th>
+                <th class="px-3 py-2 text-left" data-sortable data-column="price">Price</th>
+                <th class="px-3 py-2 text-left" data-sortable data-column="stock">Stock</th>
+                <th class="px-3 py-2 text-left" data-sortable data-column="status">Status</th>
                 <th class="px-3 py-2 text-left">Featured</th>
                 <th class="px-3 py-2 text-right">Actions</th>
             </tr>
@@ -73,6 +79,9 @@
             <tbody>
             @forelse($products as $product)
                 <tr class="border-t border-slate-100 hover:bg-slate-50">
+                    <td class="px-3 py-2">
+                        <input type="checkbox" class="item-checkbox" value="{{ $product->id }}" aria-label="Select product {{ $product->id }}">
+                    </td>
                     <td class="px-3 py-2">
                         @if($product->image_url)
                             <div class="w-12 h-12 rounded overflow-hidden bg-slate-100 flex items-center justify-center">
@@ -142,7 +151,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9" class="px-3 py-4 text-center text-gray-500">No products found.</td>
+                    <td colspan="10" class="px-3 py-4 text-center text-gray-500">No products found.</td>
                 </tr>
             @endforelse
             </tbody>

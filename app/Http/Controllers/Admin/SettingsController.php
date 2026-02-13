@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\AdminRole;
+use App\Models\ActivityLog;
 use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -34,7 +35,21 @@ class SettingsController extends Controller
             $roles = AdminRole::with('permissions')->orderBy('display_name')->get();
         }
 
-        return view('admin.settings.index', compact('user', 'canManageRoles', 'adminUsers', 'roles'));
+        // Get recent activity logs
+        $recentActivity = ActivityLog::where('user_id', $user->id)
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        // Get account stats
+        $accountStats = [
+            'member_since' => $user->created_at->diffForHumans(),
+            'last_login' => $user->updated_at->diffForHumans(),
+            'total_activity' => ActivityLog::where('user_id', $user->id)->count(),
+            'email_verified' => $user->email_verified_at !== null,
+        ];
+
+        return view('admin.settings.index', compact('user', 'canManageRoles', 'adminUsers', 'roles', 'recentActivity', 'accountStats'));
     }
 
     /**
@@ -129,5 +144,27 @@ class SettingsController extends Controller
 
         return redirect()->route('admin.settings')
             ->with('success', $role->display_name . ' role removed from ' . $user->name . '.');
+    }
+
+    /**
+     * Update profile information.
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = auth()->user();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+        ]);
+
+        $user->update($validated);
+
+        ActivityLogService::logAdmin('profile_updated', $user, [
+            'updated_fields' => array_keys($validated),
+        ]);
+
+        return redirect()->route('admin.settings')
+            ->with('success', 'Profile updated successfully.');
     }
 }

@@ -44,8 +44,11 @@ class ApprovalService
             ->first();
 
         if (! $rule) {
-            // If no rule defined, fallback to super admin only
-            return $user->isSuperAdmin();
+            // If no rule defined, fallback to super admin or chairman
+            if (!$user->relationLoaded('adminRoles')) {
+                $user->load('adminRoles');
+            }
+            return $user->isSuperAdmin() || $user->adminRoles->contains('name', 'chairman');
         }
 
         // Segregation of duties: prevent initiator from approving unless explicitly allowed
@@ -57,8 +60,16 @@ class ApprovalService
         $requiredRoles = $rule->required_roles ?? [];
         if (! empty($requiredRoles)) {
             $hasRequiredRole = false;
+            
+            // Load admin roles if not already loaded
+            if (!$user->relationLoaded('adminRoles')) {
+                $user->load('adminRoles');
+            }
+            
+            // Check if user has any of the required roles
+            // Note: We check directly on adminRoles collection to allow chairman even if is_admin is false
             foreach ($requiredRoles as $role) {
-                if ($user->hasAdminRole($role)) {
+                if ($user->adminRoles->contains('name', $role)) {
                     $hasRequiredRole = true;
                     break;
                 }

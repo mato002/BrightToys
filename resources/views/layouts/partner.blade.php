@@ -9,9 +9,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Partner Console')</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/admin-enhancements.js'])
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        /* Mobile Sidebar Overlay */
+        #partner-sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        @media (max-width: 1023px) {
+            #partner-sidebar {
+                transform: translateX(-100%);
+                z-index: 50;
+            }
+            body.mobile-sidebar-open #partner-sidebar {
+                transform: translateX(0);
+            }
+            body.mobile-sidebar-open::before {
+                content: '';
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 40;
+                backdrop-filter: blur(2px);
+            }
+            body.mobile-sidebar-open {
+                overflow: hidden;
+            }
+        }
+
         /* Fixed sidebar layout + collapse behaviour */
         @media (min-width: 1024px) {
             body.partner-has-sidebar {
@@ -19,6 +45,9 @@
             }
             body.partner-sidebar-collapsed.partner-has-sidebar {
                 padding-left: 4.5rem; /* collapsed width */
+            }
+            #partner-sidebar {
+                transform: translateX(0) !important;
             }
         }
 
@@ -69,6 +98,60 @@
             overscroll-behavior: contain;
         }
 
+        /* Responsive Tables - Mobile Cards */
+        @media (max-width: 768px) {
+            .responsive-table {
+                display: block;
+            }
+            .responsive-table thead {
+                display: none;
+            }
+            .responsive-table tbody {
+                display: block;
+            }
+            .responsive-table tr {
+                display: block;
+                margin-bottom: 1rem;
+                border: 1px solid #e2e8f0;
+                border-radius: 0.5rem;
+                background: white;
+                padding: 1rem;
+            }
+            .responsive-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.5rem 0;
+                border: none;
+                text-align: right;
+            }
+            .responsive-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                text-align: left;
+                color: #64748b;
+                margin-right: 1rem;
+            }
+            .responsive-table td:last-child {
+                border-bottom: none;
+            }
+        }
+
+        /* Mobile Header Adjustments */
+        @media (max-width: 768px) {
+            header {
+                padding: 0.75rem 1rem;
+                position: relative;
+                z-index: 30;
+            }
+
+            /* Ensure profile menu is positioned correctly on mobile */
+            .flex.items-center.space-x-3.relative {
+                position: relative;
+                z-index: 50;
+            }
+        }
+
         /* Keep footer visible at the bottom on all screen sizes */
         .partner-main {
             padding-bottom: 3.5rem; /* space so content isn't hidden behind footer */
@@ -105,6 +188,52 @@
             transform: rotate(180deg);
         }
 
+        /* Profile dropdown mobile improvements */
+        @media (max-width: 768px) {
+            #profile-menu {
+                right: 0.5rem;
+                width: calc(100vw - 1rem);
+                max-width: 16rem;
+            }
+        }
+
+        /* Touch-friendly buttons */
+        .nav-group-toggle,
+        #profile-toggle {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            cursor: pointer;
+        }
+
+        /* Profile chevron rotation */
+        #profile-toggle.active #profile-chevron {
+            transform: rotate(180deg);
+        }
+
+        /* Better mobile touch targets */
+        @media (max-width: 768px) {
+            .nav-group-toggle {
+                min-height: 44px; /* iOS recommended touch target */
+                padding: 0.75rem;
+            }
+            
+            #profile-toggle {
+                min-height: 44px;
+                min-width: 44px;
+            }
+
+            .nav-group-content a {
+                min-height: 44px;
+                padding: 0.75rem;
+            }
+
+            #profile-menu a,
+            #profile-menu button {
+                min-height: 44px;
+                padding: 0.75rem 1rem;
+            }
+        }
+
         /* Sidebar collapse styles */
         @media (min-width: 1024px) {
             #partner-sidebar.collapsed {
@@ -119,25 +248,14 @@
             }
         }
 
-        /* Mobile sidebar styles */
-        @media (max-width: 1023px) {
-            #partner-sidebar {
-                position: fixed;
-                z-index: 50;
-                display: flex !important;
-            }
-            #partner-sidebar.hidden {
-                display: none !important;
-            }
-        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased partner-has-sidebar">
-    {{-- Mobile overlay --}}
-    <div id="sidebar-overlay" class="hidden fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+    {{-- Mobile Sidebar Backdrop --}}
+    <div id="mobile-sidebar-backdrop" class="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40 opacity-0 pointer-events-none transition-opacity duration-300"></div>
     
     {{-- Sidebar --}}
-    <aside id="partner-sidebar" class="hidden lg:flex fixed inset-y-0 left-0 w-64 bg-amber-900 border-r border-amber-900/80 text-amber-50 transition-all duration-200 ease-in-out shadow-xl/40 z-50 lg:z-20">
+    <aside id="partner-sidebar" class="fixed inset-y-0 left-0 w-64 bg-amber-900 border-r border-amber-900/80 text-amber-50 transition-all duration-300 ease-in-out shadow-xl/40 z-50 lg:z-20 flex">
         <div class="flex flex-col w-full h-full overflow-hidden">
             <div class="px-6 py-5 border-b border-amber-800/80 flex items-center justify-between sticky top-0 bg-amber-900 z-10">
                 <div class="flex items-center space-x-3">
@@ -149,9 +267,20 @@
                         <p class="text-[11px] text-amber-100/80 sidebar-label">{{ $partner->name ?? $user?->name }}</p>
                     </div>
                 </div>
-                <button id="sidebar-collapse-toggle" type="button" class="flex items-center justify-center w-8 h-8 rounded-lg border border-amber-700/60 text-amber-100 hover:bg-amber-800/60 transition-colors" title="Collapse sidebar">
-                    <span class="text-[12px]">«</span>
-                </button>
+                <div class="flex items-center gap-2">
+                    <button id="mobile-sidebar-close"
+                            type="button"
+                            class="lg:hidden flex items-center justify-center w-8 h-8 rounded-lg border border-amber-700/60 text-amber-100 hover:bg-amber-800/60 transition-colors"
+                            title="Close sidebar"
+                            aria-label="Close sidebar">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                    <button id="sidebar-collapse-toggle" type="button" class="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg border border-amber-700/60 text-amber-100 hover:bg-amber-800/60 transition-colors" title="Collapse sidebar">
+                        <span class="text-[12px]">«</span>
+                    </button>
+                </div>
             </div>
 
             <nav class="mt-4 px-3 text-[13px] space-y-1 flex-1 overflow-y-auto min-h-0" style="max-height: calc(100vh - 200px);">
@@ -253,6 +382,119 @@
                     </div>
                 </div>
 
+                {{-- Accounting Section --}}
+                <div class="nav-group mb-2">
+                    <button type="button" class="nav-group-toggle w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-amber-200/80 hover:bg-amber-800/60 hover:text-amber-50 transition sidebar-section-label" data-group="accounting">
+                        <span class="text-[11px] font-medium uppercase tracking-[0.18em]">Accounting</span>
+                        <svg class="nav-chevron h-3 w-3 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div class="nav-group-content hidden pl-2 mt-1 space-y-1" data-content="accounting">
+                        <a href="{{ route('partner.accounting.dashboard') }}" class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('partner.accounting.dashboard') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                            <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M9 12l2 2 4-4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke-width="1.6"/>
+                                </svg>
+                            </span>
+                            <span class="font-medium sidebar-label">Dashboard</span>
+                        </a>
+                        <a href="{{ route('partner.accounting.financial-overview') }}" class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('partner.accounting.financial-overview') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                            <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <span class="font-medium sidebar-label">Financial Overview</span>
+                        </a>
+                        <a href="{{ route('partner.accounting.chart-of-accounts') }}" class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('partner.accounting.chart-of-accounts') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                            <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M4 7h16M4 12h16M4 17h16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <span class="font-medium sidebar-label">Chart of Accounts</span>
+                        </a>
+                        <a href="{{ route('partner.accounting.posted-entries') }}" class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('partner.accounting.posted-entries') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                            <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <span class="font-medium sidebar-label">Journal Entries</span>
+                        </a>
+                        <a href="{{ route('partner.accounting.ledger') }}" class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('partner.accounting.ledger') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                            <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <span class="font-medium sidebar-label">General Ledger</span>
+                        </a>
+                        <a href="{{ route('partner.accounting.expenses') }}" class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('partner.accounting.expenses') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                            <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M17 9V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2m2 4h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2zm7-5a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <span class="font-medium sidebar-label">Expenses</span>
+                        </a>
+                        <a href="{{ route('partner.accounting.reports') }}" class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('partner.accounting.reports') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                            <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M14 2v6h6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M16 13H8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M16 17H8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M10 9H8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <span class="font-medium sidebar-label">Financial Reports</span>
+                        </a>
+                        <a href="{{ route('partner.accounting.budget') }}" class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('partner.accounting.budget') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                            <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M3 3v18h18" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M18 7c0 1.66-1.34 3-3 3s-3-1.34-3-3 1.34-3 3-3 3 1.34 3 3z" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M18 14c0 1.66-1.34 3-3 3s-3-1.34-3-3 1.34-3 3-3 3 1.34 3 3z" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <span class="font-medium sidebar-label">Budget</span>
+                        </a>
+                        <a href="{{ route('partner.accounting.assets') }}" class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('partner.accounting.assets') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                            <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M9 22V12h6v10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <span class="font-medium sidebar-label">Assets</span>
+                        </a>
+                        <a href="{{ route('partner.accounting.reconciliation') }}" class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('partner.accounting.reconciliation') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                            <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M9 11l3 3L22 4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <span class="font-medium sidebar-label">Reconciliation</span>
+                        </a>
+                        <a href="{{ route('partner.accounting.payroll') }}" class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('partner.accounting.payroll') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                            <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle cx="9" cy="7" r="4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <span class="font-medium sidebar-label">Payroll</span>
+                        </a>
+                    </div>
+                </div>
+
                 {{-- Resources Section --}}
                 <div class="nav-group mb-2">
                     <button type="button" class="nav-group-toggle w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-amber-200/80 hover:bg-amber-800/60 hover:text-amber-50 transition sidebar-section-label" data-group="resources">
@@ -328,9 +570,9 @@
                     <span class="sidebar-label">View website</span>
                     <span class="text-[10px]">↗</span>
                 </a>
-                <button type="button" onclick="window.open('https://odhiambo.netlify.app','_blank')" class="w-full text-left text-[11px] text-amber-300 hover:text-amber-100 hover:underline mt-1">
+                <a href="https://mathiasodhiambo.netlify.app" target="_blank" rel="noopener noreferrer" class="w-full text-left text-[11px] text-amber-300 hover:text-amber-100 hover:underline mt-1 block">
                     © {{ date('Y') }} Otto Investments Partner
-                </button>
+                </a>
             </div>
         </div>
     </aside>
@@ -357,15 +599,15 @@
                     <span class="font-semibold text-slate-900">{{ auth()->user()->name ?? 'Partner' }}</span>
                     <span class="text-slate-500">{{ auth()->user()->email ?? '' }}</span>
                 </div>
-                <button id="profile-toggle" type="button" class="flex items-center space-x-2 rounded-full border border-slate-200 bg-white px-2 py-1.5 text-[11px] shadow-sm hover:bg-slate-50 relative z-40">
+                <button id="profile-toggle" type="button" class="flex items-center space-x-2 rounded-full border border-slate-200 bg-white px-2 py-1.5 text-[11px] shadow-sm hover:bg-slate-50 relative z-50 touch-manipulation">
                     <div class="w-7 h-7 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-semibold shadow-lg shadow-amber-500/40">
                         {{ strtoupper(substr(auth()->user()->name ?? 'P', 0, 1)) }}
                     </div>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-500 transition-transform duration-200" id="profile-chevron" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06z" clip-rule="evenodd"/>
                     </svg>
                 </button>
-                <div id="profile-menu" class="hidden absolute right-0 top-full mt-2 w-48 rounded-lg border border-slate-200 bg-white shadow-lg shadow-slate-200/80 text-[12px] py-1 z-50">
+                <div id="profile-menu" class="hidden absolute right-0 top-full mt-2 w-48 sm:w-56 rounded-lg border border-slate-200 bg-white shadow-xl shadow-slate-200/80 text-[12px] py-1 z-[60]">
                     <div class="px-3 py-2 border-b border-slate-100">
                         <p class="font-semibold text-slate-900 truncate">{{ auth()->user()->name ?? 'Partner' }}</p>
                         <p class="text-[11px] text-slate-500 truncate">{{ auth()->user()->email ?? '' }}</p>
@@ -391,7 +633,7 @@
 
         <footer class="px-4 md:px-6 py-3 text-[11px] text-slate-500 border-t border-slate-200 bg-white/80 backdrop-blur partner-footer">
             <div class="mx-auto max-w-6xl flex items-center justify-between">
-                <a href="https://odhiambo.netlify.app" target="_blank" class="hover:underline">
+                <a href="https://mathiasodhiambo.netlify.app" target="_blank" rel="noopener noreferrer" class="hover:underline">
                     © {{ date('Y') }} Otto Investments Partner
                 </a>
                 <span class="hidden sm:inline text-slate-600">Investment overview dashboard</span>
@@ -403,71 +645,83 @@
         (function () {
             const sidebar = document.getElementById('partner-sidebar');
             const toggle = document.getElementById('sidebar-toggle');
-            const overlay = document.getElementById('sidebar-overlay');
+            const mobileSidebarClose = document.getElementById('mobile-sidebar-close');
+            const mobileBackdrop = document.getElementById('mobile-sidebar-backdrop');
             const profileToggle = document.getElementById('profile-toggle');
             const profileMenu = document.getElementById('profile-menu');
             const collapseToggle = document.getElementById('sidebar-collapse-toggle');
+            const body = document.body;
 
-            function showSidebar() {
-                if (window.innerWidth < 1024) {
-                    sidebar.classList.remove('hidden');
-                    if (overlay) overlay.classList.remove('hidden');
+            const openSidebar = () => {
+                body.classList.add('mobile-sidebar-open');
+                if (mobileBackdrop) {
+                    mobileBackdrop.classList.remove('opacity-0', 'pointer-events-none');
+                    mobileBackdrop.classList.add('opacity-100');
                 }
-            }
+            };
 
-            function hideSidebar() {
-                if (window.innerWidth < 1024) {
-                    sidebar.classList.add('hidden');
-                    if (overlay) overlay.classList.add('hidden');
+            const closeSidebar = () => {
+                body.classList.remove('mobile-sidebar-open');
+                if (mobileBackdrop) {
+                    mobileBackdrop.classList.add('opacity-0', 'pointer-events-none');
+                    mobileBackdrop.classList.remove('opacity-100');
                 }
-            }
+            };
 
-            if (sidebar && toggle) {
+            if (toggle) {
                 toggle.addEventListener('click', function (e) {
                     e.stopPropagation();
-                    // On mobile, toggle the sidebar
                     if (window.innerWidth < 1024) {
-                        if (sidebar.classList.contains('hidden')) {
-                            showSidebar();
+                        if (body.classList.contains('mobile-sidebar-open')) {
+                            closeSidebar();
                         } else {
-                            hideSidebar();
+                            openSidebar();
                         }
                     }
-                });
-
-                // Hide sidebar when clicking on overlay
-                if (overlay) {
-                    overlay.addEventListener('click', function() {
-                        hideSidebar();
-                    });
-                }
-
-                // Hide sidebar when clicking outside on small screens
-                document.addEventListener('click', function (e) {
-                    if (window.innerWidth < 1024 &&
-                        !sidebar.classList.contains('hidden') &&
-                        !sidebar.contains(e.target) &&
-                        !toggle.contains(e.target) &&
-                        overlay &&
-                        !overlay.contains(e.target)) {
-                        hideSidebar();
-                    }
-                });
-
-                // Handle window resize - ensure sidebar is hidden on mobile by default
-                let resizeTimer;
-                window.addEventListener('resize', function() {
-                    clearTimeout(resizeTimer);
-                    resizeTimer = setTimeout(function() {
-                        if (window.innerWidth < 1024) {
-                            hideSidebar();
-                        } else {
-                            sidebar.classList.remove('hidden');
-                            if (overlay) overlay.classList.add('hidden');
-                        }
-                    }, 100);
                 });
             }
+
+            if (mobileSidebarClose) {
+                mobileSidebarClose.addEventListener('click', closeSidebar);
+            }
+
+            if (mobileBackdrop) {
+                mobileBackdrop.addEventListener('click', closeSidebar);
+            }
+
+            // Close sidebar when clicking on a link (mobile only)
+            if (sidebar) {
+                const sidebarLinks = sidebar.querySelectorAll('a');
+                sidebarLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        if (window.innerWidth < 1024) {
+                            closeSidebar();
+                        }
+                    });
+                });
+            }
+
+            // Close sidebar on escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && body.classList.contains('mobile-sidebar-open')) {
+                    closeSidebar();
+                }
+            });
+
+            // Handle window resize - ensure sidebar state is correct
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    if (window.innerWidth >= 1024) {
+                        body.classList.remove('mobile-sidebar-open');
+                        if (mobileBackdrop) {
+                            mobileBackdrop.classList.add('opacity-0', 'pointer-events-none');
+                            mobileBackdrop.classList.remove('opacity-100');
+                        }
+                    }
+                }, 100);
+            });
 
             if (collapseToggle) {
                 collapseToggle.addEventListener('click', function (e) {
@@ -500,7 +754,38 @@
             if (profileToggle && profileMenu) {
                 profileToggle.addEventListener('click', function (e) {
                     e.stopPropagation();
-                    profileMenu.classList.toggle('hidden');
+                    e.preventDefault();
+                    const isHidden = profileMenu.classList.contains('hidden');
+                    
+                    // Close all other dropdowns first
+                    document.querySelectorAll('.nav-group-content.expanded').forEach(function(content) {
+                        content.classList.remove('expanded');
+                        setTimeout(function() {
+                            content.classList.add('hidden');
+                        }, 300);
+                    });
+                    document.querySelectorAll('.nav-group-toggle.active').forEach(function(toggle) {
+                        toggle.classList.remove('active');
+                    });
+                    
+                    if (isHidden) {
+                        profileMenu.classList.remove('hidden');
+                        profileMenu.style.display = 'block';
+                        profileToggle.classList.add('active');
+                    } else {
+                        profileMenu.classList.add('hidden');
+                        profileToggle.classList.remove('active');
+                    }
+                });
+
+                // Close profile menu when clicking outside or on links
+                profileMenu.addEventListener('click', function(e) {
+                    if (e.target.tagName === 'A' || e.target.closest('a') || e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+                        setTimeout(function() {
+                            profileMenu.classList.add('hidden');
+                            profileToggle.classList.remove('active');
+                        }, 100);
+                    }
                 });
 
                 document.addEventListener('click', function (e) {
@@ -508,6 +793,15 @@
                         !profileMenu.contains(e.target) &&
                         !profileToggle.contains(e.target)) {
                         profileMenu.classList.add('hidden');
+                        profileToggle.classList.remove('active');
+                    }
+                });
+
+                // Close profile menu on escape key
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape' && !profileMenu.classList.contains('hidden')) {
+                        profileMenu.classList.add('hidden');
+                        profileToggle.classList.remove('active');
                     }
                 });
             }
@@ -518,18 +812,26 @@
                     e.preventDefault();
                     e.stopPropagation();
                     
+                    // Close profile menu if open
+                    if (profileMenu && !profileMenu.classList.contains('hidden')) {
+                        profileMenu.classList.add('hidden');
+                        if (profileToggle) profileToggle.classList.remove('active');
+                    }
+                    
                     const groupName = this.getAttribute('data-group');
                     const content = document.querySelector(`.nav-group-content[data-content="${groupName}"]`);
                     const isExpanded = content && content.classList.contains('expanded');
                     
                     if (content) {
                         if (isExpanded) {
+                            // Collapse this group
                             content.classList.remove('expanded');
                             setTimeout(function() {
                                 content.classList.add('hidden');
                             }, 300);
                             this.classList.remove('active');
                         } else {
+                            // Expand this group
                             content.classList.remove('hidden');
                             // Use setTimeout to ensure the transition works
                             setTimeout(function() {
@@ -540,6 +842,16 @@
                     }
                 });
             });
+
+            // Ensure navigation groups work on mobile touch
+            if (sidebar) {
+                sidebar.addEventListener('touchstart', function(e) {
+                    // Allow touch events to propagate for navigation toggles
+                    if (e.target.closest('.nav-group-toggle')) {
+                        e.stopPropagation();
+                    }
+                }, { passive: true });
+            }
 
             // Auto-expand groups that contain active routes on page load
             document.querySelectorAll('.nav-group-content').forEach(function(content) {

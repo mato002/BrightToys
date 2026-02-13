@@ -12,45 +12,41 @@
         </div>
     </div>
 
-    <div class="bg-white border border-slate-100 rounded-lg p-6 max-w-2xl">
-        <form method="POST" action="{{ route('admin.voting-topics.store') }}" class="space-y-4">
+    <div class="card form-full-width">
+        <form method="POST" action="{{ route('admin.voting-topics.store') }}" class="card-body space-y-4">
             @csrf
 
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">
-                    Title <span class="text-red-500">*</span>
+            <div class="form-group">
+                <label class="form-label">
+                    Title <span class="required">*</span>
                 </label>
-                <input type="text" name="title" value="{{ old('title') }}"
-                       class="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                       required>
+                <input type="text" name="title" value="{{ old('title') }}" required>
                 @error('title')
-                    <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                    <p class="form-error">{{ $message }}</p>
                 @enderror
             </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">
+            <div class="form-group">
+                <label class="form-label">
                     Description / Question
                 </label>
-                <textarea name="description" rows="4"
-                          class="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">{{ old('description') }}</textarea>
+                <textarea name="description" rows="4">{{ old('description') }}</textarea>
                 @error('description')
-                    <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                    <p class="form-error">{{ $message }}</p>
                 @enderror
             </div>
 
-            <div class="grid md:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">
-                        Initial Status <span class="text-red-500">*</span>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">
+                        Initial Status <span class="required">*</span>
                     </label>
-                    <select name="status"
-                            class="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    <select name="status">
                         <option value="draft" {{ old('status', 'draft') === 'draft' ? 'selected' : '' }}>Draft</option>
                         <option value="open" {{ old('status') === 'open' ? 'selected' : '' }}>Open Immediately</option>
                     </select>
                     @error('status')
-                        <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                        <p class="form-error">{{ $message }}</p>
                     @enderror
                 </div>
 

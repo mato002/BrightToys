@@ -13,11 +13,11 @@
         </a>
     </div>
 
-    <form action="{{ route('admin.admins.store') }}" method="POST" class="bg-white border border-slate-100 rounded-lg p-4 text-sm space-y-4 shadow-sm">
+    <form action="{{ route('admin.admins.store') }}" method="POST" class="card card-body form-full-width">
         @csrf
         
         @if($errors->any())
-            <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-700">
+            <div class="alert alert-error">
                 <ul class="list-disc list-inside space-y-1">
                     @foreach($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -26,26 +26,24 @@
             </div>
         @endif
 
-        <div>
-            <label class="block text-xs font-semibold mb-1 text-slate-700">Full Name <span class="text-red-500">*</span></label>
+        <div class="form-group">
+            <label class="form-label">Full Name <span class="required">*</span></label>
             <input type="text" name="name" value="{{ old('name') }}" required
-                   class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-400"
                    placeholder="Enter full name">
         </div>
 
-        <div>
-            <label class="block text-xs font-semibold mb-1 text-slate-700">Email Address <span class="text-red-500">*</span></label>
+        <div class="form-group">
+            <label class="form-label">Email Address <span class="required">*</span></label>
             <input type="email" name="email" value="{{ old('email') }}" required
-                   class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-400"
                    placeholder="admin@brighttoys.com">
-            <p class="text-[10px] text-slate-500 mt-1">This email will be used for login.</p>
+            <p class="form-help">This email will be used for login.</p>
         </div>
 
-        <div>
-            <label class="block text-xs font-semibold mb-1 text-slate-700">Password <span class="text-red-500">*</span></label>
+        <div class="form-group">
+            <label class="form-label">Password <span class="required">*</span></label>
             <div class="relative">
                 <input type="password" name="password" id="password" required
-                       class="border border-slate-200 rounded w-full px-3 py-2 pr-12 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-400 password-toggle-input"
+                       class="pr-12"
                        placeholder="Minimum 8 characters">
                 <button type="button"
                         class="absolute inset-y-0 right-0 px-3 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 focus:outline-none password-toggle-btn transition-colors"
@@ -54,14 +52,14 @@
                     Show
                 </button>
             </div>
-            <p class="text-[10px] text-slate-500 mt-1">Password must be at least 8 characters long.</p>
+            <p class="form-help">Password must be at least 8 characters long.</p>
         </div>
 
-        <div>
-            <label class="block text-xs font-semibold mb-1 text-slate-700">Confirm Password <span class="text-red-500">*</span></label>
+        <div class="form-group">
+            <label class="form-label">Confirm Password <span class="required">*</span></label>
             <div class="relative">
                 <input type="password" name="password_confirmation" id="password_confirmation" required
-                       class="border border-slate-200 rounded w-full px-3 py-2 pr-12 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-400 password-toggle-input"
+                       class="pr-12"
                        placeholder="Re-enter password">
                 <button type="button"
                         class="absolute inset-y-0 right-0 px-3 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 focus:outline-none password-toggle-btn transition-colors"
@@ -72,25 +70,24 @@
             </div>
         </div>
 
-        <div class="border-t border-slate-100 pt-4">
-            <label class="block text-xs font-semibold mb-2 text-slate-700">Admin Roles</label>
-            <p class="text-[10px] text-slate-500 mb-3">Select roles for this admin. Super admins have full access.</p>
-            <div class="space-y-2">
+        <div class="form-group border-t-2 border-slate-200 pt-5">
+            <label class="form-label">Admin Roles</label>
+            <p class="form-help">Select roles for this admin. Super admins have full access.</p>
+            <div class="space-y-2 mt-3">
                 @foreach($roles ?? [] as $role)
                     <label class="flex items-center">
-                        <input type="checkbox" name="roles[]" value="{{ $role->id }}" 
-                               class="rounded border-slate-300 text-amber-500 focus:ring-amber-500">
-                        <span class="ml-2 text-xs text-slate-700">{{ $role->display_name }}</span>
+                        <input type="checkbox" name="roles[]" value="{{ $role->id }}">
+                        <span class="ml-2 text-sm text-slate-700">{{ $role->display_name }}</span>
                     </label>
                 @endforeach
             </div>
         </div>
 
-        <div class="flex items-center gap-3 pt-2 border-t border-slate-100">
-            <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-6 py-2 rounded shadow-sm">
+        <div class="flex items-center gap-3 pt-4 border-t-2 border-slate-200">
+            <button type="submit" class="btn-primary">
                 Create Admin
             </button>
-            <a href="{{ route('admin.admins.index') }}" class="text-sm text-slate-600 hover:text-slate-800">
+            <a href="{{ route('admin.admins.index') }}" class="btn-secondary">
                 Cancel
             </a>
         </div>

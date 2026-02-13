@@ -17,6 +17,22 @@ class CartController extends Controller
         });
     }
 
+    protected function getCartCount(?string $sessionId = null, ?int $userId = null): int
+    {
+        $sessionId = $sessionId ?? $this->currentSessionId();
+        $userId = $userId ?? auth()->id();
+
+        $query = Cart::query();
+        
+        if ($userId) {
+            $query->where('user_id', $userId);
+        } else {
+            $query->where('session_id', $sessionId);
+        }
+
+        return $query->sum('quantity');
+    }
+
     public function index()
     {
         $sessionId = $this->currentSessionId();
@@ -37,6 +53,28 @@ class CartController extends Controller
         });
 
         return view('frontend.cart', compact('items', 'total'));
+    }
+
+    public function accountIndex()
+    {
+        $sessionId = $this->currentSessionId();
+        $userId = auth()->id();
+
+        $query = Cart::with('product');
+        
+        if ($userId) {
+            $query->where('user_id', $userId);
+        } else {
+            $query->where('session_id', $sessionId);
+        }
+
+        $items = $query->get();
+
+        $total = $items->sum(function ($item) {
+            return $item->quantity * ($item->product->price ?? 0);
+        });
+
+        return view('frontend.account.cart', compact('items', 'total'));
     }
 
     public function add(Request $request, int $id)
@@ -90,7 +128,13 @@ class CartController extends Controller
         $cartItem->quantity = $newQuantity;
         $cartItem->save();
 
-        return redirect()->route('cart.index')->with('success', 'Product added to cart successfully!');
+        // Get updated cart count
+        $cartCount = $this->getCartCount($sessionId, $userId);
+
+        return back()->with([
+            'success' => 'Product added to cart successfully!',
+            'cart_count' => $cartCount
+        ]);
     }
 
     public function update(Request $request, int $id)
@@ -121,6 +165,14 @@ class CartController extends Controller
         $cartItem->quantity = $newQuantity;
         $cartItem->save();
 
+        // Check if request came from account section
+        $referer = request()->header('referer', '');
+        $isAccountContext = str_contains($referer, '/account/cart') || (str_contains($referer, '/account') && !str_contains($referer, '/account/orders'));
+        
+        if ($isAccountContext) {
+            return redirect()->route('account.cart.index')->with('success', 'Cart updated successfully.');
+        }
+        
         return redirect()->route('cart.index')->with('success', 'Cart updated successfully.');
     }
 
@@ -139,6 +191,14 @@ class CartController extends Controller
 
         $query->delete();
 
+        // Check if request came from account section
+        $referer = request()->header('referer', '');
+        $isAccountContext = str_contains($referer, '/account/cart') || (str_contains($referer, '/account') && !str_contains($referer, '/account/orders'));
+        
+        if ($isAccountContext) {
+            return redirect()->route('account.cart.index')->with('success', 'Item removed from cart.');
+        }
+        
         return redirect()->route('cart.index')->with('success', 'Item removed from cart.');
     }
 }

@@ -226,7 +226,7 @@ class AccountingController extends Controller
             ->groupBy('type');
         
         $rules = AccountingRule::with(['debitAccount', 'creditAccount'])
-            ->where('is_active', true)
+            ->orderBy('name')
             ->get();
         
         $walletMappings = WalletAccountMapping::with('account')->get()->keyBy('wallet_type');
@@ -326,6 +326,9 @@ class AccountingController extends Controller
         }
 
         $expenses = $query->paginate(20)->withQueryString();
+        
+        // Reload relationships after join (they are lost when using select)
+        $expenses->getCollection()->load(['journalEntry.creator', 'journalEntry.poster', 'account']);
 
         // Calculate total
         $total = JournalEntryLine::whereIn('account_id', $expenseAccountIds)
@@ -364,10 +367,110 @@ class AccountingController extends Controller
     /**
      * Display the general ledger
      */
-    public function ledger()
+    public function ledger(Request $request)
     {
-        // TODO: Implement general ledger logic
-        return view('admin.accounting.ledger.index');
+        // Build query for journal entry lines
+        $query = JournalEntryLine::with(['journalEntry.creator', 'journalEntry.poster', 'account'])
+            ->whereHas('journalEntry', function($q) {
+                $q->where('status', 'posted');
+            });
+
+        // Filter by account if provided
+        if ($request->filled('account_id')) {
+            $query->where('account_id', $request->account_id);
+        }
+
+        // Filter by branch if provided
+        if ($request->filled('branch')) {
+            $query->whereHas('journalEntry', function($q) use ($request) {
+                $q->where('branch_name', $request->branch);
+            });
+        }
+
+        // Filter by date range
+        if ($request->filled('from')) {
+            $query->whereHas('journalEntry', function($q) use ($request) {
+                $q->where('transaction_date', '>=', $request->from);
+            });
+        }
+
+        if ($request->filled('to')) {
+            $query->whereHas('journalEntry', function($q) use ($request) {
+                $q->where('transaction_date', '<=', $request->to);
+            });
+        }
+
+        // Get entries with proper ordering
+        $entries = $query
+            ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.id')
+            ->select('journal_entry_lines.*')
+            ->orderBy('journal_entries.transaction_date', 'asc')
+            ->orderBy('journal_entries.created_at', 'asc')
+            ->orderBy('journal_entry_lines.id', 'asc')
+            ->get();
+        
+        // Reload relationships after join
+        $entries->load(['journalEntry.creator', 'journalEntry.poster', 'account']);
+
+        // Calculate running balance per account
+        // Group entries by account first if showing all accounts
+        $balances = [];
+        $ledgerData = [];
+        $currentAccountId = null;
+        
+        foreach ($entries as $entry) {
+            $accountId = $entry->account_id;
+            
+            // If account changed and we're showing all accounts, reset balance for new account
+            if ($currentAccountId !== null && $currentAccountId !== $accountId && !$request->filled('account_id')) {
+                // Account changed - this is for visual separation if needed
+            }
+            $currentAccountId = $accountId;
+            
+            // Initialize balance for account if not exists
+            if (!isset($balances[$accountId])) {
+                $balances[$accountId] = 0;
+            }
+            
+            // Calculate balance based on entry type and account type
+            // ASSET and EXPENSE: debit increases, credit decreases
+            // LIABILITY, EQUITY, INCOME: credit increases, debit decreases
+            $accountType = $entry->account->type;
+            
+            if ($entry->entry_type === 'debit') {
+                if (in_array($accountType, ['ASSET', 'EXPENSE'])) {
+                    $balances[$accountId] += $entry->amount;
+                } else {
+                    $balances[$accountId] -= $entry->amount;
+                }
+            } else { // credit
+                if (in_array($accountType, ['ASSET', 'EXPENSE'])) {
+                    $balances[$accountId] -= $entry->amount;
+                } else {
+                    $balances[$accountId] += $entry->amount;
+                }
+            }
+            
+            $ledgerData[] = [
+                'entry' => $entry,
+                'balance' => $balances[$accountId],
+                'account_code' => $entry->account->code,
+                'account_name' => $entry->account->name,
+            ];
+        }
+
+        // Get accounts for filter dropdown
+        $accounts = ChartOfAccount::where('is_active', true)
+            ->orderBy('code')
+            ->get();
+
+        // Get unique branches for filter
+        $branches = JournalEntry::select('branch_name')
+            ->distinct()
+            ->orderBy('branch_name')
+            ->pluck('branch_name');
+
+        return view('admin.accounting.ledger.index', compact('ledgerData', 'accounts', 'branches'));
     }
 
     /**

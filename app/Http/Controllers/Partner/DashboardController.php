@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Partner;
 
 use App\Http\Controllers\Controller;
 use App\Models\FinancialRecord;
+use App\Models\MemberWallet;
 use App\Models\PartnerContribution;
 use App\Models\Order;
 use App\Services\ActivityLogService;
 use App\Services\MonthlyContributionService;
+use App\Services\WalletService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -308,13 +310,16 @@ class DashboardController extends Controller
             abort(403, 'You are not associated with a partner account.');
         }
 
-        // Load current wallet balances so the partner can see their position
-        $wallets = $partner->wallets()
-            ->get()
-            ->keyBy('type');
-
-        $investmentBalance = $wallets[\App\Models\MemberWallet::TYPE_INVESTMENT]->balance ?? 0;
-        $welfareBalance = $wallets[\App\Models\MemberWallet::TYPE_WELFARE]->balance ?? 0;
+        // Use WalletService to get balances - it will use wallets if available, 
+        // create them if missing, and sync them if out of sync
+        $investmentBalance = WalletService::getWalletBalance(
+            $partner, 
+            MemberWallet::TYPE_INVESTMENT
+        );
+        $welfareBalance = WalletService::getWalletBalance(
+            $partner, 
+            MemberWallet::TYPE_WELFARE
+        );
 
         return view('partner.contributions.create', compact('partner', 'investmentBalance', 'welfareBalance'));
     }

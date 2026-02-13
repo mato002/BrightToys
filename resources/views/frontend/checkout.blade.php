@@ -1,23 +1,10 @@
-@extends('layouts.app')
+@extends('layouts.account')
 
-@section('title', 'Checkout - Otto Investments')
+@section('title', 'Checkout')
+@section('page_title', 'Checkout')
 
 @section('content')
-    {{-- Hero section --}}
-    <section class="relative bg-gradient-to-br from-pink-100 via-amber-50 to-sky-100 overflow-hidden py-8">
-        {{-- Background image with overlay - Bright colorful toys --}}
-        <div class="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20" 
-             style="background-image: url('https://images.pexels.com/photos/160715/pexels-photo-160715.jpeg?auto=compress&cs=tinysrgb&w=1920');">
-        </div>
-        <div class="absolute inset-0 bg-gradient-to-br from-pink-100/80 via-amber-50/80 to-sky-100/80"></div>
-        
-        <div class="container mx-auto px-4 lg:px-8 text-center relative z-10">
-            <h1 class="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Complete Your Order</h1>
-            <p class="text-sm text-slate-600">Just a few details to get your toys on their way!</p>
-        </div>
-    </section>
-
-    <div class="container mx-auto px-4 lg:px-8 py-8">
+    <div class="w-full space-y-6">
 
         @if($errors->any())
             <div class="mb-6 text-sm text-red-700 bg-red-100 border border-red-200 px-4 py-3 rounded-2xl">
@@ -29,7 +16,7 @@
             </div>
         @endif
 
-        <div class="grid lg:grid-cols-3 gap-6 items-start">
+        <div class="grid lg:grid-cols-3 gap-6 items-start px-4 md:px-6">
             {{-- Main checkout column --}}
             <div class="lg:col-span-2 space-y-6">
                 {{-- Step indicator --}}

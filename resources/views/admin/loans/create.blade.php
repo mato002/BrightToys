@@ -15,12 +15,12 @@
         <p class="text-xs text-slate-500">Capture bank/SACCO loans and link them to projects.</p>
     </div>
 
-    <div class="bg-white border border-slate-100 rounded-lg p-6 max-w-2xl">
-        <form action="{{ route('admin.loans.store') }}" method="POST" class="space-y-4">
+    <div class="card form-full-width">
+        <form action="{{ route('admin.loans.store') }}" method="POST" class="card-body space-y-4">
             @csrf
 
             @if($errors->any())
-                <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-700 mb-2">
+                <div class="alert alert-error">
                     <ul class="list-disc list-inside space-y-1">
                         @foreach($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -29,47 +29,41 @@
                 </div>
             @endif
 
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Lender (Bank / SACCO) <span class="text-red-500">*</span></label>
-                <input type="text" name="lender_name" value="{{ old('lender_name') }}" required
-                       class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500">
+            <div class="form-group">
+                <label class="form-label">Lender (Bank / SACCO) <span class="required">*</span></label>
+                <input type="text" name="lender_name" value="{{ old('lender_name') }}" required>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Loan Amount (Ksh) <span class="text-red-500">*</span></label>
-                    <input type="number" step="0.01" name="amount" value="{{ old('amount') }}" min="0.01" required
-                           class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Loan Amount (Ksh) <span class="required">*</span></label>
+                    <input type="number" step="0.01" name="amount" value="{{ old('amount') }}" min="0.01" required>
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Interest Rate (% per year) <span class="text-red-500">*</span></label>
-                    <input type="number" step="0.01" name="interest_rate" value="{{ old('interest_rate') }}" min="0"
-                           class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500">
-                    <p class="text-[10px] text-slate-500 mt-1">e.g. 12 for 12% p.a.</p>
+                <div class="form-group">
+                    <label class="form-label">Interest Rate (% per year) <span class="required">*</span></label>
+                    <input type="number" step="0.01" name="interest_rate" value="{{ old('interest_rate') }}" min="0">
+                    <p class="form-help">e.g. 12 for 12% p.a.</p>
                 </div>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Tenure (months) <span class="text-red-500">*</span></label>
-                    <input type="number" name="tenure_months" value="{{ old('tenure_months') }}" min="1" required
-                           class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Tenure (months) <span class="required">*</span></label>
+                    <input type="number" name="tenure_months" value="{{ old('tenure_months') }}" min="1" required>
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Repayment Frequency <span class="text-red-500">*</span></label>
-                    <select name="repayment_frequency"
-                            class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500">
+                <div class="form-group">
+                    <label class="form-label">Repayment Frequency <span class="required">*</span></label>
+                    <select name="repayment_frequency">
                         <option value="monthly" {{ old('repayment_frequency', 'monthly') === 'monthly' ? 'selected' : '' }}>Monthly</option>
                         <option value="quarterly" {{ old('repayment_frequency') === 'quarterly' ? 'selected' : '' }}>Quarterly</option>
                     </select>
                 </div>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Linked Project</label>
-                    <select name="project_id"
-                            class="border border-slate-200 rounded w-full px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Linked Project</label>
+                    <select name="project_id">
                         <option value="">None</option>
                         @foreach($projects as $project)
                             <option value="{{ $project->id }}" {{ old('project_id') == $project->id ? 'selected' : '' }}>
@@ -85,13 +79,11 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-3 pt-4 border-t border-slate-100">
-                <button type="submit"
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg">
+            <div class="flex items-center gap-3 pt-4 border-t-2 border-slate-200">
+                <button type="submit" class="btn-primary">
                     Save Loan & Generate Schedule
                 </button>
-                <a href="{{ route('admin.loans.index') }}"
-                   class="border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold px-4 py-2 rounded-lg">
+                <a href="{{ route('admin.loans.index') }}" class="btn-secondary">
                     Cancel
                 </a>
             </div>

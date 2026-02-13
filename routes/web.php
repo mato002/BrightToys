@@ -43,6 +43,7 @@ Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.s
 
 // Customer account (includes members and non-admin users)
 Route::middleware(['auth', 'customer'])->prefix('account')->name('account.')->group(function () {
+    Route::get('/overview', [AccountController::class, 'overview'])->name('overview');
     Route::get('/', [AccountController::class, 'profile'])->name('profile');
     Route::get('/orders', [AccountController::class, 'orders'])->name('orders');
     Route::get('/orders/{order}/track', [AccountController::class, 'trackOrder'])->name('orders.track');
@@ -165,6 +166,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::post('/penalty-rates/{penaltyRate}/activate', [\App\Http\Controllers\Admin\PenaltyRateController::class, 'activate'])
         ->name('penalty-rates.activate');
     
+    // Monthly Contribution Penalty Rates Management
+    Route::resource('monthly-contribution-penalty-rates', \App\Http\Controllers\Admin\MonthlyContributionPenaltyRateController::class)
+        ->except(['show', 'destroy'])
+        ->parameters(['monthly-contribution-penalty-rates' => 'penalty_rate']);
+    
     // Penalty Adjustments (manual penalties, waivers, pauses)
     Route::get('/penalties', [\App\Http\Controllers\Admin\PenaltyAdjustmentController::class, 'index'])->name('penalties.index');
     Route::get('/penalties/create', [\App\Http\Controllers\Admin\PenaltyAdjustmentController::class, 'create'])->name('penalties.create');
@@ -241,6 +247,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         // Chart of Accounts
         Route::get('/chart-of-accounts', [\App\Http\Controllers\Admin\AccountingController::class, 'chartOfAccounts'])->name('chart-of-accounts.index');
         Route::post('/chart-of-accounts/wallet-mappings', [\App\Http\Controllers\Admin\AccountingController::class, 'updateWalletMappings'])->name('chart-of-accounts.update-mappings');
+        Route::resource('chart-of-accounts', \App\Http\Controllers\Admin\ChartOfAccountController::class)->except(['index']);
+        
+        // Accounting Rules
+        Route::resource('rules', \App\Http\Controllers\Admin\AccountingRuleController::class);
         
         // Expenses
         Route::get('/expenses', [\App\Http\Controllers\Admin\AccountingController::class, 'expenses'])->name('expenses.index');
@@ -303,6 +313,21 @@ Route::prefix('partner')->name('partner.')->middleware(['auth', 'partner'])->gro
     Route::put('/profile', [\App\Http\Controllers\Partner\ProfileController::class, 'update'])->name('profile.update');
         Route::get('/reports', [\App\Http\Controllers\Partner\DashboardController::class, 'reports'])->name('reports');
         Route::get('/notifications', [\App\Http\Controllers\Partner\NotificationController::class, 'index'])->name('notifications');
+    
+    // Accounting Module (read-only access for partners)
+    Route::prefix('accounting')->name('accounting.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Partner\AccountingController::class, 'dashboard'])->name('dashboard');
+        Route::get('/ledger', [\App\Http\Controllers\Partner\AccountingController::class, 'ledger'])->name('ledger');
+        Route::get('/reports', [\App\Http\Controllers\Partner\AccountingController::class, 'reports'])->name('reports');
+        Route::get('/chart-of-accounts', [\App\Http\Controllers\Partner\AccountingController::class, 'chartOfAccounts'])->name('chart-of-accounts');
+        Route::get('/posted-entries', [\App\Http\Controllers\Partner\AccountingController::class, 'postedEntries'])->name('posted-entries');
+        Route::get('/expenses', [\App\Http\Controllers\Partner\AccountingController::class, 'expenses'])->name('expenses');
+        Route::get('/budget', [\App\Http\Controllers\Partner\AccountingController::class, 'budget'])->name('budget');
+        Route::get('/assets', [\App\Http\Controllers\Partner\AccountingController::class, 'assets'])->name('assets');
+        Route::get('/reconciliation', [\App\Http\Controllers\Partner\AccountingController::class, 'reconciliation'])->name('reconciliation');
+        Route::get('/payroll', [\App\Http\Controllers\Partner\AccountingController::class, 'payroll'])->name('payroll');
+        Route::get('/financial-overview', [\App\Http\Controllers\Partner\AccountingController::class, 'financialOverview'])->name('financial-overview');
+    });
 
     // Weighted Voting (partners)
     Route::get('/voting', [\App\Http\Controllers\Partner\VotingController::class, 'index'])->name('voting.index');

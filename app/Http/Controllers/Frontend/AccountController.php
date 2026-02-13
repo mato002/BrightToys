@@ -5,15 +5,114 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Loan;
+use App\Models\Cart;
+use App\Models\Wishlist;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class AccountController extends Controller
 {
-    public function profile()
+    public function overview()
     {
         $user = auth()->user();
 
+        // Dashboard Statistics
+        $totalOrders = $user->orders()->count();
+        $totalSpent = $user->orders()->where('status', 'completed')->sum('total');
+        $pendingOrders = $user->orders()->where('status', 'pending')->count();
+        $processingOrders = $user->orders()->where('status', 'processing')->count();
+        $shippedOrders = $user->orders()->where('status', 'shipped')->count();
+        $deliveredOrders = $user->orders()->where('status', 'delivered')->count();
+        $completedOrders = $user->orders()->where('status', 'completed')->count();
+        $cancelledOrders = $user->orders()->where('status', 'cancelled')->count();
+        
+        $cartItems = Cart::where('user_id', $user->id)->sum('quantity');
+        $wishlistItems = Wishlist::where('user_id', $user->id)->count();
+        $savedAddresses = $user->addresses()->count();
+        
+        // Recent orders
+        $recentOrders = $user->orders()
+            ->with('items.product')
+            ->latest()
+            ->take(5)
+            ->get();
+        
+        // Orders this month
+        $ordersThisMonth = $user->orders()
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->count();
+        
+        $spentThisMonth = $user->orders()
+            ->where('status', 'completed')
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->sum('total');
+        
+        // Last 7 days orders
+        $ordersLast7Days = collect(range(6, 0))->map(function ($daysAgo) use ($user) {
+            $date = Carbon::today()->subDays($daysAgo);
+            return [
+                'date' => $date->format('M d'),
+                'count' => $user->orders()->whereDate('created_at', $date)->count(),
+                'total' => $user->orders()
+                    ->where('status', 'completed')
+                    ->whereDate('created_at', $date)
+                    ->sum('total'),
+            ];
+        });
+
+        $stats = [
+            'total_orders' => $totalOrders,
+            'total_spent' => $totalSpent,
+            'pending_orders' => $pendingOrders,
+            'processing_orders' => $processingOrders,
+            'shipped_orders' => $shippedOrders,
+            'delivered_orders' => $deliveredOrders,
+            'completed_orders' => $completedOrders,
+            'cancelled_orders' => $cancelledOrders,
+            'cart_items' => $cartItems,
+            'wishlist_items' => $wishlistItems,
+            'saved_addresses' => $savedAddresses,
+            'orders_this_month' => $ordersThisMonth,
+            'spent_this_month' => $spentThisMonth,
+        ];
+
+        return view('frontend.account.overview', compact('user', 'stats', 'recentOrders', 'ordersLast7Days'));
+    }
+
+    public function profile()
+    {
+        $user = auth()->user();
         return view('frontend.account.profile', compact('user'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = auth()->user();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        
+        if (isset($validated['phone'])) {
+            $user->phone = $validated['phone'];
+        }
+
+        if (!empty($validated['password'])) {
+            $user->password = bcrypt($validated['password']);
+        }
+
+        $user->save();
+
+        return redirect()->route('account.profile')
+            ->with('success', 'Profile updated successfully.');
     }
 
     public function orders()
@@ -246,6 +345,22 @@ class AccountController extends Controller
             'remainingTenure',
             'status'
         ));
+    }
+
+    public function notifications()
+    {
+        $user = auth()->user();
+        
+        $notifications = \App\Models\SystemNotification::where('user_id', $user->id)
+            ->latest()
+            ->paginate(20);
+        
+        // Mark as read when viewing
+        \App\Models\SystemNotification::where('user_id', $user->id)
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+        
+        return view('frontend.account.notifications', compact('user', 'notifications'));
     }
 }
 

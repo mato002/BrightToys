@@ -68,7 +68,7 @@ class OrderController extends Controller
     {
         $this->checkStoreAdminPermission(false); // Partners cannot modify
         $data = $request->validate([
-            'status' => 'required|string|in:pending,processing,shipped,completed,cancelled',
+            'status' => 'required|string|in:pending,processing,shipped,delivered,completed,cancelled',
         ]);
 
         $oldStatus = $order->status;
@@ -230,6 +230,56 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to generate report: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Handle bulk actions on orders (update status, delete, etc.)
+     */
+    public function bulkAction(\Illuminate\Http\Request $request)
+    {
+        $this->checkStoreAdminPermission(false); // Partners cannot modify
+
+        $request->validate([
+            'action' => 'required|string|in:delete,status_update',
+            'ids' => 'required|string', // JSON array of IDs
+            'status' => 'required_if:action,status_update|string|in:pending,processing,shipped,delivered,completed,cancelled',
+        ]);
+
+        $ids = json_decode($request->ids, true);
+        
+        if (!is_array($ids) || empty($ids)) {
+            return redirect()->back()->with('error', 'No items selected.');
+        }
+
+        $orders = Order::whereIn('id', $ids);
+        $count = $orders->count();
+
+        switch ($request->action) {
+            case 'delete':
+                $orders->delete();
+                $message = "{$count} order(s) deleted successfully.";
+                break;
+            case 'status_update':
+                $orders->update(['status' => $request->status]);
+                $message = "{$count} order(s) updated to " . ucfirst($request->status) . ".";
+                
+                // Restore stock if cancelled
+                if ($request->status === 'cancelled') {
+                    foreach ($orders->get() as $order) {
+                        foreach ($order->items as $item) {
+                            if ($item->product) {
+                                $item->product->stock += $item->quantity;
+                                $item->product->save();
+                            }
+                        }
+                    }
+                }
+                break;
+            default:
+                return redirect()->back()->with('error', 'Invalid action.');
+        }
+
+        return redirect()->route('admin.orders.index')->with('success', $message);
     }
 }
 
