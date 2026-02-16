@@ -8,6 +8,9 @@ use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
 use App\Models\AccountingRule;
 use App\Models\WalletAccountMapping;
+use App\Models\Loan;
+use App\Models\FinancialRecord;
+use App\Models\PartnerContribution;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -36,29 +39,118 @@ class AccountingController extends Controller
      */
     public function financialOverview()
     {
-        // TODO: Replace these placeholders with real aggregates from your accounting,
-        //       contributions, loans, assets and welfare tables.
+        // Get group financial snapshot from service
+        $snapshot = \App\Services\FinancialOverviewService::getGroupSnapshot();
+        
+        // Group Financial Summary
         $groupSummary = [
-            'total_contributions' => 0,
-            'welfare_total'       => 0,
-            'investment_total'    => 0,
-            'net_worth'           => 0,
+            'total_contributions' => ($snapshot['total_contributions_investment'] ?? 0) + ($snapshot['total_contributions_welfare'] ?? 0),
+            'welfare_total'       => $snapshot['welfare_balance'] ?? 0,
+            'investment_total'    => $snapshot['investment_wallet_total'] ?? 0,
+            'net_worth'           => $snapshot['net_worth'] ?? 0,
         ];
 
-        $bankBalances = [];
-        $outstandingLoans = [];
-        $assetsSummary = [];
-        $performance = [
-            'monthly' => [],
-            'yearly'  => [],
-            'trends'  => [],
+        // Bank & SACCO Balances - from Chart of Accounts (asset accounts that might be bank accounts)
+        $bankAccounts = ChartOfAccount::where('type', 'asset')
+            ->where(function($q) {
+                $q->where('name', 'like', '%bank%')
+                  ->orWhere('name', 'like', '%sacco%')
+                  ->orWhere('name', 'like', '%account%');
+            })
+            ->where('is_active', true)
+            ->get();
+        
+        $bankBalances = $bankAccounts->map(function($account) {
+            // Calculate balance from journal entries
+            $debits = \App\Models\JournalEntryLine::where('account_id', $account->id)
+                ->where('entry_type', 'debit')
+                ->sum('amount');
+            $credits = \App\Models\JournalEntryLine::where('account_id', $account->id)
+                ->where('entry_type', 'credit')
+                ->sum('amount');
+            $balance = $debits - $credits;
+            
+            // For now, reconciled = balance, unreconciled = 0 (can be enhanced with reconciliation data)
+            return [
+                'name' => $account->name,
+                'reconciled' => max(0, $balance),
+                'unreconciled' => 0, // TODO: Calculate from AccountReconciliation
+            ];
+        })->toArray();
+
+        // Outstanding Loans
+        $loans = \App\Models\Loan::whereIn('status', ['active', 'pending'])
+            ->with(['repayments'])
+            ->get();
+        
+        $outstandingLoans = $loans->map(function($loan) {
+            $totalRepaid = $loan->repayments->sum('amount_paid');
+            $outstandingPrincipal = max(0, $loan->amount - $totalRepaid);
+            
+            // Calculate interest (simple calculation - can be enhanced)
+            $monthsElapsed = \Carbon\Carbon::parse($loan->start_date)->diffInMonths(now());
+            $totalInterest = ($loan->amount * $loan->interest_rate / 100) * ($monthsElapsed / 12);
+            $interestPaid = 0; // TODO: Track interest payments separately
+            $outstandingInterest = max(0, $totalInterest - $interestPaid);
+            
+            return [
+                'name' => $loan->lender_name ?? 'Loan #' . $loan->id,
+                'principal' => $outstandingPrincipal,
+                'interest' => $outstandingInterest,
+                'status' => $loan->status === 'active' ? 'on-track' : 'pending',
+            ];
+        })->toArray();
+
+        // Assets Summary
+        $assetsSummary = [
+            'land' => $snapshot['assets']['land'] ?? 0,
+            'toy_shop' => $snapshot['assets']['toy_shop'] ?? 0,
+            'inventory' => $snapshot['assets']['inventory'] ?? 0,
         ];
+
+        // Performance Data
+        $performance = [
+            'monthly' => $snapshot['performance']['monthly'] ?? [],
+            'yearly'  => $snapshot['performance']['yearly'] ?? [],
+            'trends'  => $snapshot['performance']['trend'] ?? [],
+        ];
+
+        // Welfare Stats
+        $welfareContributions = \App\Models\PartnerContribution::where('status', 'approved')
+            ->where('is_archived', false)
+            ->where('fund_type', 'welfare')
+            ->where('type', 'contribution')
+            ->sum('amount');
+        
+        $welfareDisbursements = \App\Models\FinancialRecord::where('type', 'expense')
+            ->where('fund_type', 'welfare')
+            ->where('status', 'approved')
+            ->where('is_archived', false)
+            ->sum('amount');
+        
+        $recentWelfareDisbursements = \App\Models\FinancialRecord::where('type', 'expense')
+            ->where('fund_type', 'welfare')
+            ->where('status', 'approved')
+            ->where('is_archived', false)
+            ->with('partner')
+            ->latest('occurred_at')
+            ->limit(10)
+            ->get()
+            ->map(function($record) {
+                return [
+                    'date' => $record->occurred_at->format('M d, Y'),
+                    'member' => $record->partner->name ?? 'N/A',
+                    'purpose' => $record->description ?? 'Welfare disbursement',
+                    'amount' => $record->amount,
+                    'status' => $record->status,
+                ];
+            })->toArray();
 
         $welfareStats = [
-            'total_inflows'      => 0,
-            'total_disbursements'=> 0,
-            'remaining_balance'  => 0,
-            'recent_disbursements' => [],
+            'total_inflows'      => $welfareContributions,
+            'total_disbursements' => $welfareDisbursements,
+            'remaining_balance'  => $welfareContributions - $welfareDisbursements,
+            'recent_disbursements' => $recentWelfareDisbursements,
         ];
 
         return view('admin.accounting.financial-overview', compact(

@@ -125,8 +125,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/profile', [AdminProfileController::class, 'index'])->name('profile');
     Route::get('/profile/edit', [AdminProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/sessions', [AdminProfileController::class, 'sessions'])->name('profile.sessions');
+    Route::post('/profile/sessions/{sessionId}/revoke', [AdminProfileController::class, 'revokeSession'])->name('profile.sessions.revoke');
+    Route::post('/profile/sessions/revoke-all', [AdminProfileController::class, 'revokeAllOtherSessions'])->name('profile.sessions.revoke-all');
     
     Route::get('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings');
+    Route::put('/settings/profile', [\App\Http\Controllers\Admin\SettingsController::class, 'updateProfile'])->name('settings.profile');
     Route::put('/settings/password', [\App\Http\Controllers\Admin\SettingsController::class, 'updatePassword'])->name('settings.password');
     
     // Role Management (only for super admin and finance admin)
