@@ -12,18 +12,28 @@
                 Back to Books of Account
             </a>
             <h1 class="text-lg font-semibold text-slate-900">Employee Payroll</h1>
-            <p class="text-xs text-slate-500">Salary dues, payroll and payslips overview (placeholder).</p>
+            <p class="text-xs text-slate-500">Salary dues, payroll and payslips overview.</p>
         </div>
-        <div class="flex items-center gap-2 text-xs">
-            <select class="border border-slate-200 rounded px-3 py-2 text-sm">
-                <option>{{ now()->year }}</option>
+        <form method="GET" class="flex items-center gap-2 text-xs">
+            <select name="year" class="border border-slate-200 rounded px-3 py-2 text-sm" onchange="this.form.submit()">
+                @for($y = now()->year; $y >= now()->year - 5; $y--)
+                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
+                @endfor
             </select>
-            <select class="border border-slate-200 rounded px-3 py-2 text-sm">
-                <option>{{ now()->format('M') }}</option>
+            <select name="month" class="border border-slate-200 rounded px-3 py-2 text-sm" onchange="this.form.submit()">
+                @for($m = 1; $m <= 12; $m++)
+                    <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
+                @endfor
             </select>
-            <button class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-4 py-2 rounded">
-                Generate Payroll
-            </button>
+        </form>
+    </div>
+
+    <div class="bg-white border border-slate-100 rounded-lg overflow-hidden mb-4">
+        <div class="px-6 py-4 border-b border-slate-200">
+            <div class="flex justify-between items-center">
+                <span class="text-sm font-semibold text-slate-900">Total Payroll for {{ date('F', mktime(0, 0, 0, $month ?? now()->month, 1)) }} {{ $year ?? now()->year }}</span>
+                <span class="text-lg font-bold text-slate-900">Ksh {{ number_format($totalPayroll ?? 0, 2) }}</span>
+            </div>
         </div>
     </div>
 
@@ -33,22 +43,28 @@
                 <thead class="bg-slate-50 border-b border-slate-200">
                     <tr>
                         <th class="px-4 py-2 text-left text-xs font-semibold text-slate-700">Employee</th>
-                        <th class="px-4 py-2 text-right text-xs font-semibold text-slate-700">Basic</th>
-                        <th class="px-4 py-2 text-right text-xs font-semibold text-slate-700">Allowances</th>
-                        <th class="px-4 py-2 text-right text-xs font-semibold text-slate-700">Deductions</th>
-                        <th class="px-4 py-2 text-right text-xs font-semibold text-slate-700">Net Pay</th>
-                        <th class="px-4 py-2 text-left text-xs font-semibold text-slate-700">Status</th>
+                        <th class="px-4 py-2 text-right text-xs font-semibold text-slate-700">Amount</th>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-slate-700">Date</th>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-slate-700">Description</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    <tr>
-                        <td colspan="6" class="px-4 py-8 text-center text-slate-500 text-sm">
-                            Payroll module placeholder. Integrate employee data and payslips here.
-                        </td>
-                    </tr>
+                    @forelse($payrollData ?? [] as $payroll)
+                        <tr>
+                            <td class="px-4 py-3 text-slate-700">{{ $payroll['employee'] }}</td>
+                            <td class="px-4 py-3 text-right text-slate-700">Ksh {{ number_format($payroll['amount'], 2) }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $payroll['date'] }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $payroll['description'] }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="px-4 py-8 text-center text-slate-500 text-sm">
+                                No payroll records found for {{ date('F', mktime(0, 0, 0, $month ?? now()->month, 1)) }} {{ $year ?? now()->year }}.
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
     </div>
 @endsection
-

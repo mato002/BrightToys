@@ -1,5 +1,16 @@
 @extends('layouts.partner')
 
+@section('page_title', 'My Profile')
+
+@section('breadcrumbs')
+    <li>
+        <span class="text-slate-400">/</span>
+    </li>
+    <li>
+        <a href="{{ route('partner.profile') }}" class="text-slate-600 hover:text-amber-600 transition-colors">Profile</a>
+    </li>
+@endsection
+
 @section('partner_content')
     <div class="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -188,6 +199,158 @@
                 </div>
             </div>
             @endif
+        </div>
+        @endif
+
+        {{-- Monthly Contribution Status --}}
+        @if(isset($monthlyContribution))
+        @php
+            $mc = $monthlyContribution;
+            $statusClass = match($mc['status']) {
+                'on_time' => 'bg-emerald-50 text-emerald-700 border border-emerald-100',
+                'late' => 'bg-amber-50 text-amber-700 border border-amber-100',
+                'critical' => 'bg-red-50 text-red-700 border border-red-100',
+                default => 'bg-slate-50 text-slate-700 border border-slate-100',
+            };
+        @endphp
+        <div class="border-t border-slate-200 pt-4">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-semibold text-slate-900">Monthly Contribution Status</h2>
+                <a href="{{ route('partner.dashboard') }}" class="text-xs text-emerald-600 hover:text-emerald-700 underline">
+                    View Full Details
+                </a>
+            </div>
+            <div class="bg-white rounded-lg border border-slate-100 p-4 shadow-sm mb-4">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <p class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold mb-1">Monthly Contributions</p>
+                        <p class="text-[11px] text-slate-500">
+                            Expected Ksh {{ number_format($mc['config']['monthly_total'], 0) }} per month 
+                            ({{ number_format($mc['config']['monthly_welfare'], 0) }} welfare, {{ number_format($mc['config']['monthly_investment'], 0) }} investment).
+                        </p>
+                    </div>
+                    <div class="text-right text-xs">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full {{ $statusClass }}">
+                            @if($mc['status'] === 'on_time') On time
+                            @elseif($mc['status'] === 'late') Late
+                            @else Critical arrears
+                            @endif
+                        </span>
+                        <div class="mt-1 text-[11px] text-slate-500">
+                            Arrears: <span class="font-semibold text-amber-700">Ksh {{ number_format($mc['total_arrears'], 0) }}</span> ·
+                            Penalties: <span class="font-semibold text-red-700">Ksh {{ number_format($mc['total_penalty'], 0) }}</span> ·
+                            Months in arrears: <span class="font-semibold">{{ $mc['months_in_arrears'] }}</span>
+                            @if($mc['days_in_arrears'] > 0)
+                                · Days: <span class="font-semibold">{{ $mc['days_in_arrears'] }}</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-[11px]">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-3 py-2 text-left font-semibold text-slate-700">Month</th>
+                                <th class="px-3 py-2 text-left font-semibold text-slate-700">Expected</th>
+                                <th class="px-3 py-2 text-left font-semibold text-slate-700">Accumulated Arrears</th>
+                                @if($mc['current'] && $mc['current']['is_current'])
+                                    <th class="px-3 py-2 text-left font-semibold text-slate-700">Amount Paid</th>
+                                    <th class="px-3 py-2 text-left font-semibold text-slate-700">Balance Expected</th>
+                                @else
+                                <th class="px-3 py-2 text-left font-semibold text-slate-700">Paid</th>
+                                <th class="px-3 py-2 text-left font-semibold text-slate-700">Arrear</th>
+                                @endif
+                                <th class="px-3 py-2 text-left font-semibold text-slate-700">Penalty</th>
+                                <th class="px-3 py-2 text-left font-semibold text-slate-700">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach(collect($mc['monthly'])->take(6) as $month)
+                                @php
+                                    $rowStatus = 'On time';
+                                    $badgeClass = 'bg-emerald-100 text-emerald-700';
+                                    $statusNarration = '';
+                                    
+                                    if($month['arrear'] > 0 && $month['is_past']) {
+                                        $rowStatus = 'In arrears';
+                                        $badgeClass = 'bg-amber-100 text-amber-700';
+                                    }
+                                    
+                                    // For current month, show detailed status
+                                    if($month['is_current']) {
+                                        if($month['accumulated_arrears'] > 0 || $month['arrear'] > 0) {
+                                            $rowStatus = 'In arrears';
+                                            $badgeClass = 'bg-amber-100 text-amber-700';
+                                            $penaltyRatePercent = $mc['config']['penalty_rate'] * 100;
+                                            $statusNarration = "You are {$mc['months_in_arrears']} month(s) in arrears ({$mc['days_in_arrears']} days). ";
+                                            if($mc['total_penalty'] > 0) {
+                                                $statusNarration .= "⚠️ Arrears are accumulating penalties at a high rate ({$penaltyRatePercent}%). Current penalty: Ksh " . number_format($mc['total_penalty'], 0) . ". ";
+                                            }
+                                            $statusNarration .= "Please clear your arrears immediately to avoid further penalties.";
+                                        } else {
+                                            $statusNarration = "Current month payment is on track.";
+                                        }
+                                    }
+                                @endphp
+                                <tr class="{{ $month['is_current'] ? 'bg-amber-50/50' : '' }}">
+                                    <td class="px-3 py-2 font-medium text-slate-900">
+                                        {{ $month['label'] }}
+                                        @if($month['is_current'])
+                                            <span class="ml-1 text-[10px] text-amber-600 font-semibold">(Current)</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-3 py-2">Ksh {{ number_format($month['expected'], 0) }}</td>
+                                    <td class="px-3 py-2 {{ $month['accumulated_arrears'] > 0 ? 'text-amber-700 font-semibold' : 'text-slate-400' }}">
+                                        @if($month['accumulated_arrears'] > 0)
+                                            Ksh {{ number_format($month['accumulated_arrears'], 0) }}
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
+                                    @if($month['is_current'])
+                                        <td class="px-3 py-2 {{ $month['paid'] > 0 ? 'text-emerald-700 font-semibold' : 'text-slate-700' }}">
+                                            Ksh {{ number_format($month['paid'], 0) }}
+                                        </td>
+                                        <td class="px-3 py-2 {{ $month['balance_expected'] > 0 ? 'text-red-700 font-semibold' : 'text-slate-700' }}">
+                                            Ksh {{ number_format($month['balance_expected'] ?? 0, 0) }}
+                                        </td>
+                                    @else
+                                    <td class="px-3 py-2">Ksh {{ number_format($month['paid'], 0) }}</td>
+                                    <td class="px-3 py-2 {{ $month['arrear'] > 0 && $month['is_past'] ? 'text-amber-700 font-semibold' : 'text-slate-700' }}">
+                                        Ksh {{ number_format($month['arrear'], 0) }}
+                                    </td>
+                                    @endif
+                                    <td class="px-3 py-2 {{ $month['penalty'] > 0 ? 'text-red-700 font-semibold' : 'text-slate-400' }}">
+                                        @if($month['penalty'] > 0)
+                                            Ksh {{ number_format($month['penalty'], 0) }}
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <div class="space-y-1">
+                                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium {{ $badgeClass }}">
+                                            {{ $rowStatus }}
+                                        </span>
+                                            @if($statusNarration)
+                                                <p class="text-[10px] text-slate-600 leading-tight max-w-xs">{{ $statusNarration }}</p>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @if(collect($mc['monthly'])->count() > 6)
+                    <p class="text-xs text-slate-500 mt-3 text-center">
+                        <a href="{{ route('partner.dashboard') }}" class="text-emerald-600 hover:text-emerald-700 underline">
+                            View all {{ collect($mc['monthly'])->count() }} months
+                        </a>
+                    </p>
+                @endif
+            </div>
         </div>
         @endif
 

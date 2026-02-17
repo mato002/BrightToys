@@ -42,7 +42,35 @@ class ProductController extends Controller
             $query->where('category_id', $categoryId);
         }
 
-        $products = $query->latest()->paginate(20)->withQueryString();
+        // Quick date filters
+        if ($dateFilter = request('created_at')) {
+            switch ($dateFilter) {
+                case 'today':
+                    $query->whereDate('created_at', today());
+                    break;
+                case 'week':
+                    $query->where('created_at', '>=', now()->startOfWeek());
+                    break;
+                case 'month':
+                    $query->where('created_at', '>=', now()->startOfMonth());
+                    break;
+            }
+        }
+
+        // Sorting
+        $sortColumn = request('sort', 'created_at');
+        $sortDirection = request('direction', 'desc');
+        
+        // Validate sort column
+        $allowedSorts = ['name', 'sku', 'price', 'stock', 'status', 'created_at'];
+        if (in_array($sortColumn, $allowedSorts)) {
+            $query->orderBy($sortColumn, $sortDirection);
+        } else {
+            $query->latest();
+        }
+
+        $perPage = request('per_page', 20);
+        $products = $query->paginate($perPage)->withQueryString();
         $categories = Category::orderBy('name')->get();
 
         return view('admin.products.index', compact('products', 'categories'));
@@ -298,18 +326,19 @@ class ProductController extends Controller
     /**
      * Handle bulk actions on products (delete, update status, etc.)
      */
-    public function bulkAction(\Illuminate\Http\Request $request)
+    public function bulk(\Illuminate\Http\Request $request)
     {
         $this->checkStoreAdminPermission();
 
         $request->validate([
             'action' => 'required|string|in:delete,activate,deactivate,feature,unfeature',
-            'ids' => 'required|string', // JSON array of IDs
+            'ids' => 'required|array',
+            'ids.*' => 'required|integer|exists:products,id',
         ]);
 
-        $ids = json_decode($request->ids, true);
+        $ids = $request->ids;
         
-        if (!is_array($ids) || empty($ids)) {
+        if (empty($ids)) {
             return redirect()->back()->with('error', 'No items selected.');
         }
 

@@ -2,6 +2,11 @@
 
 @section('page_title', 'Dashboard')
 
+@section('breadcrumbs')
+    <span class="breadcrumb-separator">/</span>
+    <span class="text-slate-700">Dashboard</span>
+@endsection
+
 @section('content')
     @if(!$isChairman)
         {{-- Header / intro --}}
@@ -16,13 +21,23 @@
             <div class="flex items-center gap-2 md:gap-3">
                 <div class="flex gap-2">
                     <a href="{{ route('admin.dashboard.export') }}"
-                       class="inline-flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm">
+                       class="no-print inline-flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm tooltip"
+                       data-tooltip="Export dashboard data to CSV (Ctrl/Cmd + E)"
+                       aria-label="Export dashboard">
                         Export CSV
                     </a>
                     <a href="{{ route('admin.dashboard.report') }}"
-                       class="inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm">
+                       class="no-print inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm tooltip"
+                       data-tooltip="Generate printable report"
+                       aria-label="Generate report">
                         Generate Report
                     </a>
+                    <button onclick="window.print()"
+                            class="no-print inline-flex items-center justify-center bg-slate-500 hover:bg-slate-600 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm tooltip"
+                            data-tooltip="Print this page (Ctrl/Cmd + P)"
+                            aria-label="Print page">
+                        Print
+                    </button>
                 </div>
                 <div class="flex items-center gap-2 md:gap-3 text-[11px]">
                     <span class="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-50 px-2.5 py-1 text-emerald-600">

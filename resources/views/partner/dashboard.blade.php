@@ -1,11 +1,46 @@
 @extends('layouts.partner')
 
+@section('breadcrumbs')
+    <li>
+        <span class="text-slate-400">/</span>
+    </li>
+    <li>
+        <span class="text-slate-700">Dashboard</span>
+    </li>
+@endsection
+
 @section('partner_content')
-    <div class="mb-4">
-        <h1 class="text-lg font-semibold">Welcome, {{ $partner->name }}</h1>
-        <p class="text-xs text-slate-500">
-            Comprehensive financial overview and business insights for your investment in Otto Investments.
-        </p>
+    <div class="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h1 class="text-lg font-semibold">Welcome, {{ $partner->name }}</h1>
+            <p class="text-xs text-slate-500">
+                Comprehensive financial overview and business insights for your investment in Otto Investments.
+            </p>
+            @if(isset($dataRefreshedAt))
+                <p class="text-[10px] text-slate-400 mt-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                    Data refreshed: {{ $dataRefreshedAt->format('M d, Y H:i:s') }}
+                </p>
+            @endif
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="window.print()" class="no-print inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors tooltip" data-tooltip="Print this page (Ctrl/Cmd + P)" aria-label="Print page">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                    <path d="M6 14h12v8H6z"/>
+                </svg>
+                Print
+            </button>
+            <a href="{{ route('partner.contributions.create') }}" class="no-print inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition-colors tooltip" data-tooltip="Create new contribution (Ctrl/Cmd + K)" aria-label="New contribution">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14m7-7H5"/>
+                </svg>
+                New Contribution
+            </a>
+        </div>
     </div>
 
     {{-- Monthly Contributions (Existing Members) --}}
@@ -22,7 +57,15 @@
     <div class="mb-4 bg-white rounded-lg border border-slate-100 p-4 shadow-sm">
         <div class="flex items-center justify-between mb-3">
             <div>
-                <p class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold mb-1">Monthly Contributions</p>
+                <div class="flex items-center gap-2">
+                    <p class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold mb-1">Monthly Contributions</p>
+                    <span class="tooltip" data-tooltip="Expected monthly contribution: Ksh 55,000 (Ksh 5,000 welfare + Ksh 50,000 investment). Penalties apply to overdue amounts.">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3m.08 4h.01"/>
+                        </svg>
+                    </span>
+                </div>
                 <p class="text-[11px] text-slate-500">
                     Expected Ksh {{ number_format($mc['config']['monthly_total'], 0) }} per month 
                     ({{ number_format($mc['config']['monthly_welfare'], 0) }} welfare, {{ number_format($mc['config']['monthly_investment'], 0) }} investment).
@@ -51,8 +94,12 @@
                 <thead class="bg-slate-50 border-b border-slate-200">
                     <tr>
                         <th class="px-3 py-2 text-left font-semibold text-slate-700">Month</th>
-                        <th class="px-3 py-2 text-left font-semibold text-slate-700">Expected</th>
-                        <th class="px-3 py-2 text-left font-semibold text-slate-700">Accumulated Arrears</th>
+                        <th class="px-3 py-2 text-left font-semibold text-slate-700">
+                            <span class="tooltip" data-tooltip="The expected monthly contribution amount (Ksh 55,000)">Expected</span>
+                        </th>
+                        <th class="px-3 py-2 text-left font-semibold text-slate-700">
+                            <span class="tooltip" data-tooltip="Total arrears accumulated from previous months">Accumulated Arrears</span>
+                        </th>
                         @if($mc['current'] && $mc['current']['is_current'])
                             <th class="px-3 py-2 text-left font-semibold text-slate-700">Amount Paid</th>
                             <th class="px-3 py-2 text-left font-semibold text-slate-700">Balance Expected</th>
@@ -60,7 +107,9 @@
                         <th class="px-3 py-2 text-left font-semibold text-slate-700">Paid</th>
                         <th class="px-3 py-2 text-left font-semibold text-slate-700">Arrear</th>
                         @endif
-                        <th class="px-3 py-2 text-left font-semibold text-slate-700">Penalty</th>
+                        <th class="px-3 py-2 text-left font-semibold text-slate-700">
+                            <span class="tooltip" data-tooltip="Penalty calculated at {{ number_format($mc['config']['penalty_rate'] * 100, 1) }}% of arrears">Penalty</span>
+                        </th>
                         <th class="px-3 py-2 text-left font-semibold text-slate-700">Status</th>
                     </tr>
                 </thead>
@@ -171,7 +220,15 @@
     {{-- Key Metrics Row --}}
     <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
         <div class="bg-white rounded-lg border border-slate-100 p-4 shadow-sm">
-            <p class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold mb-1">Current Ownership</p>
+            <div class="flex items-center gap-2 mb-1">
+                <p class="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Current Ownership</p>
+                <span class="tooltip" data-tooltip="Your current ownership percentage determines your share of profits and voting weight">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3m.08 4h.01"/>
+                    </svg>
+                </span>
+            </div>
             <p class="text-2xl font-bold text-emerald-600">
                 {{ optional($currentOwnership)->percentage ? number_format($currentOwnership->percentage, 2) . '%' : 'N/A' }}
             </p>
@@ -290,8 +347,12 @@
                 $maxRevenue = $revenueLast6Months->max('revenue');
             @endphp
             @if($maxRevenue <= 0)
-                <div class="h-48 flex items-center justify-center text-xs text-slate-400">
-                    No revenue data available yet.
+                <div class="h-48 flex flex-col items-center justify-center text-xs text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-300 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M3 3v18h18M7 16l4-4 4 4 6-6"/>
+                    </svg>
+                    <p class="font-medium">No revenue data available yet</p>
+                    <p class="text-[10px] mt-1">Revenue data will appear here once orders are completed</p>
                 </div>
             @else
                 <div class="h-48 flex items-end justify-between gap-1">
@@ -330,7 +391,13 @@
                     @endforeach
                 </div>
             @else
-                <p class="text-xs text-slate-500">No product sales data available.</p>
+                <div class="flex flex-col items-center justify-center py-8 text-xs text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-slate-300 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                    <p class="font-medium">No product sales data available</p>
+                    <p class="text-[10px] mt-1">Top products will appear here once sales are recorded</p>
+                </div>
             @endif
         </div>
     </div>
@@ -362,7 +429,12 @@
                     @endforeach
                 </div>
             @else
-                <p class="text-xs text-slate-500">No expense categories recorded.</p>
+                <div class="flex flex-col items-center justify-center py-6 text-xs text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-slate-300 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                    <p class="font-medium">No expense categories recorded</p>
+                </div>
             @endif
         </div>
 
@@ -391,7 +463,14 @@
                     @endforeach
                 </div>
             @else
-                <p class="text-xs text-slate-500">No recent orders.</p>
+                <div class="flex flex-col items-center justify-center py-6 text-xs text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-slate-300 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="8.5" cy="7" r="4"/>
+                        <path d="M20 8v6m3-3l-3 3-3-3"/>
+                    </svg>
+                    <p class="font-medium">No recent orders</p>
+                </div>
             @endif
         </div>
     </div>
@@ -441,7 +520,15 @@
                     @endforeach
                 </div>
             @else
-                <p class="text-xs text-slate-500">No projects available.</p>
+                <div class="flex flex-col items-center justify-center py-6 text-xs text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-slate-300 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M4 7l8-4 8 4-8 4-8-4z"/>
+                        <path d="M4 17l8 4 8-4"/>
+                        <path d="M4 7v10"/>
+                        <path d="M20 7v10"/>
+                    </svg>
+                    <p class="font-medium">No projects available</p>
+                </div>
             @endif
         </div>
 
@@ -454,7 +541,13 @@
             </div>
 
             @if($recentContributions->isEmpty())
-                <p class="text-xs text-slate-500">No contributions recorded yet.</p>
+                <div class="flex flex-col items-center justify-center py-6 text-xs text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-slate-300 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                    <p class="font-medium">No contributions recorded yet</p>
+                    <a href="{{ route('partner.contributions.create') }}" class="mt-2 text-amber-600 hover:text-amber-700 underline text-[10px]">Create your first contribution</a>
+                </div>
             @else
                 <div class="space-y-2">
                     @foreach($recentContributions->take(5) as $contribution)

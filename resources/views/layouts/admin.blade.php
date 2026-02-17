@@ -134,6 +134,241 @@
                 align-self: center;
             }
         }
+
+        /* Print Styles */
+        @media print {
+            body {
+                padding-left: 0 !important;
+                background: white;
+            }
+            
+            #admin-sidebar,
+            header,
+            footer,
+            .no-print,
+            button.no-print,
+            a.no-print {
+                display: none !important;
+            }
+            
+            .admin-main {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            
+            .bg-white {
+                background: white !important;
+            }
+            
+            .border,
+            .shadow-sm,
+            .shadow {
+                border: 1px solid #e5e7eb !important;
+                box-shadow: none !important;
+            }
+            
+            @page {
+                margin: 1cm;
+            }
+            
+            .print-page-break {
+                page-break-before: always;
+            }
+        }
+
+        /* Tooltip Styles */
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+        
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 10px;
+            background: #1f2937;
+            color: white;
+            font-size: 11px;
+            white-space: nowrap;
+            border-radius: 4px;
+            z-index: 1000;
+            margin-bottom: 5px;
+            pointer-events: none;
+            max-width: 250px;
+            white-space: normal;
+            text-align: center;
+        }
+        
+        .tooltip:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: #1f2937;
+            z-index: 1000;
+            margin-bottom: -5px;
+            pointer-events: none;
+        }
+
+        /* Empty State Styles */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6b7280;
+        }
+        
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1rem;
+            opacity: 0.5;
+        }
+        
+        .empty-state h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .empty-state p {
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Data Refresh Indicator */
+        .data-refresh-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 10px;
+            color: #6b7280;
+        }
+        
+        .data-refresh-indicator .pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Breadcrumb Styles */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 1rem;
+        }
+        
+        .breadcrumb a {
+            color: #64748b;
+            transition: color 0.2s;
+        }
+        
+        .breadcrumb a:hover {
+            color: #10b981;
+        }
+        
+        .breadcrumb-separator {
+            color: #cbd5e1;
+        }
+
+        /* Loading States */
+        .loading-skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Sortable Header */
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .sortable-header:hover {
+            color: #1e293b;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        }
+        
+        .toast {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease-out;
+            border-left: 4px solid;
+        }
+        
+        .toast.success {
+            border-left-color: #10b981;
+        }
+        
+        .toast.error {
+            border-left-color: #ef4444;
+        }
+        
+        .toast.info {
+            border-left-color: #3b82f6;
+        }
+        
+        .toast.warning {
+            border-left-color: #f59e0b;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .toast-close {
+            margin-left: auto;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        
+        .toast-close:hover {
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-900 flex min-h-screen antialiased admin-has-sidebar">
@@ -759,62 +994,77 @@
 
     {{-- Main content --}}
     <div class="flex-1 flex flex-col min-h-screen">
-        <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200 px-3 md:px-6 py-3 flex items-center justify-between">
-            <div class="flex items-center space-x-3 relative">
-                <button id="sidebar-toggle"
-                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 focus:outline-none lg:hidden">
-                    <span class="sr-only">Toggle sidebar</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
-                         viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                              d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
-                <div>
-                    <h1 class="text-sm md:text-base font-semibold text-slate-900 tracking-tight">
-                        @yield('page_title', 'Dashboard')
-                    </h1>
-                    <p class="text-[11px] text-slate-400 hidden md:block">Otto Investments admin control panel</p>
-                </div>
-            </div>
-
-            <div class="flex items-center space-x-3">
-                <div class="hidden md:flex flex-col items-end text-[11px] leading-tight">
-                    <span class="font-semibold text-slate-900">{{ auth()->user()->name ?? 'Admin' }}</span>
-                    <span class="text-slate-500">{{ auth()->user()->email ?? '' }}</span>
-                </div>
-                <button id="profile-toggle"
-                        type="button"
-                        class="flex items-center space-x-2 rounded-full border border-slate-200 bg-white px-2 py-1.5 text-[11px] shadow-sm hover:bg-slate-50">
-                    <div class="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-semibold shadow-lg shadow-emerald-500/40">
-                        {{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}
+        <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200 px-3 md:px-6 py-3">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center space-x-3 relative">
+                    <button id="sidebar-toggle"
+                            class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 focus:outline-none lg:hidden"
+                            aria-label="Toggle sidebar">
+                        <span class="sr-only">Toggle sidebar</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                             viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                  d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                    <div>
+                        <h1 class="text-sm md:text-base font-semibold text-slate-900 tracking-tight">
+                            @yield('page_title', 'Dashboard')
+                        </h1>
+                        <p class="text-[11px] text-slate-400 hidden md:block">Otto Investments admin control panel</p>
                     </div>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06z" clip-rule="evenodd" />
-                    </svg>
-                </button>
-
-                <div id="profile-menu"
-                     class="hidden absolute right-0 top-10 mt-1 w-48 rounded-lg border border-slate-200 bg-white shadow-lg shadow-slate-200/80 text-[12px] py-1 z-30">
-                    <div class="px-3 py-2 border-b border-slate-100">
-                        <p class="font-semibold text-slate-900 truncate">{{ auth()->user()->name ?? 'Admin' }}</p>
-                        <p class="text-[11px] text-slate-500 truncate">{{ auth()->user()->email ?? '' }}</p>
+                </div>
+                <div class="flex items-center gap-3 relative">
+                    <div class="data-refresh-indicator hidden md:flex">
+                        <span class="pulse"></span>
+                        <span>Last updated: {{ now()->format('M d, H:i') }}</span>
                     </div>
-                    <a href="{{ route('admin.profile') }}"
-                       class="flex items-center px-3 py-2 text-slate-700 hover:bg-slate-50">
-                        <span class="mr-2 text-[13px]">👤</span>
-                        <span>My Profile</span>
-                    </a>
-                    <form id="logout-form" action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button type="submit"
-                                class="w-full text-left flex items-center px-3 py-2 text-red-500 hover:bg-red-50 hover:text-red-600">
-                            <span class="mr-2 text-[13px]">⎋</span>
-                            <span>Logout</span>
+                    <div class="flex items-center space-x-3">
+                        <div class="hidden md:flex flex-col items-end text-[11px] leading-tight">
+                            <span class="font-semibold text-slate-900">{{ auth()->user()->name ?? 'Admin' }}</span>
+                            <span class="text-slate-500">{{ auth()->user()->email ?? '' }}</span>
+                        </div>
+                        <button id="profile-toggle"
+                                type="button"
+                                class="flex items-center space-x-2 rounded-full border border-slate-200 bg-white px-2 py-1.5 text-[11px] shadow-sm hover:bg-slate-50">
+                            <div class="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-semibold shadow-lg shadow-emerald-500/40">
+                                {{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}
+                            </div>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06z" clip-rule="evenodd" />
+                            </svg>
                         </button>
-                    </form>
+
+                        <div id="profile-menu"
+                             class="hidden absolute right-0 top-full mt-2 w-48 rounded-lg border border-slate-200 bg-white shadow-lg shadow-slate-200/80 text-[12px] py-1 z-50">
+                            <div class="px-3 py-2 border-b border-slate-100">
+                                <p class="font-semibold text-slate-900 truncate">{{ auth()->user()->name ?? 'Admin' }}</p>
+                                <p class="text-[11px] text-slate-500 truncate">{{ auth()->user()->email ?? '' }}</p>
+                            </div>
+                            <a href="{{ route('admin.profile') }}"
+                               class="flex items-center px-3 py-2 text-slate-700 hover:bg-slate-50">
+                                <span class="mr-2 text-[13px]">👤</span>
+                                <span>My Profile</span>
+                            </a>
+                            <form id="logout-form" action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button type="submit"
+                                        class="w-full text-left flex items-center px-3 py-2 text-red-500 hover:bg-red-50 hover:text-red-600">
+                                    <span class="mr-2 text-[13px]">⎋</span>
+                                    <span>Logout</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
+            @hasSection('breadcrumbs')
+                <nav class="breadcrumb" aria-label="Breadcrumb">
+                    <a href="{{ route('admin.dashboard') }}">Dashboard</a>
+                    @yield('breadcrumbs')
+                </nav>
+            @endif
+        </header>
         </header>
 
         <main class="flex-1 p-3 md:p-6 admin-main">
@@ -981,7 +1231,127 @@
                     });
                 });
             });
+
+            // Keyboard Shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Ctrl/Cmd + P: Print
+                if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                    e.preventDefault();
+                    window.print();
+                }
+                
+                // Ctrl/Cmd + E: Export (if export link exists)
+                if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                    const exportLink = document.querySelector('a[href*="export"]');
+                    if (exportLink && !e.target.matches('input, textarea, select')) {
+                        e.preventDefault();
+                        exportLink.click();
+                    }
+                }
+                
+                // Ctrl/Cmd + F: Focus search (if search input exists)
+                if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                    const searchInput = document.querySelector('input[type="search"], input[name="search"], input[id*="search"]');
+                    if (searchInput && !e.target.matches('input, textarea')) {
+                        e.preventDefault();
+                        searchInput.focus();
+                        searchInput.select();
+                    }
+                }
+                
+                // Ctrl/Cmd + K: Quick create (if create link exists)
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                    const createLink = document.querySelector('a[href*="create"]');
+                    if (createLink && !e.target.matches('input, textarea')) {
+                        e.preventDefault();
+                        createLink.click();
+                    }
+                }
+                
+                // Escape: Close modals/dropdowns
+                if (e.key === 'Escape') {
+                    // Close profile menu
+                    if (profileMenu && !profileMenu.classList.contains('hidden')) {
+                        profileMenu.classList.add('hidden');
+                    }
+                    
+                    // Close sidebar on mobile
+                    if (sidebar && window.innerWidth < 1024 && !sidebar.classList.contains('hidden')) {
+                        sidebar.classList.add('hidden');
+                    }
+                }
+            });
+
+            // Show keyboard shortcuts hint on first visit
+            if (!localStorage.getItem('admin-shortcuts-shown')) {
+                setTimeout(function() {
+                    Swal.fire({
+                        title: 'Keyboard Shortcuts',
+                        html: `
+                            <div class="text-left space-y-2 text-sm">
+                                <p><kbd class="px-2 py-1 bg-slate-100 rounded">Ctrl/Cmd + P</kbd> - Print page</p>
+                                <p><kbd class="px-2 py-1 bg-slate-100 rounded">Ctrl/Cmd + E</kbd> - Export data</p>
+                                <p><kbd class="px-2 py-1 bg-slate-100 rounded">Ctrl/Cmd + F</kbd> - Focus search</p>
+                                <p><kbd class="px-2 py-1 bg-slate-100 rounded">Ctrl/Cmd + K</kbd> - Quick create</p>
+                                <p><kbd class="px-2 py-1 bg-slate-100 rounded">Esc</kbd> - Close menus</p>
+                            </div>
+                        `,
+                        icon: 'info',
+                        confirmButtonText: 'Got it!',
+                        confirmButtonColor: '#10b981',
+                    });
+                    localStorage.setItem('admin-shortcuts-shown', 'true');
+                }, 2000);
+            }
         })();
+    </script>
+    {{-- Toast Container --}}
+    <div id="toast-container" class="toast-container"></div>
+
+    <script>
+        // Toast Notification System
+        function showToast(message, type = 'success', duration = 3000) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z"/></svg>',
+                error: '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>',
+                info: '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>',
+                warning: '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>'
+            };
+            
+            toast.innerHTML = `
+                ${icons[type] || icons.success}
+                <span class="flex-1 text-sm text-slate-900">${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            `;
+            
+            container.appendChild(toast);
+            
+            if (duration > 0) {
+                setTimeout(() => {
+                    toast.style.animation = 'slideIn 0.3s ease-out reverse';
+                    setTimeout(() => toast.remove(), 300);
+                }, duration);
+            }
+        }
+
+        // Show toast from session flash messages
+        @if(session('success'))
+            showToast(@json(session('success')), 'success');
+        @endif
+        
+        @if(session('error'))
+            showToast(@json(session('error')), 'error');
+        @endif
     </script>
     @stack('scripts')
 </body>

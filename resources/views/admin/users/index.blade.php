@@ -2,6 +2,11 @@
 
 @section('page_title', 'Users')
 
+@section('breadcrumbs')
+    <span class="breadcrumb-separator">/</span>
+    <a href="{{ route('admin.users.index') }}" class="text-slate-600 hover:text-emerald-600 transition-colors">Customers</a>
+@endsection
+
 @section('content')
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
         <div>
@@ -10,13 +15,23 @@
         </div>
         <div class="flex gap-2">
             <a href="{{ route('admin.users.export') . '?' . http_build_query(request()->query()) }}"
-               class="inline-flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm">
+               class="no-print inline-flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm tooltip"
+               data-tooltip="Export customers to CSV (Ctrl/Cmd + E)"
+               aria-label="Export customers">
                 Export CSV
             </a>
             <a href="{{ route('admin.users.report') . '?' . http_build_query(request()->query()) }}"
-               class="inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm">
+               class="no-print inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm tooltip"
+               data-tooltip="Generate printable report"
+               aria-label="Generate report">
                 Generate Report
             </a>
+            <button onclick="window.print()"
+                    class="no-print inline-flex items-center justify-center bg-slate-500 hover:bg-slate-600 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm tooltip"
+                    data-tooltip="Print this page (Ctrl/Cmd + P)"
+                    aria-label="Print page">
+                Print
+            </button>
         </div>
     </div>
 
@@ -70,7 +85,16 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="px-3 py-4 text-center text-slate-500 text-sm">No customers found.</td>
+                    <td colspan="5" class="px-3 py-12">
+                        <div class="empty-state">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4z" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M4 20a8 8 0 0 1 16 0" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <h3>No customers found</h3>
+                            <p>No customers match your search criteria. Try adjusting your search terms.</p>
+                        </div>
+                    </td>
                 </tr>
             @endforelse
             </tbody>

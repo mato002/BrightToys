@@ -70,11 +70,20 @@ class AccountingController extends Controller
                 ->sum('amount');
             $balance = $debits - $credits;
             
-            // For now, reconciled = balance, unreconciled = 0 (can be enhanced with reconciliation data)
+            // Get latest reconciliation
+            $latestReconciliation = \App\Models\AccountReconciliation::where('account_id', $account->id)
+                ->where('status', 'completed')
+                ->latest('reconciliation_date')
+                ->first();
+            
+            // Calculate unreconciled amount
+            $reconciledAmount = $latestReconciliation ? $latestReconciliation->reconciled_amount : 0;
+            $unreconciled = max(0, $balance - $reconciledAmount);
+            
             return [
                 'name' => $account->name,
-                'reconciled' => max(0, $balance),
-                'unreconciled' => 0, // TODO: Calculate from AccountReconciliation
+                'reconciled' => max(0, $reconciledAmount),
+                'unreconciled' => $unreconciled,
             ];
         })->toArray();
 
@@ -84,14 +93,24 @@ class AccountingController extends Controller
             ->get();
         
         $outstandingLoans = $loans->map(function($loan) {
+            // Calculate principal repaid from repayments
             $totalRepaid = $loan->repayments->sum('amount_paid');
             $outstandingPrincipal = max(0, $loan->amount - $totalRepaid);
             
-            // Calculate interest (simple calculation - can be enhanced)
-            $monthsElapsed = \Carbon\Carbon::parse($loan->start_date)->diffInMonths(now());
-            $totalInterest = ($loan->amount * $loan->interest_rate / 100) * ($monthsElapsed / 12);
-            $interestPaid = 0; // TODO: Track interest payments separately
-            $outstandingInterest = max(0, $totalInterest - $interestPaid);
+            // Calculate interest from loan schedules
+            $loan->load('schedules.repayments');
+            $totalInterestDue = $loan->schedules->sum('interest_due');
+            $interestPaid = $loan->schedules->sum(function($schedule) {
+                return $schedule->repayments->sum('amount_paid') * ($schedule->interest_due / max(1, $schedule->total_due));
+            });
+            
+            // If no schedules, use simple calculation
+            if ($totalInterestDue == 0) {
+                $monthsElapsed = \Carbon\Carbon::parse($loan->start_date)->diffInMonths(now());
+                $totalInterestDue = ($loan->amount * $loan->interest_rate / 100) * ($monthsElapsed / 12);
+            }
+            
+            $outstandingInterest = max(0, $totalInterestDue - $interestPaid);
             
             return [
                 'name' => $loan->lender_name ?? 'Loan #' . $loan->id,
@@ -128,21 +147,32 @@ class AccountingController extends Controller
             ->where('is_archived', false)
             ->sum('amount');
         
+        // Count pending approvals for display
+        $pendingWelfareDisbursements = \App\Models\FinancialRecord::where('type', 'expense')
+            ->where('fund_type', 'welfare')
+            ->where('status', 'pending_approval')
+            ->where('is_archived', false)
+            ->count();
+        
+        // Get all welfare disbursements (both pending and approved) for the table
         $recentWelfareDisbursements = \App\Models\FinancialRecord::where('type', 'expense')
             ->where('fund_type', 'welfare')
-            ->where('status', 'approved')
             ->where('is_archived', false)
-            ->with('partner')
+            ->with(['partner', 'creator', 'approver'])
             ->latest('occurred_at')
             ->limit(10)
             ->get()
             ->map(function($record) {
                 return [
+                    'id' => $record->id,
                     'date' => $record->occurred_at->format('M d, Y'),
                     'member' => $record->partner->name ?? 'N/A',
                     'purpose' => $record->description ?? 'Welfare disbursement',
                     'amount' => $record->amount,
-                    'status' => $record->status,
+                    'status' => $record->status ?? 'pending_approval',
+                    'created_by' => $record->creator->name ?? 'N/A',
+                    'approved_by' => $record->approver->name ?? null,
+                    'approved_at' => $record->approved_at ? $record->approved_at->format('M d, Y') : null,
                 ];
             })->toArray();
 
@@ -151,7 +181,13 @@ class AccountingController extends Controller
             'total_disbursements' => $welfareDisbursements,
             'remaining_balance'  => $welfareContributions - $welfareDisbursements,
             'recent_disbursements' => $recentWelfareDisbursements,
+            'pending_count'      => $pendingWelfareDisbursements,
         ];
+
+        // Get all partners for member search
+        $allPartners = \App\Models\Partner::where('status', 'active')
+            ->orderBy('name')
+            ->get();
 
         return view('admin.accounting.financial-overview', compact(
             'groupSummary',
@@ -159,8 +195,81 @@ class AccountingController extends Controller
             'outstandingLoans',
             'assetsSummary',
             'performance',
-            'welfareStats'
+            'welfareStats',
+            'allPartners'
         ));
+    }
+
+    /**
+     * Search for a member/partner and return their financial details
+     */
+    public function searchMember(Request $request)
+    {
+        $request->validate([
+            'query' => 'required|string|min:2',
+        ]);
+
+        $query = $request->input('query');
+        
+        // Search partners by name, email, phone, or national ID
+        $partner = \App\Models\Partner::where('status', 'active')
+            ->where(function($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                  ->orWhere('email', 'like', "%{$query}%")
+                  ->orWhere('phone', 'like', "%{$query}%")
+                  ->orWhere('national_id_number', 'like', "%{$query}%");
+            })
+            ->with(['wallets', 'contributions', 'ownerships'])
+            ->first();
+
+        if (!$partner) {
+            return response()->json(['error' => 'Member not found'], 404);
+        }
+
+        // Calculate financial details
+        $approvedContributions = $partner->contributions()
+            ->where('status', 'approved')
+            ->where('is_archived', false)
+            ->get();
+
+        $totalContributions = $approvedContributions->sum('amount');
+        $welfareContributions = $approvedContributions->where('fund_type', 'welfare')->sum('amount');
+        $investmentContributions = $approvedContributions->where('fund_type', 'investment')->sum('amount');
+        
+        // Get wallet balances
+        $welfareBalance = \App\Services\WalletService::getWalletBalance($partner, \App\Models\MemberWallet::TYPE_WELFARE);
+        $investmentBalance = \App\Services\WalletService::getWalletBalance($partner, \App\Models\MemberWallet::TYPE_INVESTMENT);
+        
+        // Get total investment from all partners for percentage calculation
+        $totalGroupInvestment = \App\Models\MemberWallet::where('type', \App\Models\MemberWallet::TYPE_INVESTMENT)->sum('balance');
+        $investmentShare = $totalGroupInvestment > 0 ? ($investmentBalance / $totalGroupInvestment) * 100 : 0;
+        
+        // Get ownership percentage
+        $ownershipPercentage = $partner->getCurrentOwnershipPercentage();
+        
+        // Get profit distributions
+        $profitDistributions = $approvedContributions
+            ->where('type', 'profit_distribution')
+            ->sum('amount');
+
+        return response()->json([
+            'partner' => [
+                'id' => $partner->id,
+                'name' => $partner->name,
+                'email' => $partner->email,
+                'phone' => $partner->phone,
+            ],
+            'financials' => [
+                'total_contributed' => $totalContributions,
+                'welfare_contributions' => $welfareContributions,
+                'investment_contributions' => $investmentContributions,
+                'welfare_balance' => $welfareBalance,
+                'investment_balance' => $investmentBalance,
+                'investment_share_percent' => round($investmentShare, 2),
+                'ownership_percentage' => $ownershipPercentage,
+                'profit_entitlement' => $profitDistributions,
+            ],
+        ]);
     }
 
     /**
@@ -566,21 +675,232 @@ class AccountingController extends Controller
     }
 
     /**
-     * Display accruals and reports
+     * Display accruals and reports (Income Statement, Trial Balance, Balance Sheet)
      */
-    public function reports()
+    public function reports(Request $request)
     {
-        // TODO: Implement reports logic
-        return view('admin.accounting.reports.index');
+        $reportType = $request->get('type', 'income');
+        $year = $request->get('year', now()->year);
+        $month = $request->get('month');
+        
+        $startDate = Carbon::create($year, $month ?? 1, 1)->startOfMonth();
+        $endDate = $month 
+            ? Carbon::create($year, $month, 1)->endOfMonth()
+            : Carbon::create($year, 12, 31)->endOfYear();
+        
+        $previousStartDate = $startDate->copy()->subYear()->startOfMonth();
+        $previousEndDate = $endDate->copy()->subYear()->endOfMonth();
+        
+        $data = [];
+        
+        if ($reportType === 'income') {
+            // Income Statement
+            $revenueAccounts = ChartOfAccount::where('type', 'revenue')
+                ->where('is_active', true)
+                ->get();
+            
+            $expenseAccounts = ChartOfAccount::where('type', 'expense')
+                ->where('is_active', true)
+                ->get();
+            
+            $revenues = [];
+            $expenses = [];
+            
+            foreach ($revenueAccounts as $account) {
+                $current = $this->getAccountBalance($account->id, $startDate, $endDate);
+                $previous = $this->getAccountBalance($account->id, $previousStartDate, $previousEndDate);
+                if ($current > 0 || $previous > 0) {
+                    $revenues[] = [
+                        'name' => $account->name,
+                        'current' => $current,
+                        'previous' => $previous,
+                    ];
+                }
+            }
+            
+            foreach ($expenseAccounts as $account) {
+                $current = abs($this->getAccountBalance($account->id, $startDate, $endDate));
+                $previous = abs($this->getAccountBalance($account->id, $previousStartDate, $previousEndDate));
+                if ($current > 0 || $previous > 0) {
+                    $expenses[] = [
+                        'name' => $account->name,
+                        'current' => $current,
+                        'previous' => $previous,
+                    ];
+                }
+            }
+            
+            $totalRevenue = collect($revenues)->sum('current');
+            $totalExpenses = collect($expenses)->sum('current');
+            $netIncome = $totalRevenue - $totalExpenses;
+            
+            $data = [
+                'type' => 'income',
+                'revenues' => $revenues,
+                'expenses' => $expenses,
+                'total_revenue' => $totalRevenue,
+                'total_expenses' => $totalExpenses,
+                'net_income' => $netIncome,
+                'previous_revenue' => collect($revenues)->sum('previous'),
+                'previous_expenses' => collect($expenses)->sum('previous'),
+                'previous_net_income' => collect($revenues)->sum('previous') - collect($expenses)->sum('previous'),
+            ];
+        } elseif ($reportType === 'trial_balance') {
+            // Trial Balance
+            $accounts = ChartOfAccount::where('is_active', true)
+                ->orderBy('code')
+                ->get();
+            
+            $trialBalance = [];
+            foreach ($accounts as $account) {
+                $debits = JournalEntryLine::where('account_id', $account->id)
+                    ->where('entry_type', 'debit')
+                    ->whereHas('journalEntry', function($q) use ($startDate, $endDate) {
+                        $q->whereBetween('transaction_date', [$startDate, $endDate]);
+                    })
+                    ->sum('amount');
+                
+                $credits = JournalEntryLine::where('account_id', $account->id)
+                    ->where('entry_type', 'credit')
+                    ->whereHas('journalEntry', function($q) use ($startDate, $endDate) {
+                        $q->whereBetween('transaction_date', [$startDate, $endDate]);
+                    })
+                    ->sum('amount');
+                
+                if ($debits > 0 || $credits > 0) {
+                    $trialBalance[] = [
+                        'code' => $account->code,
+                        'name' => $account->name,
+                        'debits' => $debits,
+                        'credits' => $credits,
+                    ];
+                }
+            }
+            
+            $data = [
+                'type' => 'trial_balance',
+                'accounts' => $trialBalance,
+                'total_debits' => collect($trialBalance)->sum('debits'),
+                'total_credits' => collect($trialBalance)->sum('credits'),
+            ];
+        } elseif ($reportType === 'balance_sheet') {
+            // Balance Sheet
+            $assets = ChartOfAccount::where('type', 'asset')
+                ->where('is_active', true)
+                ->get()
+                ->map(function($account) use ($endDate) {
+                    $balance = $this->getAccountBalance($account->id, null, $endDate);
+                    return [
+                        'name' => $account->name,
+                        'balance' => $balance,
+                    ];
+                })
+                ->filter(fn($a) => $a['balance'] > 0);
+            
+            $liabilities = ChartOfAccount::where('type', 'liability')
+                ->where('is_active', true)
+                ->get()
+                ->map(function($account) use ($endDate) {
+                    $balance = abs($this->getAccountBalance($account->id, null, $endDate));
+                    return [
+                        'name' => $account->name,
+                        'balance' => $balance,
+                    ];
+                })
+                ->filter(fn($l) => $l['balance'] > 0);
+            
+            $equity = ChartOfAccount::where('type', 'equity')
+                ->where('is_active', true)
+                ->get()
+                ->map(function($account) use ($endDate) {
+                    $balance = abs($this->getAccountBalance($account->id, null, $endDate));
+                    return [
+                        'name' => $account->name,
+                        'balance' => $balance,
+                    ];
+                })
+                ->filter(fn($e) => $e['balance'] > 0);
+            
+            $totalAssets = $assets->sum('balance');
+            $totalLiabilities = $liabilities->sum('balance');
+            $totalEquity = $equity->sum('balance');
+            
+            $data = [
+                'type' => 'balance_sheet',
+                'assets' => $assets->values(),
+                'liabilities' => $liabilities->values(),
+                'equity' => $equity->values(),
+                'total_assets' => $totalAssets,
+                'total_liabilities' => $totalLiabilities,
+                'total_equity' => $totalEquity,
+            ];
+        }
+        
+        return view('admin.accounting.reports.index', compact('data', 'reportType', 'year', 'month', 'startDate', 'endDate'));
+    }
+    
+    /**
+     * Helper method to get account balance for a date range
+     */
+    private function getAccountBalance($accountId, $startDate = null, $endDate = null)
+    {
+        $query = JournalEntryLine::where('account_id', $accountId);
+        
+        if ($startDate && $endDate) {
+            $query->whereHas('journalEntry', function($q) use ($startDate, $endDate) {
+                $q->whereBetween('transaction_date', [$startDate, $endDate]);
+            });
+        } elseif ($endDate) {
+            $query->whereHas('journalEntry', function($q) use ($endDate) {
+                $q->where('transaction_date', '<=', $endDate);
+            });
+        }
+        
+        $debits = (clone $query)->where('entry_type', 'debit')->sum('amount');
+        $credits = (clone $query)->where('entry_type', 'credit')->sum('amount');
+        
+        // For asset and expense accounts, debits increase, credits decrease
+        // For liability, equity, and revenue accounts, credits increase, debits decrease
+        $account = ChartOfAccount::find($accountId);
+        if (in_array($account->type, ['asset', 'expense'])) {
+            return $debits - $credits;
+        } else {
+            return $credits - $debits;
+        }
     }
 
     /**
      * Display budget reports
      */
-    public function budget()
+    public function budget(Request $request)
     {
-        // TODO: Implement budget reports logic
-        return view('admin.accounting.budget.index');
+        $year = $request->get('year', now()->year);
+        $month = $request->get('month', now()->month);
+        
+        $budgets = \App\Models\Budget::where('year', $year)
+            ->where('month', $month)
+            ->with('account')
+            ->get();
+        
+        $budgetData = [];
+        foreach ($budgets as $budget) {
+            $actual = $this->getAccountBalance($budget->account_id, 
+                Carbon::create($year, $month, 1)->startOfMonth(),
+                Carbon::create($year, $month, 1)->endOfMonth()
+            );
+            $variance = $budget->amount - abs($actual);
+            $variancePercent = $budget->amount > 0 ? ($variance / $budget->amount) * 100 : 0;
+            
+            $budgetData[] = [
+                'account' => $budget->account->name,
+                'budgeted' => $budget->amount,
+                'actual' => abs($actual),
+                'variance' => $variance,
+                'variance_percent' => $variancePercent,
+            ];
+        }
+        
+        return view('admin.accounting.budget.index', compact('budgetData', 'year', 'month'));
     }
 
     /**
@@ -588,25 +908,87 @@ class AccountingController extends Controller
      */
     public function assets()
     {
-        // TODO: Implement assets listing logic
-        return view('admin.accounting.assets.index');
+        $assets = \App\Models\ProjectAsset::with(['project', 'creator'])
+            ->orderBy('date_acquired', 'desc')
+            ->get()
+            ->map(function($asset) {
+                return [
+                    'id' => $asset->id,
+                    'code' => 'AST-' . str_pad($asset->id, 6, '0', STR_PAD_LEFT),
+                    'name' => $asset->name,
+                    'type' => ucfirst(str_replace('_', ' ', $asset->category ?? 'other')),
+                    'purchase_value' => $asset->acquisition_cost,
+                    'current_value' => $asset->current_value,
+                    'location' => $asset->project->name ?? 'N/A',
+                    'date_acquired' => $asset->date_acquired,
+                ];
+            });
+        
+        return view('admin.accounting.assets.index', compact('assets'));
     }
 
     /**
      * Display accounts reconciliation
      */
-    public function reconciliation()
+    public function reconciliation(Request $request)
     {
-        // TODO: Implement reconciliation logic
-        return view('admin.accounting.reconciliation.index');
+        $accountId = $request->get('account_id');
+        
+        $accounts = ChartOfAccount::where('type', 'asset')
+            ->where('is_active', true)
+            ->where(function($q) {
+                $q->where('name', 'like', '%bank%')
+                  ->orWhere('name', 'like', '%sacco%')
+                  ->orWhere('name', 'like', '%account%');
+            })
+            ->get();
+        
+        $reconciliations = [];
+        if ($accountId) {
+            $account = ChartOfAccount::find($accountId);
+            if ($account) {
+                $reconciliations = \App\Models\AccountReconciliation::where('account_id', $accountId)
+                    ->orderBy('reconciliation_date', 'desc')
+                    ->with('reconciler')
+                    ->get();
+            }
+        }
+        
+        return view('admin.accounting.reconciliation.index', compact('accounts', 'reconciliations', 'accountId'));
     }
 
     /**
      * Display employee payroll
      */
-    public function payroll()
+    public function payroll(Request $request)
     {
-        // TODO: Implement payroll logic
-        return view('admin.accounting.payroll.index');
+        $year = $request->get('year', now()->year);
+        $month = $request->get('month', now()->month);
+        
+        // Get payroll expenses from financial records
+        $payrollRecords = FinancialRecord::where('type', 'expense')
+            ->where(function($q) {
+                $q->where('category', 'like', '%salary%')
+                  ->orWhere('category', 'like', '%payroll%')
+                  ->orWhere('category', 'like', '%wage%');
+            })
+            ->whereYear('occurred_at', $year)
+            ->whereMonth('occurred_at', $month)
+            ->where('status', 'approved')
+            ->with('partner')
+            ->get();
+        
+        $payrollData = $payrollRecords->map(function($record) {
+            return [
+                'employee' => $record->partner->name ?? $record->description ?? 'Employee',
+                'amount' => $record->amount,
+                'date' => $record->occurred_at->format('M d, Y'),
+                'description' => $record->description,
+            ];
+        });
+        
+        $totalPayroll = $payrollData->sum('amount');
+        
+        return view('admin.accounting.payroll.index', compact('payrollData', 'totalPayroll', 'year', 'month'));
     }
 }

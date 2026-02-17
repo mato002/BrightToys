@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Partner;
 
 use App\Http\Controllers\Controller;
+use App\Services\MonthlyContributionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +32,10 @@ class ProfileController extends Controller
         $welfareWallet = $partner->wallets->firstWhere('type', \App\Models\MemberWallet::TYPE_WELFARE);
         $investmentWallet = $partner->wallets->firstWhere('type', \App\Models\MemberWallet::TYPE_INVESTMENT);
 
-        return view('partner.profile.index', compact('user', 'partner', 'welfareWallet', 'investmentWallet'));
+        // Get monthly contribution status
+        $monthlyContribution = MonthlyContributionService::forPartner($partner);
+
+        return view('partner.profile.index', compact('user', 'partner', 'welfareWallet', 'investmentWallet', 'monthlyContribution'));
     }
 
     public function update(Request $request)

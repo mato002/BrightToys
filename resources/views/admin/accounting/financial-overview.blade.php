@@ -184,9 +184,29 @@
                         </span>
                     </div>
                 </div>
-                <div class="border border-dashed border-slate-200 rounded-xl p-6 text-center text-xs text-slate-400">
-                    Charts for monthly and yearly performance, plus trends over time, will appear here once you plug in reporting data.
-                </div>
+                @if(!empty($performance['trends']) && count($performance['trends']) > 0)
+                    <div class="mb-4">
+                        <canvas id="performanceChart" height="80"></canvas>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3 text-xs">
+                        <div class="text-center">
+                            <p class="text-slate-500">Monthly Revenue</p>
+                            <p class="font-semibold text-emerald-700">Ksh {{ number_format($performance['monthly']['revenue'] ?? 0, 0) }}</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-slate-500">Monthly Expenses</p>
+                            <p class="font-semibold text-red-700">Ksh {{ number_format($performance['monthly']['expenses'] ?? 0, 0) }}</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-slate-500">Monthly Profit</p>
+                            <p class="font-semibold text-sky-700">Ksh {{ number_format($performance['monthly']['profit'] ?? 0, 0) }}</p>
+                        </div>
+                    </div>
+                @else
+                    <div class="border border-dashed border-slate-200 rounded-xl p-6 text-center text-xs text-slate-400">
+                        No performance data available yet. Charts will appear once transactions are recorded.
+                    </div>
+                @endif
             </section>
         </div>
 
@@ -202,14 +222,50 @@
                     Search a member to view their total contributions, welfare vs investment split, investment share and profit entitlement.
                 </p>
                 <div class="flex items-center gap-2 mb-3">
-                    <input type="text"
+                    <input type="text" id="member-search-input"
                            class="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs focus:border-emerald-500 focus:ring-emerald-500"
-                           placeholder="Search member by name, ID or phone (UI only – hook to members table)">
-                    <button class="rounded-lg bg-emerald-500 px-3 py-2 text-[11px] font-semibold text-white hover:bg-emerald-600">
-                        View Profile
+                           placeholder="Search member by name, email, phone or national ID">
+                    <button id="member-search-btn" class="rounded-lg bg-emerald-500 px-3 py-2 text-[11px] font-semibold text-white hover:bg-emerald-600">
+                        Search
                     </button>
                 </div>
-                <div class="border border-dashed border-emerald-100 rounded-xl p-3 text-[11px] text-slate-500">
+                <div id="member-results" class="hidden border border-emerald-200 rounded-xl p-4 bg-emerald-50/50">
+                    <div id="member-loading" class="hidden text-center text-xs text-slate-500 py-2">Searching...</div>
+                    <div id="member-error" class="hidden text-center text-xs text-red-600 py-2"></div>
+                    <div id="member-details" class="hidden space-y-2 text-xs">
+                        <div class="flex items-center justify-between border-b border-emerald-200 pb-2 mb-2">
+                            <span class="font-semibold text-emerald-900" id="member-name"></span>
+                            <a href="#" id="member-profile-link" class="text-emerald-600 hover:text-emerald-700 text-[10px]">View Full Profile →</a>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <span class="text-slate-600">Total Contributed:</span>
+                                <span class="font-semibold text-slate-900 ml-1" id="member-total-contributed"></span>
+                            </div>
+                            <div>
+                                <span class="text-slate-600">Welfare:</span>
+                                <span class="font-semibold text-slate-900 ml-1" id="member-welfare"></span>
+                            </div>
+                            <div>
+                                <span class="text-slate-600">Investment:</span>
+                                <span class="font-semibold text-slate-900 ml-1" id="member-investment"></span>
+                            </div>
+                            <div>
+                                <span class="text-slate-600">Investment Share:</span>
+                                <span class="font-semibold text-slate-900 ml-1" id="member-investment-share"></span>
+                            </div>
+                            <div>
+                                <span class="text-slate-600">Ownership %:</span>
+                                <span class="font-semibold text-slate-900 ml-1" id="member-ownership"></span>
+                            </div>
+                            <div>
+                                <span class="text-slate-600">Profit Entitlement:</span>
+                                <span class="font-semibold text-slate-900 ml-1" id="member-profit"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="member-placeholder" class="border border-dashed border-emerald-100 rounded-xl p-3 text-[11px] text-slate-500">
                     This panel will show:
                     <ul class="mt-1 list-disc list-inside space-y-0.5">
                         <li>Total contributed (welfare + investment)</li>
@@ -223,7 +279,14 @@
             {{-- C & D. Welfare Fund Management & Approvals --}}
             <section class="bg-white border border-amber-100 rounded-2xl p-4 shadow-sm">
                 <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-xs font-semibold text-amber-900 uppercase tracking-[0.16em]">Welfare Fund & Approvals</h3>
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-xs font-semibold text-amber-900 uppercase tracking-[0.16em]">Welfare Fund & Approvals</h3>
+                        @if(($welfareStats['pending_count'] ?? 0) > 0)
+                            <span class="inline-flex items-center rounded-full bg-amber-100 text-amber-700 px-2 py-0.5 text-[10px] font-medium">
+                                {{ $welfareStats['pending_count'] }} pending
+                            </span>
+                        @endif
+                    </div>
                     <span class="text-[10px] text-amber-600">Strict controls</span>
                 </div>
                 <dl class="grid grid-cols-3 gap-3 text-[11px] mb-4">
@@ -257,6 +320,16 @@
                     </ul>
                 </div>
 
+                <div class="mb-3 flex items-center justify-between">
+                    <p class="text-[11px] text-slate-500">Recent disbursements and pending approvals</p>
+                    <a href="{{ route('admin.financial.create', ['fund_type' => 'welfare']) }}" 
+                       class="inline-flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-semibold rounded-lg transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        New Disbursement
+                    </a>
+                </div>
                 <div class="admin-table-scroll max-h-40">
                     <table class="w-full text-[11px]">
                         <thead class="border-b border-amber-50 bg-amber-50/60">
@@ -265,35 +338,99 @@
                             <th class="px-3 py-2 text-left font-semibold text-amber-900">Member / Purpose</th>
                             <th class="px-3 py-2 text-right font-semibold text-amber-900">Amount</th>
                             <th class="px-3 py-2 text-right font-semibold text-amber-900">Status</th>
+                            <th class="px-3 py-2 text-right font-semibold text-amber-900">Actions</th>
                         </tr>
                         </thead>
                         <tbody class="divide-y divide-amber-50">
                         @forelse($welfareStats['recent_disbursements'] ?? [] as $item)
-                            <tr>
+                            <tr class="hover:bg-amber-50/30">
                                 <td class="px-3 py-2 text-slate-700">{{ $item['date'] ?? '' }}</td>
                                 <td class="px-3 py-2 text-slate-700">
-                                    {{ $item['member'] ?? 'Member' }} – {{ $item['purpose'] ?? 'Purpose' }}
+                                    <div class="font-medium">{{ $item['member'] ?? 'Member' }}</div>
+                                    <div class="text-[10px] text-slate-500">{{ $item['purpose'] ?? 'Purpose' }}</div>
                                 </td>
-                                <td class="px-3 py-2 text-right text-slate-900">
-                                    {{ number_format($item['amount'] ?? 0, 2) }}
+                                <td class="px-3 py-2 text-right text-slate-900 font-semibold">
+                                    Ksh {{ number_format($item['amount'] ?? 0, 2) }}
                                 </td>
                                 <td class="px-3 py-2 text-right">
-                                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium
-                                        {{ ($item['status'] ?? '') === 'approved' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700' }}">
-                                        {{ ucfirst($item['status'] ?? 'pending') }}
+                                    @php
+                                        $status = $item['status'] ?? 'pending_approval';
+                                        $statusClass = $status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
+                                                      ($status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' : 
+                                                      'bg-amber-50 text-amber-700 border-amber-200');
+                                    @endphp
+                                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium border {{ $statusClass }}">
+                                        {{ ucfirst(str_replace('_', ' ', $status)) }}
                                     </span>
+                                </td>
+                                <td class="px-3 py-2 text-right">
+                                    <div class="flex items-center justify-end gap-1">
+                                        <a href="{{ route('admin.financial.show', $item['id'] ?? '') }}" 
+                                           class="text-amber-600 hover:text-amber-700 text-[10px] font-medium">
+                                            View
+                                        </a>
+                                        @if(($item['status'] ?? 'pending_approval') === 'pending_approval')
+                                            @php
+                                                $user = auth()->user();
+                                                $canApprove = $user->hasPermission('financial.records.approve') 
+                                                    || $user->isSuperAdmin() 
+                                                    || $user->hasAdminRole('finance_admin')
+                                                    || $user->hasAdminRole('treasurer')
+                                                    || $user->hasAdminRole('chairman');
+                                            @endphp
+                                            @if($canApprove)
+                                                <form action="{{ route('admin.financial.approve', $item['id'] ?? '') }}" 
+                                                      method="POST" 
+                                                      class="inline"
+                                                      data-confirm="Approve this welfare disbursement?">
+                                                    @csrf
+                                                    <button type="submit" 
+                                                            class="text-emerald-600 hover:text-emerald-700 text-[10px] font-medium">
+                                                        Approve
+                                                    </button>
+                                                </form>
+                                                <form action="{{ route('admin.financial.reject', $item['id'] ?? '') }}" 
+                                                      method="POST" 
+                                                      class="inline"
+                                                      data-confirm="Reject this welfare disbursement?">
+                                                    @csrf
+                                                    <button type="submit" 
+                                                            class="text-red-600 hover:text-red-700 text-[10px] font-medium">
+                                                        Reject
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-3 py-6 text-center text-amber-500">
-                                    Once welfare rules and workflows are wired, all disbursements and approvals will be listed here (read-only for members).
+                                <td colspan="5" class="px-3 py-6 text-center text-amber-500">
+                                    <div class="flex flex-col items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                        <p class="text-[11px]">No welfare disbursements yet.</p>
+                                        <a href="{{ route('admin.financial.create', ['fund_type' => 'welfare']) }}" 
+                                           class="text-amber-600 hover:text-amber-700 text-[10px] font-medium underline">
+                                            Create first disbursement
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         @endforelse
                         </tbody>
                     </table>
                 </div>
+                @if(count($welfareStats['recent_disbursements'] ?? []) > 0)
+                    <div class="mt-2 text-center">
+                        <a href="{{ route('admin.financial.index', ['fund_type' => 'welfare']) }}" 
+                           class="text-[10px] text-amber-600 hover:text-amber-700 font-medium">
+                            View all welfare disbursements →
+                        </a>
+                    </div>
+                @endif
             </section>
 
             {{-- E. Data Integrity --}}
@@ -307,5 +444,116 @@
             </section>
         </div>
     </div>
+
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // Member Search Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('member-search-input');
+            const searchBtn = document.getElementById('member-search-btn');
+            const resultsDiv = document.getElementById('member-results');
+            const loadingDiv = document.getElementById('member-loading');
+            const errorDiv = document.getElementById('member-error');
+            const detailsDiv = document.getElementById('member-details');
+            const placeholderDiv = document.getElementById('member-placeholder');
+
+            function performSearch() {
+                const query = searchInput.value.trim();
+                if (query.length < 2) {
+                    return;
+                }
+
+                // Show loading
+                resultsDiv.classList.remove('hidden');
+                loadingDiv.classList.remove('hidden');
+                errorDiv.classList.add('hidden');
+                detailsDiv.classList.add('hidden');
+                placeholderDiv.classList.add('hidden');
+
+                fetch('{{ route("admin.accounting.financial-overview.search-member") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ query: query })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loadingDiv.classList.add('hidden');
+                    if (data.error) {
+                        errorDiv.textContent = data.error;
+                        errorDiv.classList.remove('hidden');
+                    } else {
+                        // Display member details
+                        document.getElementById('member-name').textContent = data.partner.name;
+                        document.getElementById('member-profile-link').href = '{{ url("/admin/partners") }}/' + data.partner.id;
+                        document.getElementById('member-total-contributed').textContent = 'Ksh ' + parseFloat(data.financials.total_contributed).toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        document.getElementById('member-welfare').textContent = 'Ksh ' + parseFloat(data.financials.welfare_balance).toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        document.getElementById('member-investment').textContent = 'Ksh ' + parseFloat(data.financials.investment_balance).toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        document.getElementById('member-investment-share').textContent = data.financials.investment_share_percent + '%';
+                        document.getElementById('member-ownership').textContent = data.financials.ownership_percentage + '%';
+                        document.getElementById('member-profit').textContent = 'Ksh ' + parseFloat(data.financials.profit_entitlement).toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        detailsDiv.classList.remove('hidden');
+                    }
+                })
+                .catch(error => {
+                    loadingDiv.classList.add('hidden');
+                    errorDiv.textContent = 'Error searching for member. Please try again.';
+                    errorDiv.classList.remove('hidden');
+                });
+            }
+
+            searchBtn.addEventListener('click', performSearch);
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+        });
+
+        // Performance Chart
+        @if(!empty($performance['trends']) && count($performance['trends']) > 0)
+        const ctx = document.getElementById('performanceChart');
+        if (ctx) {
+            const trends = @json($performance['trends']);
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: trends.map(t => t.month),
+                    datasets: [{
+                        label: 'Revenue',
+                        data: trends.map(t => t.revenue),
+                        borderColor: 'rgb(16, 185, 129)',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'Ksh ' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        @endif
+    </script>
+    @endpush
 @endsection
 

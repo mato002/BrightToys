@@ -49,6 +49,11 @@ class FinancialRecordController extends Controller
             $query->where('type', $type);
         }
 
+        // Filter by fund_type (for welfare, investment, etc.)
+        if ($fundType = request('fund_type')) {
+            $query->where('fund_type', $fundType);
+        }
+
         // Filter by status
         if ($status = request('status')) {
             $query->where('status', $status);

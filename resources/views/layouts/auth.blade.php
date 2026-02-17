@@ -11,9 +11,9 @@
         <div class="flex flex-col items-center mb-6">
             <div class="inline-flex items-center gap-2 mb-2">
                 <div class="h-9 w-9 rounded-full bg-amber-500 flex items-center justify-center text-white text-lg font-semibold">
-                    {{ strtoupper(substr(config('app.name')[0] ?? 'A', 0, 1)) }}
+                    OI
                 </div>
-                <span class="text-xl font-semibold tracking-wide">{{ config('app.name', 'Application') }}</span>
+                <span class="text-xl font-semibold tracking-wide">Otto Investments</span>
             </div>
             <p class="text-[11px] text-slate-500 text-center max-w-sm">
                 Sign in or create an account to access your workspace, manage projects and view your activity.
@@ -25,7 +25,7 @@
         </div>
 
         <p class="mt-6 text-center text-[11px] text-slate-500">
-            © {{ date('Y') }} {{ config('app.name', 'Application') }}. All rights reserved.
+            © {{ date('Y') }} Otto Investments. All rights reserved.
         </p>
     </div>
 </body>

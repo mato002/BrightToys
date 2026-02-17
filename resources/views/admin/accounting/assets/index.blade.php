@@ -12,12 +12,7 @@
                 Back to Books of Account
             </a>
             <h1 class="text-lg font-semibold text-slate-900">Company Assets</h1>
-            <p class="text-xs text-slate-500">Register and manage company assets (placeholder).</p>
-        </div>
-        <div>
-            <button class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-4 py-2 rounded">
-                Register Asset
-            </button>
+            <p class="text-xs text-slate-500">Register and manage company assets.</p>
         </div>
     </div>
 
@@ -32,17 +27,29 @@
                         <th class="px-4 py-2 text-right text-xs font-semibold text-slate-700">Purchase Value</th>
                         <th class="px-4 py-2 text-right text-xs font-semibold text-slate-700">Current Value</th>
                         <th class="px-4 py-2 text-left text-xs font-semibold text-slate-700">Location</th>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-slate-700">Date Acquired</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    <tr>
-                        <td colspan="6" class="px-4 py-8 text-center text-slate-500 text-sm">
-                            Asset management implementation placeholder. No assets to display yet.
-                        </td>
-                    </tr>
+                    @forelse($assets ?? [] as $asset)
+                        <tr>
+                            <td class="px-4 py-3 text-slate-700">{{ $asset['code'] }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $asset['name'] }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $asset['type'] }}</td>
+                            <td class="px-4 py-3 text-right text-slate-700">Ksh {{ number_format($asset['purchase_value'], 2) }}</td>
+                            <td class="px-4 py-3 text-right text-slate-700">Ksh {{ number_format($asset['current_value'], 2) }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $asset['location'] }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $asset['date_acquired'] ? \Carbon\Carbon::parse($asset['date_acquired'])->format('M d, Y') : 'N/A' }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="px-4 py-8 text-center text-slate-500 text-sm">
+                                No assets registered yet.
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
     </div>
 @endsection
-

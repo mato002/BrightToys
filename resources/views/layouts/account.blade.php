@@ -182,6 +182,153 @@
         .account-content-wrapper .overflow-x-auto {
             max-width: 100%;
         }
+
+        /* Print Styles */
+        @media print {
+            body {
+                padding-left: 0 !important;
+                background: white;
+            }
+            
+            #account-sidebar,
+            header,
+            footer,
+            .no-print,
+            button.no-print,
+            a.no-print {
+                display: none !important;
+            }
+            
+            .account-content-wrapper {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            
+            .bg-white {
+                background: white !important;
+            }
+            
+            .border,
+            .shadow-sm,
+            .shadow {
+                border: 1px solid #e5e7eb !important;
+                box-shadow: none !important;
+            }
+            
+            @page {
+                margin: 1cm;
+            }
+        }
+
+        /* Tooltip Styles */
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+        
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 10px;
+            background: #1f2937;
+            color: white;
+            font-size: 11px;
+            white-space: nowrap;
+            border-radius: 4px;
+            z-index: 1000;
+            margin-bottom: 5px;
+            pointer-events: none;
+            max-width: 250px;
+            white-space: normal;
+            text-align: center;
+        }
+        
+        .tooltip:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: #1f2937;
+            z-index: 1000;
+            margin-bottom: -5px;
+            pointer-events: none;
+        }
+
+        /* Empty State Styles */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6b7280;
+        }
+        
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1rem;
+            opacity: 0.5;
+        }
+        
+        .empty-state h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .empty-state p {
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Data Refresh Indicator */
+        .data-refresh-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 10px;
+            color: #6b7280;
+        }
+        
+        .data-refresh-indicator .pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Breadcrumb Styles */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 1rem;
+        }
+        
+        .breadcrumb a {
+            color: #64748b;
+            transition: color 0.2s;
+        }
+        
+        .breadcrumb a:hover {
+            color: #f59e0b;
+        }
+        
+        .breadcrumb-separator {
+            color: #cbd5e1;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 flex min-h-screen antialiased account-has-sidebar overflow-x-hidden">
@@ -314,24 +461,42 @@
 
     {{-- Main content --}}
     <div class="flex-1 flex flex-col min-h-screen w-full max-w-full overflow-x-hidden">
-        <header class="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-slate-200 px-3 md:px-6 py-3 flex items-center justify-between">
-            <div class="flex items-center space-x-3 relative">
-                <button id="sidebar-toggle"
-                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 focus:outline-none lg:hidden">
-                    <span class="sr-only">Toggle sidebar</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
-                         viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                              d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
-                <div class="ml-2 md:ml-4">
-                    <h1 class="text-sm md:text-base font-semibold text-slate-900 tracking-tight">
-                        @yield('page_title', 'My Account')
-                    </h1>
-                    <p class="text-[11px] text-slate-400 hidden md:block">Customer Account - Manage your orders and profile</p>
+        <header class="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-slate-200 px-3 md:px-6 py-3">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center space-x-3 relative">
+                    <button id="sidebar-toggle"
+                            class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 focus:outline-none lg:hidden"
+                            aria-label="Toggle sidebar">
+                        <span class="sr-only">Toggle sidebar</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                             viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                  d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                    <div class="ml-2 md:ml-4">
+                        <h1 class="text-sm md:text-base font-semibold text-slate-900 tracking-tight">
+                            @yield('page_title', 'My Account')
+                        </h1>
+                        <p class="text-[11px] text-slate-400 hidden md:block">Customer Account - Manage your orders and profile</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    @if(isset($dataRefreshedAt) || true)
+                        <div class="data-refresh-indicator hidden md:flex">
+                            <span class="pulse"></span>
+                            <span>Last updated: {{ now()->format('M d, H:i') }}</span>
+                        </div>
+                    @endif
                 </div>
             </div>
+            @hasSection('breadcrumbs')
+                <nav class="breadcrumb" aria-label="Breadcrumb">
+                    <a href="{{ route('account.overview') }}">Dashboard</a>
+                    @yield('breadcrumbs')
+                </nav>
+            @endif
+        </header>
 
             <div class="flex items-center space-x-2 md:space-x-3">
                 {{-- Notifications Bell --}}
@@ -678,6 +843,53 @@
                     timerProgressBar: true
                 });
             @endif
+
+            // Keyboard Shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Ctrl/Cmd + P: Print
+                if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                    e.preventDefault();
+                    window.print();
+                }
+                
+                // Ctrl/Cmd + F: Focus search (if search input exists)
+                if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                    const searchInput = document.getElementById('search-input');
+                    if (searchInput && !e.target.matches('input, textarea')) {
+                        e.preventDefault();
+                        searchInput.focus();
+                        searchInput.select();
+                    }
+                }
+                
+                // Escape: Close modals/dropdowns
+                if (e.key === 'Escape') {
+                    // Close sidebar on mobile
+                    if (window.innerWidth < 1024 && body.classList.contains('mobile-sidebar-open')) {
+                        closeSidebar();
+                    }
+                }
+            });
+
+            // Show keyboard shortcuts hint on first visit
+            if (!localStorage.getItem('account-shortcuts-shown')) {
+                setTimeout(function() {
+                    Swal.fire({
+                        title: 'Keyboard Shortcuts',
+                        html: `
+                            <div class="text-left space-y-2 text-sm">
+                                <p><kbd class="px-2 py-1 bg-slate-100 rounded">Ctrl/Cmd + P</kbd> - Print page</p>
+                                <p><kbd class="px-2 py-1 bg-slate-100 rounded">Ctrl/Cmd + F</kbd> - Focus search</p>
+                                <p><kbd class="px-2 py-1 bg-slate-100 rounded">Esc</kbd> - Close menus</p>
+                            </div>
+                        `,
+                        icon: 'info',
+                        confirmButtonText: 'Got it!',
+                        confirmButtonColor: '#f59e0b',
+                    });
+                    localStorage.setItem('account-shortcuts-shown', 'true');
+                }, 2000);
+            }
         })();
     </script>
 </body>

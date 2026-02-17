@@ -193,6 +193,9 @@ class DashboardController extends Controller
         // Monthly 55,000 contributions (welfare + investment)
         $monthlyContribution = MonthlyContributionService::forPartner($partner);
 
+        // Data refresh timestamp
+        $dataRefreshedAt = now();
+
         return view('partner.dashboard', compact(
             'partner',
             'currentOwnership',
@@ -222,7 +225,8 @@ class DashboardController extends Controller
             'installments',
             'overdueInstallments',
             'upcomingInstallments',
-            'monthlyContribution'
+            'monthlyContribution',
+            'dataRefreshedAt'
         ));
     }
 
@@ -289,6 +293,18 @@ class DashboardController extends Controller
 
         if ($dateFrom = request('date_from')) {
             $query->whereDate('contributed_at', '>=', $dateFrom);
+        }
+
+        if ($search = request('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('reference', 'like', "%{$search}%")
+                  ->orWhere('notes', 'like', "%{$search}%");
+                
+                // Search by amount if numeric
+                if (is_numeric($search)) {
+                    $q->orWhere('amount', $search);
+                }
+            });
         }
 
         $contributions = $query->latest('contributed_at')
@@ -503,5 +519,66 @@ class DashboardController extends Controller
             'expenseCategories',
             'records'
         ));
+    }
+
+    /**
+     * Export contributions to CSV
+     */
+    public function exportContributions()
+    {
+        $user = Auth::user();
+        $partner = $user->partner;
+
+        if (!$partner) {
+            abort(403, 'You are not associated with a partner account.');
+        }
+
+        try {
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+
+            $contributions = PartnerContribution::where('partner_id', $partner->id)
+                ->where('is_archived', false)
+                ->latest('contributed_at')
+                ->get();
+
+            $filename = 'my_contributions_' . date('Y-m-d_His') . '.csv';
+            $headers = [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Pragma' => 'no-cache',
+                'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                'Expires' => '0'
+            ];
+
+            $callback = function() use ($contributions) {
+                $file = fopen('php://output', 'w');
+                
+                // Add BOM for UTF-8
+                fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+                
+                fputcsv($file, ['Date', 'Type', 'Amount (KES)', 'Fund Type', 'Status', 'Reference', 'Notes']);
+                
+                foreach ($contributions as $contribution) {
+                    fputcsv($file, [
+                        $contribution->contributed_at->format('Y-m-d'),
+                        ucfirst(str_replace('_', ' ', $contribution->type)),
+                        number_format($contribution->amount, 2),
+                        $contribution->fund_type ? ucfirst($contribution->fund_type) : 'N/A',
+                        ucfirst($contribution->status),
+                        $contribution->reference ?? 'N/A',
+                        $contribution->notes ?? 'N/A',
+                    ]);
+                }
+                
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        } catch (\Exception $e) {
+            return redirect()->route('partner.contributions')
+                ->with('error', 'Failed to export contributions: ' . $e->getMessage());
+        }
     }
 }

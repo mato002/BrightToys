@@ -46,6 +46,7 @@ Route::middleware(['auth', 'customer'])->prefix('account')->name('account.')->gr
     Route::get('/overview', [AccountController::class, 'overview'])->name('overview');
     Route::get('/', [AccountController::class, 'profile'])->name('profile');
     Route::get('/orders', [AccountController::class, 'orders'])->name('orders');
+    Route::get('/orders/export', [AccountController::class, 'exportOrders'])->name('orders.export');
     Route::get('/orders/{order}/track', [AccountController::class, 'trackOrder'])->name('orders.track');
     Route::get('/orders/{order}/invoice', [AccountController::class, 'invoice'])->name('orders.invoice');
     Route::post('/orders/{order}/cancel', [AccountController::class, 'cancelOrder'])->name('orders.cancel');
@@ -106,6 +107,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('products', AdminProductController::class);
     Route::get('/products/export', [AdminProductController::class, 'export'])->name('products.export');
     Route::get('/products/report', [AdminProductController::class, 'report'])->name('products.report');
+    Route::post('/products/bulk', [AdminProductController::class, 'bulk'])->name('products.bulk');
     
     Route::resource('categories', AdminCategoryController::class);
     Route::get('/categories/export', [AdminCategoryController::class, 'export'])->name('categories.export');
@@ -114,6 +116,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('orders', AdminOrderController::class)->only(['index', 'show', 'update']);
     Route::get('/orders/export', [AdminOrderController::class, 'export'])->name('orders.export');
     Route::get('/orders/report', [AdminOrderController::class, 'report'])->name('orders.report');
+    Route::post('/orders/bulk', [AdminOrderController::class, 'bulkAction'])->name('orders.bulk');
     
     Route::resource('users', AdminUserController::class)->only(['index', 'show']);
     Route::get('/users/export', [AdminUserController::class, 'export'])->name('users.export');
@@ -132,6 +135,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings');
     Route::put('/settings/profile', [\App\Http\Controllers\Admin\SettingsController::class, 'updateProfile'])->name('settings.profile');
     Route::put('/settings/password', [\App\Http\Controllers\Admin\SettingsController::class, 'updatePassword'])->name('settings.password');
+    
+    // System Settings
+    Route::post('/settings/system', [\App\Http\Controllers\Admin\SettingsController::class, 'updateSystemSettings'])->name('settings.system');
+    
+    // Welfare Rules
+    Route::post('/settings/welfare-rules', [\App\Http\Controllers\Admin\SettingsController::class, 'storeWelfareRule'])->name('settings.welfare-rules.store');
+    Route::delete('/settings/welfare-rules/{welfareRule}', [\App\Http\Controllers\Admin\SettingsController::class, 'deleteWelfareRule'])->name('settings.welfare-rules.delete');
     
     // Role Management (only for super admin and finance admin)
     Route::post('/settings/users/{user}/roles', [\App\Http\Controllers\Admin\SettingsController::class, 'assignRoles'])->name('settings.assign-roles');
@@ -280,6 +290,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         // High-level financial tracking dashboard
         Route::get('/financial-overview', [\App\Http\Controllers\Admin\AccountingController::class, 'financialOverview'])
             ->name('financial-overview');
+        Route::post('/financial-overview/search-member', [\App\Http\Controllers\Admin\AccountingController::class, 'searchMember'])
+            ->name('financial-overview.search-member');
     });
 
     // Notifications & Transparency
@@ -297,6 +309,7 @@ Route::prefix('partner')->name('partner.')->middleware(['auth', 'partner'])->gro
     Route::get('/dashboard', [\App\Http\Controllers\Partner\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/financial-records', [\App\Http\Controllers\Partner\DashboardController::class, 'financialRecords'])->name('financial-records');
     Route::get('/contributions', [\App\Http\Controllers\Partner\DashboardController::class, 'contributions'])->name('contributions');
+    Route::get('/contributions/export', [\App\Http\Controllers\Partner\DashboardController::class, 'exportContributions'])->name('contributions.export');
     Route::get('/contributions/create', [\App\Http\Controllers\Partner\DashboardController::class, 'createContribution'])->name('contributions.create');
     Route::post('/contributions', [\App\Http\Controllers\Partner\DashboardController::class, 'storeContribution'])->name('contributions.store');
     Route::get('/earnings', [\App\Http\Controllers\Partner\DashboardController::class, 'earnings'])->name('earnings');

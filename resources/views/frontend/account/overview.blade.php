@@ -3,6 +3,11 @@
 @section('title', 'Dashboard Overview')
 @section('page_title', 'Dashboard Overview')
 
+@section('breadcrumbs')
+    <span class="breadcrumb-separator">/</span>
+    <span class="text-slate-700">Overview</span>
+@endsection
+
 @section('content')
     <div class="space-y-6">
         {{-- Welcome Section --}}

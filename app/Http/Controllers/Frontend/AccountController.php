@@ -132,9 +132,116 @@ class AccountController extends Controller
             $query->whereDate('created_at', '<=', $to);
         }
 
+        if ($search = request('search')) {
+            $query->where(function ($q) use ($search) {
+                // Search by order number or ID
+                if (is_numeric($search)) {
+                    $q->where('id', $search)
+                      ->orWhere('order_number', 'like', "%{$search}%");
+                } else {
+                    $q->where('order_number', 'like', "%{$search}%");
+                }
+                
+                // Search by tracking number
+                $q->orWhere('tracking_number', 'like', "%{$search}%");
+                
+                // Search by product names in order items
+                $q->orWhereHas('items.product', function ($productQuery) use ($search) {
+                    $productQuery->where('name', 'like', "%{$search}%");
+                });
+            });
+        }
+
         $orders = $query->latest()->paginate(10)->withQueryString();
 
         return view('frontend.account.orders', compact('user', 'orders'));
+    }
+
+    /**
+     * Export orders to CSV
+     */
+    public function exportOrders()
+    {
+        $user = auth()->user();
+        
+        try {
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+
+            $query = $user->orders()->with('items.product');
+
+            // Apply same filters as orders page
+            if ($status = request('status')) {
+                $query->where('status', $status);
+            }
+
+            if ($from = request('from_date')) {
+                $query->whereDate('created_at', '>=', $from);
+            }
+
+            if ($to = request('to_date')) {
+                $query->whereDate('created_at', '<=', $to);
+            }
+
+            if ($search = request('search')) {
+                $query->where(function ($q) use ($search) {
+                    if (is_numeric($search)) {
+                        $q->where('id', $search)
+                          ->orWhere('order_number', 'like', "%{$search}%");
+                    } else {
+                        $q->where('order_number', 'like', "%{$search}%");
+                    }
+                    $q->orWhere('tracking_number', 'like', "%{$search}%");
+                    $q->orWhereHas('items.product', function ($productQuery) use ($search) {
+                        $productQuery->where('name', 'like', "%{$search}%");
+                    });
+                });
+            }
+
+            $orders = $query->latest()->get();
+
+            $filename = 'my_orders_' . date('Y-m-d_His') . '.csv';
+            $headers = [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Pragma' => 'no-cache',
+                'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                'Expires' => '0'
+            ];
+
+            $callback = function() use ($orders) {
+                $file = fopen('php://output', 'w');
+                
+                // Add BOM for UTF-8
+                fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+                
+                fputcsv($file, ['Order Number', 'Date', 'Status', 'Total (KES)', 'Tracking Number', 'Items Count', 'Products']);
+                
+                foreach ($orders as $order) {
+                    $products = $order->items->map(function ($item) {
+                        return ($item->product->name ?? 'N/A') . ' (x' . $item->quantity . ')';
+                    })->implode('; ');
+                    
+                    fputcsv($file, [
+                        $order->order_number ?? '#' . $order->id,
+                        $order->created_at->format('Y-m-d H:i:s'),
+                        ucfirst($order->status),
+                        number_format($order->total, 2),
+                        $order->tracking_number ?? 'N/A',
+                        $order->items->count(),
+                        $products,
+                    ]);
+                }
+                
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        } catch (\Exception $e) {
+            return redirect()->route('account.orders')
+                ->with('error', 'Failed to export orders: ' . $e->getMessage());
+        }
     }
 
     public function trackOrder(Order $order)

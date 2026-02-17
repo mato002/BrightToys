@@ -163,6 +163,61 @@
             z-index: 20;
         }
 
+        /* Print Styles */
+        @media print {
+            #partner-sidebar,
+            header,
+            .partner-footer,
+            button,
+            .no-print {
+                display: none !important;
+            }
+            body.partner-has-sidebar {
+                padding-left: 0 !important;
+            }
+            .partner-main {
+                padding: 0 !important;
+            }
+            .bg-white {
+                background: white !important;
+            }
+            .border {
+                border: 1px solid #e2e8f0 !important;
+            }
+        }
+
+        /* Tooltip Styles */
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem 0.75rem;
+            background: #1e293b;
+            color: white;
+            font-size: 0.75rem;
+            border-radius: 0.375rem;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: 0.25rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .tooltip:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 4px solid transparent;
+            border-top-color: #1e293b;
+            z-index: 1000;
+        }
+
         /* Navigation group styles */
         .nav-group-content {
             max-height: 0;
@@ -246,6 +301,173 @@
             #partner-sidebar.collapsed .nav-group-content {
                 display: none !important;
             }
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                padding-left: 0 !important;
+                background: white;
+            }
+            
+            #partner-sidebar,
+            header,
+            footer,
+            .no-print,
+            button.no-print,
+            a.no-print {
+                display: none !important;
+            }
+            
+            .partner-main {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            
+            .bg-white {
+                background: white !important;
+            }
+            
+            .border,
+            .shadow-sm,
+            .shadow {
+                border: 1px solid #e5e7eb !important;
+                box-shadow: none !important;
+            }
+            
+            .text-slate-500,
+            .text-slate-400 {
+                color: #6b7280 !important;
+            }
+            
+            a {
+                color: #1f2937 !important;
+                text-decoration: none !important;
+            }
+            
+            table {
+                page-break-inside: auto;
+            }
+            
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            
+            thead {
+                display: table-header-group;
+            }
+            
+            tfoot {
+                display: table-footer-group;
+            }
+            
+            @page {
+                margin: 1cm;
+            }
+            
+            .print-page-break {
+                page-break-before: always;
+            }
+        }
+
+        /* Tooltip Styles */
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+        
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 10px;
+            background: #1f2937;
+            color: white;
+            font-size: 11px;
+            white-space: nowrap;
+            border-radius: 4px;
+            z-index: 1000;
+            margin-bottom: 5px;
+            pointer-events: none;
+            max-width: 250px;
+            white-space: normal;
+            text-align: center;
+        }
+        
+        .tooltip:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: #1f2937;
+            z-index: 1000;
+            margin-bottom: -5px;
+            pointer-events: none;
+        }
+
+        /* Loading States */
+        .loading-skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Empty State Styles */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6b7280;
+        }
+        
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1rem;
+            opacity: 0.5;
+        }
+        
+        .empty-state h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .empty-state p {
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Data Refresh Indicator */
+        .data-refresh-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 10px;
+            color: #6b7280;
+        }
+        
+        .data-refresh-indicator .pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
     </style>
@@ -579,64 +801,107 @@
 
     {{-- Main content --}}
     <div class="flex-1 flex flex-col min-h-screen">
-        <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200 px-3 md:px-6 py-3 flex items-center justify-between">
-            <div class="flex items-center space-x-3 relative">
-                <button id="sidebar-toggle" class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 focus:outline-none lg:hidden">
-                    <span class="sr-only">Toggle sidebar</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6h16M4 12h16M4 18h16"/>
-                    </svg>
-                </button>
-                <div>
-                    <h1 class="text-sm md:text-base font-semibold text-slate-900 tracking-tight">
-                        @yield('page_title', 'Partner Dashboard')
-                    </h1>
-                    <p class="text-[11px] text-slate-400 hidden md:block">Otto Investments partner overview</p>
+        <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200 px-3 md:px-6 py-3">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center space-x-3 relative">
+                    <button id="sidebar-toggle" class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 focus:outline-none lg:hidden" aria-label="Toggle sidebar">
+                        <span class="sr-only">Toggle sidebar</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                    <div>
+                        <h1 class="text-sm md:text-base font-semibold text-slate-900 tracking-tight">
+                            @yield('page_title', 'Partner Dashboard')
+                        </h1>
+                        <p class="text-[11px] text-slate-400 hidden md:block">Otto Investments partner overview</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3 relative">
+                    @if(isset($dataRefreshedAt) || true)
+                        <div class="data-refresh-indicator hidden md:flex">
+                            <span class="pulse"></span>
+                            <span>Last updated: {{ now()->format('M d, H:i') }}</span>
+                        </div>
+                    @endif
+                    <div class="hidden md:flex flex-col items-end text-[11px] leading-tight">
+                        <span class="font-semibold text-slate-900">{{ auth()->user()->name ?? 'Partner' }}</span>
+                        <span class="text-slate-500">{{ auth()->user()->email ?? '' }}</span>
+                    </div>
+                    <button id="profile-toggle" type="button" class="flex items-center space-x-2 rounded-full border border-slate-200 bg-white px-2 py-1.5 text-[11px] shadow-sm hover:bg-slate-50 relative z-50 touch-manipulation" aria-label="Profile menu" aria-expanded="false">
+                        <div class="w-7 h-7 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-semibold shadow-lg shadow-amber-500/40">
+                            {{ strtoupper(substr(auth()->user()->name ?? 'P', 0, 1)) }}
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-500 transition-transform duration-200" id="profile-chevron" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                    <div id="profile-menu" class="hidden absolute right-0 top-full mt-2 w-48 sm:w-56 rounded-lg border border-slate-200 bg-white shadow-xl shadow-slate-200/80 text-[12px] py-1 z-[60]">
+                        <div class="px-3 py-2 border-b border-slate-100">
+                            <p class="font-semibold text-slate-900 truncate">{{ auth()->user()->name ?? 'Partner' }}</p>
+                            <p class="text-[11px] text-slate-500 truncate">{{ auth()->user()->email ?? '' }}</p>
+                        </div>
+                        <a href="{{ route('partner.profile') }}" class="flex items-center px-3 py-2 text-slate-700 hover:bg-slate-50">
+                            <span class="mr-2 text-[13px]">👤</span>
+                            <span>My Profile</span>
+                        </a>
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="w-full text-left flex items-center px-3 py-2 text-red-500 hover:bg-red-50 hover:text-red-600">
+                                <span class="mr-2 text-[13px]">⎋</span>
+                                <span>Logout</span>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
-            <div class="flex items-center space-x-3 relative">
-                <div class="hidden md:flex flex-col items-end text-[11px] leading-tight">
-                    <span class="font-semibold text-slate-900">{{ auth()->user()->name ?? 'Partner' }}</span>
-                    <span class="text-slate-500">{{ auth()->user()->email ?? '' }}</span>
-                </div>
-                <button id="profile-toggle" type="button" class="flex items-center space-x-2 rounded-full border border-slate-200 bg-white px-2 py-1.5 text-[11px] shadow-sm hover:bg-slate-50 relative z-50 touch-manipulation">
-                    <div class="w-7 h-7 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-semibold shadow-lg shadow-amber-500/40">
-                        {{ strtoupper(substr(auth()->user()->name ?? 'P', 0, 1)) }}
-                    </div>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-500 transition-transform duration-200" id="profile-chevron" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06z" clip-rule="evenodd"/>
-                    </svg>
-                </button>
-                <div id="profile-menu" class="hidden absolute right-0 top-full mt-2 w-48 sm:w-56 rounded-lg border border-slate-200 bg-white shadow-xl shadow-slate-200/80 text-[12px] py-1 z-[60]">
-                    <div class="px-3 py-2 border-b border-slate-100">
-                        <p class="font-semibold text-slate-900 truncate">{{ auth()->user()->name ?? 'Partner' }}</p>
-                        <p class="text-[11px] text-slate-500 truncate">{{ auth()->user()->email ?? '' }}</p>
-                    </div>
-                    <a href="{{ route('partner.profile') }}" class="flex items-center px-3 py-2 text-slate-700 hover:bg-slate-50">
-                        <span class="mr-2 text-[13px]">👤</span>
-                        <span>My Profile</span>
-                    </a>
-                    <form id="logout-form" action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button type="submit" class="w-full text-left flex items-center px-3 py-2 text-red-500 hover:bg-red-50 hover:text-red-600">
-                            <span class="mr-2 text-[13px]">⎋</span>
-                            <span>Logout</span>
-                        </button>
-                    </form>
-                </div>
-            </div>
+            @hasSection('breadcrumbs')
+                <nav class="flex items-center space-x-1 text-[11px] text-slate-500" aria-label="Breadcrumb">
+                    <a href="{{ route('partner.dashboard') }}" class="hover:text-amber-600 transition-colors">Dashboard</a>
+                    @yield('breadcrumbs')
+                </nav>
+            @endif
         </header>
 
         <main class="flex-1 p-3 md:p-6 partner-main">
+            {{-- Breadcrumbs --}}
+            @hasSection('breadcrumbs')
+                <nav class="mb-4 text-[11px] text-slate-500" aria-label="Breadcrumb">
+                    <ol class="flex items-center space-x-2">
+                        <li>
+                            <a href="{{ route('partner.dashboard') }}" class="hover:text-amber-600 transition-colors">Dashboard</a>
+                        </li>
+                        @yield('breadcrumbs')
+                    </ol>
+                </nav>
+            @endif
+            
             @yield('partner_content')
         </main>
 
-        <footer class="px-4 md:px-6 py-3 text-[11px] text-slate-500 border-t border-slate-200 bg-white/80 backdrop-blur partner-footer">
-            <div class="mx-auto max-w-6xl flex items-center justify-between">
-                <a href="https://mathiasodhiambo.netlify.app" target="_blank" rel="noopener noreferrer" class="hover:underline">
-                    © {{ date('Y') }} Otto Investments Partner
-                </a>
-                <span class="hidden sm:inline text-slate-600">Investment overview dashboard</span>
+        <footer class="px-4 md:px-6 py-4 text-[11px] text-slate-500 border-t border-slate-200 bg-white/80 backdrop-blur partner-footer">
+            <div class="mx-auto max-w-6xl">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-3">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <a href="{{ route('partner.dashboard') }}" class="hover:text-amber-600 transition-colors">Dashboard</a>
+                        <a href="{{ route('partner.profile') }}" class="hover:text-amber-600 transition-colors">Profile</a>
+                        <a href="{{ route('partner.contributions') }}" class="hover:text-amber-600 transition-colors">Contributions</a>
+                        <a href="{{ route('partner.documents') }}" class="hover:text-amber-600 transition-colors">Documents</a>
+                        <a href="{{ route('pages.contact') }}" target="_blank" class="hover:text-amber-600 transition-colors">Support</a>
+                        @if(route('pages.policies'))
+                            <a href="{{ route('pages.policies') }}" target="_blank" class="hover:text-amber-600 transition-colors">Policies</a>
+                        @endif
+                    </div>
+                    <div class="text-slate-400">
+                        <span class="hidden sm:inline">Last updated: {{ now()->format('M d, Y H:i') }}</span>
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 pt-3 border-t border-slate-100">
+                    <a href="https://mathiasodhiambo.netlify.app" target="_blank" rel="noopener noreferrer" class="hover:underline">
+                        © {{ date('Y') }} Otto Investments. All rights reserved.
+                    </a>
+                    <span class="text-slate-400">Partner Console v1.0</span>
+                </div>
             </div>
         </footer>
     </div>
@@ -909,6 +1174,79 @@
                     });
                 });
             });
+
+            // Keyboard Shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Ctrl/Cmd + P: Print
+                if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                    e.preventDefault();
+                    window.print();
+                }
+                
+                // Ctrl/Cmd + E: Export (if on contributions page)
+                if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                    const exportLink = document.querySelector('a[href*="export"]');
+                    if (exportLink && !e.target.matches('input, textarea, select')) {
+                        e.preventDefault();
+                        exportLink.click();
+                    }
+                }
+                
+                // Ctrl/Cmd + F: Focus search (if search input exists)
+                if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                    const searchInput = document.getElementById('search-input');
+                    if (searchInput && !e.target.matches('input, textarea')) {
+                        e.preventDefault();
+                        searchInput.focus();
+                        searchInput.select();
+                    }
+                }
+                
+                // Ctrl/Cmd + K: Quick actions menu (dashboard)
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                    const newContributionLink = document.querySelector('a[href*="contributions/create"]');
+                    if (newContributionLink && !e.target.matches('input, textarea')) {
+                        e.preventDefault();
+                        newContributionLink.click();
+                    }
+                }
+                
+                // Escape: Close modals/dropdowns
+                if (e.key === 'Escape') {
+                    // Close profile menu
+                    if (profileMenu && !profileMenu.classList.contains('hidden')) {
+                        profileMenu.classList.add('hidden');
+                        if (profileToggle) profileToggle.classList.remove('active');
+                    }
+                    
+                    // Close sidebar on mobile
+                    if (window.innerWidth < 1024 && body.classList.contains('mobile-sidebar-open')) {
+                        closeSidebar();
+                    }
+                }
+            });
+
+            // Show keyboard shortcuts hint on first visit
+            if (!localStorage.getItem('partner-shortcuts-shown')) {
+                setTimeout(function() {
+                    Swal.fire({
+                        title: 'Keyboard Shortcuts',
+                        html: `
+                            <div class="text-left space-y-2 text-sm">
+                                <p><kbd class="px-2 py-1 bg-slate-100 rounded">Ctrl/Cmd + P</kbd> - Print page</p>
+                                <p><kbd class="px-2 py-1 bg-slate-100 rounded">Ctrl/Cmd + E</kbd> - Export data</p>
+                                <p><kbd class="px-2 py-1 bg-slate-100 rounded">Ctrl/Cmd + F</kbd> - Focus search</p>
+                                <p><kbd class="px-2 py-1 bg-slate-100 rounded">Ctrl/Cmd + K</kbd> - Quick actions</p>
+                                <p><kbd class="px-2 py-1 bg-slate-100 rounded">Esc</kbd> - Close menus</p>
+                            </div>
+                        `,
+                        icon: 'info',
+                        confirmButtonText: 'Got it!',
+                        confirmButtonColor: '#f59e0b',
+                    });
+                    localStorage.setItem('partner-shortcuts-shown', 'true');
+                }, 2000);
+            }
         })();
     </script>
     @stack('scripts')

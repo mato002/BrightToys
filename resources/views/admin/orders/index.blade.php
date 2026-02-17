@@ -2,6 +2,11 @@
 
 @section('page_title', 'Orders')
 
+@section('breadcrumbs')
+    <span class="breadcrumb-separator">/</span>
+    <a href="{{ route('admin.orders.index') }}" class="text-slate-600 hover:text-emerald-600 transition-colors">Orders</a>
+@endsection
+
 @section('content')
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
         <div>
@@ -10,14 +15,50 @@
         </div>
         <div class="flex gap-2">
             <a href="{{ route('admin.orders.export') . '?' . http_build_query(request()->query()) }}"
-               class="inline-flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm">
+               class="no-print inline-flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm tooltip"
+               data-tooltip="Export orders to CSV (Ctrl/Cmd + E)"
+               aria-label="Export orders">
                 Export CSV
             </a>
             <a href="{{ route('admin.orders.report') . '?' . http_build_query(request()->query()) }}"
-               class="inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm">
+               class="no-print inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm tooltip"
+               data-tooltip="Generate printable report"
+               aria-label="Generate report">
                 Generate Report
             </a>
+            <button onclick="window.print()"
+                    class="no-print inline-flex items-center justify-center bg-slate-500 hover:bg-slate-600 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm tooltip"
+                    data-tooltip="Print this page (Ctrl/Cmd + P)"
+                    aria-label="Print page">
+                Print
+            </button>
         </div>
+    </div>
+
+    {{-- Quick Filter Presets --}}
+    <div class="mb-3 flex flex-wrap gap-2">
+        <a href="{{ route('admin.orders.index', ['created_at' => 'today']) }}" 
+           class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md border transition-colors {{ request('created_at') == 'today' ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50' }}">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 6v6l4 2"/>
+            </svg>
+            Today
+        </a>
+        <a href="{{ route('admin.orders.index', ['created_at' => 'week']) }}" 
+           class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md border transition-colors {{ request('created_at') == 'week' ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50' }}">
+            This Week
+        </a>
+        <a href="{{ route('admin.orders.index', ['created_at' => 'month']) }}" 
+           class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md border transition-colors {{ request('created_at') == 'month' ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50' }}">
+            This Month
+        </a>
+        @if(request()->hasAny(['q', 'status', 'from_date', 'to_date', 'created_at']))
+            <a href="{{ route('admin.orders.index') }}"
+               class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md border bg-white border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors">
+                Clear Filters
+            </a>
+        @endif
     </div>
 
     <form method="GET" class="mb-4 bg-white border border-slate-100 rounded-lg p-3 text-xs grid md:grid-cols-4 gap-3">
@@ -128,15 +169,40 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" class="px-3 py-4 text-center text-slate-500 text-sm">No orders found.</td>
+                    <td colspan="8" class="px-3 py-12">
+                        <div class="empty-state">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M7 3h10a1 1 0 0 1 1 1v16l-3-2-3 2-3-2-3 2V4a1 1 0 0 1 1-1z" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M9 8h6M9 12h4" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <h3>No orders found</h3>
+                            <p>No orders match your search criteria. Try adjusting your filters.</p>
+                        </div>
+                    </td>
                 </tr>
             @endforelse
             </tbody>
         </table>
     </div>
 
-    <div class="mt-4">
-        {{ $orders->links() }}
-    </div>
+    {{-- Enhanced Pagination --}}
+    @include('admin.partials.pagination', ['paginator' => $orders])
 @endsection
 
+@push('scripts')
+<script>
+    // Sortable table functionality
+    function sortTable(column) {
+        const currentSort = '{{ request('sort') }}';
+        const currentDirection = '{{ request('direction', 'desc') }}';
+        const newDirection = (currentSort === column && currentDirection === 'asc') ? 'desc' : 'asc';
+        
+        const url = new URL(window.location.href);
+        url.searchParams.set('sort', column);
+        url.searchParams.set('direction', newDirection);
+        url.searchParams.delete('page'); // Reset to first page
+        
+        window.location.href = url.toString();
+    }
+</script>
+@endpush

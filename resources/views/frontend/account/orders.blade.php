@@ -3,17 +3,65 @@
 @section('title', 'My Orders')
 @section('page_title', 'My Orders')
 
+@section('breadcrumbs')
+    <span class="breadcrumb-separator">/</span>
+    <a href="{{ route('account.orders') }}" class="text-slate-600 hover:text-amber-600 transition-colors">Orders</a>
+@endsection
+
 @section('content')
     <div class="space-y-6">
         {{-- Page Header --}}
-        <div class="mb-6">
-            <h1 class="text-xl md:text-2xl font-semibold text-slate-900 tracking-tight">My Orders</h1>
-            <p class="text-xs md:text-sm text-slate-500 mt-1">View and manage all your orders</p>
+        <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h1 class="text-xl md:text-2xl font-semibold text-slate-900 tracking-tight">My Orders</h1>
+                <p class="text-xs md:text-sm text-slate-500 mt-1">View and manage all your orders</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('account.orders.export', request()->query()) }}" 
+                   class="no-print inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-300 text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:shadow-md tooltip" 
+                   data-tooltip="Export your orders to CSV file"
+                   aria-label="Export orders">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Export CSV
+                </a>
+                <button onclick="window.print()" 
+                        class="no-print inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-300 text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:shadow-md tooltip" 
+                        data-tooltip="Print this page (Ctrl/Cmd + P)"
+                        aria-label="Print page">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                        <path d="M6 14h12v8H6z"/>
+                    </svg>
+                    Print
+                </button>
+            </div>
         </div>
 
-        {{-- Filters --}}
+        {{-- Filters & Search --}}
         <div class="bg-white border-2 border-slate-200 rounded-xl p-4 md:p-6 shadow-sm">
-            <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-semibold text-slate-900">Search & Filter</h3>
+                <a href="#" class="text-xs text-amber-600 hover:text-amber-700 flex items-center gap-1 tooltip" data-tooltip="Use filters to find specific orders. Press Ctrl+F to focus search.">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3m.08 4h.01"/>
+                    </svg>
+                    Help
+                </a>
+            </div>
+            <form method="GET" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Search</label>
+                    <input type="text" 
+                           name="search" 
+                           id="search-input"
+                           value="{{ request('search') }}" 
+                           placeholder="Search by order number, tracking number, or product name..."
+                           class="w-full border-2 border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1.5">Status</label>
                     <select name="status"
@@ -40,15 +88,16 @@
                            value="{{ request('to_date') }}"
                            class="w-full border-2 border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
                 </div>
-                <div class="flex items-end gap-2">
+                </div>
+                <div class="flex items-center gap-2 pt-2 border-t border-slate-200">
                     <button type="submit"
                             class="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
-                        Filter
+                        Apply Filters
                     </button>
-                    @if(request()->hasAny(['status','from_date','to_date']) && (request('status') || request('from_date') || request('to_date')))
+                    @if(request()->hasAny(['status','from_date','to_date','search']) && (request('status') || request('from_date') || request('to_date') || request('search')))
                         <a href="{{ route('account.orders') }}"
                            class="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 font-medium border-2 border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
-                            Clear
+                            Reset
                         </a>
                     @endif
                 </div>

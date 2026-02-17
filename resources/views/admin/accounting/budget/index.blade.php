@@ -12,25 +12,20 @@
                 Back to Books of Account
             </a>
             <h1 class="text-lg font-semibold text-slate-900">Budget Reports</h1>
-            <p class="text-xs text-slate-500">Budget analysis for branches & estimates (placeholder).</p>
+            <p class="text-xs text-slate-500">Budget analysis and variance tracking.</p>
         </div>
-        <div class="flex items-center gap-2 text-xs">
-            <select class="border border-slate-200 rounded px-3 py-2 text-sm">
-                <option>{{ now()->year }}</option>
+        <form method="GET" class="flex items-center gap-2 text-xs">
+            <select name="year" class="border border-slate-200 rounded px-3 py-2 text-sm" onchange="this.form.submit()">
+                @for($y = now()->year; $y >= now()->year - 5; $y--)
+                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
+                @endfor
             </select>
-            <select class="border border-slate-200 rounded px-3 py-2 text-sm">
-                <option>-- Month --</option>
+            <select name="month" class="border border-slate-200 rounded px-3 py-2 text-sm" onchange="this.form.submit()">
+                @for($m = 1; $m <= 12; $m++)
+                    <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
+                @endfor
             </select>
-            <select class="border border-slate-200 rounded px-3 py-2 text-sm">
-                <option>-- Expense Book --</option>
-            </select>
-            <select class="border border-slate-200 rounded px-3 py-2 text-sm">
-                <option>-- Branch --</option>
-            </select>
-            <button class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-4 py-2 rounded">
-                Create
-            </button>
-        </div>
+        </form>
     </div>
 
     <div class="bg-white border border-slate-100 rounded-lg overflow-hidden">
@@ -39,22 +34,34 @@
                 <thead class="bg-slate-50 border-b border-slate-200">
                     <tr>
                         <th class="px-4 py-2 text-left text-xs font-semibold text-slate-700">Expense Account</th>
-                        <th class="px-4 py-2 text-left text-xs font-semibold text-slate-700">Branch</th>
                         <th class="px-4 py-2 text-right text-xs font-semibold text-slate-700">Budget</th>
-                        <th class="px-4 py-2 text-right text-xs font-semibold text-slate-700">Spent</th>
-                        <th class="px-4 py-2 text-right text-xs font-semibold text-slate-700">Balance</th>
+                        <th class="px-4 py-2 text-right text-xs font-semibold text-slate-700">Actual</th>
+                        <th class="px-4 py-2 text-right text-xs font-semibold text-slate-700">Variance</th>
                         <th class="px-4 py-2 text-right text-xs font-semibold text-slate-700">Var %</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    <tr>
-                        <td colspan="6" class="px-4 py-8 text-center text-slate-500 text-sm">
-                            No budget data yet. Hook up budgets to see performance here.
-                        </td>
-                    </tr>
+                    @forelse($budgetData ?? [] as $budget)
+                        <tr>
+                            <td class="px-4 py-3 text-slate-700">{{ $budget['account'] }}</td>
+                            <td class="px-4 py-3 text-right text-slate-700">Ksh {{ number_format($budget['budgeted'], 2) }}</td>
+                            <td class="px-4 py-3 text-right text-slate-700">Ksh {{ number_format($budget['actual'], 2) }}</td>
+                            <td class="px-4 py-3 text-right {{ $budget['variance'] >= 0 ? 'text-emerald-700' : 'text-red-700' }}">
+                                Ksh {{ number_format($budget['variance'], 2) }}
+                            </td>
+                            <td class="px-4 py-3 text-right {{ $budget['variance'] >= 0 ? 'text-emerald-700' : 'text-red-700' }}">
+                                {{ number_format($budget['variance_percent'], 1) }}%
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="px-4 py-8 text-center text-slate-500 text-sm">
+                                No budget data available for {{ date('F', mktime(0, 0, 0, $month ?? now()->month, 1)) }} {{ $year ?? now()->year }}.
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
     </div>
 @endsection
-

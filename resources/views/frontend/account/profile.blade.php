@@ -3,6 +3,11 @@
 @section('title', 'Profile Details')
 @section('page_title', 'Profile Details')
 
+@section('breadcrumbs')
+    <span class="breadcrumb-separator">/</span>
+    <a href="{{ route('account.profile') }}" class="text-slate-600 hover:text-amber-600 transition-colors">Profile</a>
+@endsection
+
 @section('content')
     <div class="w-full space-y-6">
         {{-- Profile Header Card --}}

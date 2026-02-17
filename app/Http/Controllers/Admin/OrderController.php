@@ -52,7 +52,35 @@ class OrderController extends Controller
             $query->whereDate('created_at', '<=', $to);
         }
 
-        $orders = $query->latest()->paginate(20)->withQueryString();
+        // Quick date filters
+        if ($dateFilter = request('created_at')) {
+            switch ($dateFilter) {
+                case 'today':
+                    $query->whereDate('created_at', today());
+                    break;
+                case 'week':
+                    $query->where('created_at', '>=', now()->startOfWeek());
+                    break;
+                case 'month':
+                    $query->where('created_at', '>=', now()->startOfMonth());
+                    break;
+            }
+        }
+
+        // Sorting
+        $sortColumn = request('sort', 'created_at');
+        $sortDirection = request('direction', 'desc');
+        
+        // Validate sort column
+        $allowedSorts = ['id', 'total', 'status', 'created_at'];
+        if (in_array($sortColumn, $allowedSorts)) {
+            $query->orderBy($sortColumn, $sortDirection);
+        } else {
+            $query->latest();
+        }
+
+        $perPage = request('per_page', 20);
+        $orders = $query->paginate($perPage)->withQueryString();
 
         return view('admin.orders.index', compact('orders'));
     }
@@ -241,13 +269,14 @@ class OrderController extends Controller
 
         $request->validate([
             'action' => 'required|string|in:delete,status_update',
-            'ids' => 'required|string', // JSON array of IDs
+            'ids' => 'required|array',
+            'ids.*' => 'required|integer|exists:orders,id',
             'status' => 'required_if:action,status_update|string|in:pending,processing,shipped,delivered,completed,cancelled',
         ]);
 
-        $ids = json_decode($request->ids, true);
+        $ids = $request->ids;
         
-        if (!is_array($ids) || empty($ids)) {
+        if (empty($ids)) {
             return redirect()->back()->with('error', 'No items selected.');
         }
 
