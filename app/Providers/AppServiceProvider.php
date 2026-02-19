@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Cart;
+use App\Models\Wishlist;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -36,6 +37,15 @@ class AppServiceProvider extends ServiceProvider
             })->sum('quantity');
 
             $view->with('cartCount', $cartCount ?? 0);
+        });
+
+        // Share wishlist count with account layout (authenticated users only)
+        View::composer('layouts.account', function ($view) {
+            $wishlistCount = 0;
+            if (auth()->check()) {
+                $wishlistCount = Wishlist::where('user_id', auth()->id())->count();
+            }
+            $view->with('wishlistCount', $wishlistCount);
         });
 
         // Cache frequently accessed data

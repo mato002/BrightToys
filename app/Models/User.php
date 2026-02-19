@@ -6,11 +6,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+
+    protected static function booted()
+    {
+        static::creating(function (User $user) {
+            if (empty($user->referral_code)) {
+                do {
+                    $user->referral_code = strtoupper(Str::random(8));
+                } while (static::where('referral_code', $user->referral_code)->exists());
+            }
+        });
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -21,8 +33,11 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'phone',
         'is_admin',
         'is_partner',
+        'referral_code',
+        'referred_by',
     ];
 
     /**
@@ -63,6 +78,41 @@ class User extends Authenticatable
     public function wishlist()
     {
         return $this->hasMany(Wishlist::class);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function supportTickets()
+    {
+        return $this->hasMany(SupportTicket::class);
+    }
+
+    public function couponRedemptions()
+    {
+        return $this->hasMany(CouponRedemption::class);
+    }
+
+    public function rewardPointTransactions()
+    {
+        return $this->hasMany(RewardPointTransaction::class);
+    }
+
+    public function customerWallet()
+    {
+        return $this->hasOne(CustomerWallet::class);
+    }
+
+    public function referredBy()
+    {
+        return $this->belongsTo(User::class, 'referred_by');
+    }
+
+    public function referrals()
+    {
+        return $this->hasMany(User::class, 'referred_by');
     }
 
     /**

@@ -20,10 +20,13 @@ class Order extends Model
         'shipping_address',
         'phone',
         'notes',
+        'coupon_id',
+        'discount_amount',
     ];
 
     protected $casts = [
         'total' => 'float',
+        'discount_amount' => 'float',
     ];
 
     protected static function boot()
@@ -48,6 +51,11 @@ class Order extends Model
     public function items()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function coupon()
+    {
+        return $this->belongsTo(Coupon::class);
     }
 }
 

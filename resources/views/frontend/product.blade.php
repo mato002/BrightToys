@@ -245,7 +245,7 @@
                 @if(!$hasReviewed)
                     <div class="bg-white border border-slate-200 rounded-xl p-6 mb-8">
                         <h3 class="text-lg font-semibold mb-4 text-slate-900">Write a Review</h3>
-                        <form action="{{ route('review.store', $product->id) }}" method="POST">
+                        <form action="{{ route('review.store', $product->id) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <div class="space-y-4">
                                 <div>
@@ -279,6 +279,13 @@
                                         <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                                     @enderror
                                     <p class="text-xs text-slate-500 mt-1">Minimum 10 characters</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold mb-2 text-slate-700">Photos (optional)</label>
+                                    <input type="file" name="images[]" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" multiple
+                                           class="border border-slate-200 rounded-lg w-full px-4 py-2 text-sm">
+                                    <p class="text-xs text-slate-500 mt-1">Max 5 images, 2MB each</p>
                                 </div>
 
                                 <button type="submit" 

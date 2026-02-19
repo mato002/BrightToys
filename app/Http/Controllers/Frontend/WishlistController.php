@@ -46,7 +46,7 @@ class WishlistController extends Controller
             ->where('product_id', $product->id)
             ->delete();
 
-        return redirect()->route('wishlist.index')
+        return redirect()->route('account.wishlist')
             ->with('success', 'Removed from wishlist');
     }
 }

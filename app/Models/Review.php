@@ -36,6 +36,11 @@ class Review extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function images()
+    {
+        return $this->hasMany(ReviewImage::class)->orderBy('sort_order');
+    }
+
     public function scopeApproved($query)
     {
         return $query->where('status', 'approved');

@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ReviewController extends Controller
 {
@@ -31,6 +32,7 @@ class ReviewController extends Controller
             'comment' => 'required|string|min:10|max:1000',
             'name' => 'nullable|string|max:255', // For guests
             'email' => 'nullable|email|max:255', // For guests
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         // If user is logged in, use their info
@@ -48,7 +50,14 @@ class ReviewController extends Controller
         $validated['product_id'] = $product->id;
         $validated['status'] = 'pending'; // Requires admin approval
 
-        Review::create($validated);
+        $review = Review::create(array_diff_key($validated, array_flip(['images'])));
+
+        if ($user && $request->hasFile('images')) {
+            foreach ($request->file('images') as $index => $file) {
+                $path = $file->store('reviews/' . $review->id, 'public');
+                $review->images()->create(['path' => $path, 'sort_order' => $index]);
+            }
+        }
 
         return back()->with('success', 'Thank you for your review! It will be published after admin approval.');
     }

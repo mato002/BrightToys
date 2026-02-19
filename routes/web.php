@@ -45,6 +45,7 @@ Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.s
 Route::middleware(['auth', 'customer'])->prefix('account')->name('account.')->group(function () {
     Route::get('/overview', [AccountController::class, 'overview'])->name('overview');
     Route::get('/', [AccountController::class, 'profile'])->name('profile');
+    Route::put('/profile', [AccountController::class, 'updateProfile'])->name('profile.update');
     Route::get('/orders', [AccountController::class, 'orders'])->name('orders');
     Route::get('/orders/export', [AccountController::class, 'exportOrders'])->name('orders.export');
     Route::get('/orders/{order}/track', [AccountController::class, 'trackOrder'])->name('orders.track');
@@ -56,6 +57,50 @@ Route::middleware(['auth', 'customer'])->prefix('account')->name('account.')->gr
     // Loans (read-only for members)
     Route::get('/loans', [AccountController::class, 'loans'])->name('loans');
     Route::get('/loans/{loan}', [AccountController::class, 'showLoan'])->name('loans.show');
+    
+    // Notifications
+    Route::get('/notifications', [AccountController::class, 'notifications'])->name('notifications');
+    Route::post('/notifications/read-all', [AccountController::class, 'markAllNotificationsAsRead'])->name('notifications.read-all');
+    Route::post('/notifications/{notificationId}/read', [AccountController::class, 'markNotificationAsRead'])->name('notifications.read');
+
+    // My Reviews
+    Route::get('/reviews', [AccountController::class, 'reviews'])->name('reviews');
+    Route::get('/reviews/{review}/edit', [AccountController::class, 'editReview'])->name('reviews.edit');
+    Route::put('/reviews/{review}', [AccountController::class, 'updateReview'])->name('reviews.update');
+
+    // Reorder
+    Route::post('/orders/{order}/reorder', [AccountController::class, 'reorder'])->name('orders.reorder');
+
+    // Support / My Tickets
+    Route::get('/support', [AccountController::class, 'supportTickets'])->name('support.index');
+    Route::get('/support/create', [AccountController::class, 'createSupportTicket'])->name('support.create');
+    Route::post('/support', [AccountController::class, 'storeSupportTicket'])->name('support.store');
+    Route::get('/support/{ticket}', [AccountController::class, 'showSupportTicket'])->name('support.show');
+    Route::post('/support/{ticket}/reply', [AccountController::class, 'replySupportTicket'])->name('support.reply');
+
+    // Spending Analytics
+    Route::get('/analytics', [AccountController::class, 'analytics'])->name('analytics');
+
+    // Coupons & Rewards
+    Route::get('/rewards', [AccountController::class, 'rewards'])->name('rewards');
+
+    // FAQ
+    Route::get('/faq', [AccountController::class, 'faq'])->name('faq');
+
+    // Shop (inside account layout)
+    Route::get('/shop', [\App\Http\Controllers\Frontend\ProductController::class, 'accountShop'])->name('shop');
+
+    // Wishlist (inside account layout)
+    Route::get('/wishlist', [\App\Http\Controllers\Frontend\WishlistController::class, 'index'])->name('wishlist');
+
+    // Contact (inside account layout)
+    Route::get('/contact', [AccountController::class, 'contact'])->name('contact');
+
+    // Returns & refunds (dedicated page inside account layout)
+    Route::get('/returns', [AccountController::class, 'returns'])->name('returns');
+    
+    // Cart (alias to main cart route)
+    Route::get('/cart', [\App\Http\Controllers\Frontend\CartController::class, 'accountIndex'])->name('cart.index');
 });
 
 // Wishlist (requires authentication)
@@ -174,6 +219,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // Payment Reminders
     Route::get('/payment-reminders', [\App\Http\Controllers\Admin\PaymentReminderController::class, 'index'])
         ->name('payment-reminders.index');
+    Route::get('/payment-reminders/export', [\App\Http\Controllers\Admin\PaymentReminderController::class, 'export'])
+        ->name('payment-reminders.export');
+    Route::post('/payment-reminders/{installment}/send-reminder', [\App\Http\Controllers\Admin\PaymentReminderController::class, 'sendReminder'])
+        ->name('payment-reminders.send-reminder');
+    Route::post('/payment-reminders/bulk-send', [\App\Http\Controllers\Admin\PaymentReminderController::class, 'sendBulkReminders'])
+        ->name('payment-reminders.bulk-send');
     
     // Penalty Rates Management
     Route::resource('penalty-rates', \App\Http\Controllers\Admin\PenaltyRateController::class)->except(['show', 'destroy']);

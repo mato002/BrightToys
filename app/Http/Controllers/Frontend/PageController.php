@@ -25,6 +25,8 @@ class PageController extends Controller
             'email' => ['required', 'email', 'max:255'],
             'subject' => ['nullable', 'string', 'max:255'],
             'message' => ['required', 'string', 'max:5000'],
+            'ticket_type' => ['nullable', 'in:general,complaint,return,refund'],
+            'order_number' => ['nullable', 'string', 'max:50'],
         ]);
 
         SupportTicket::create([
@@ -34,10 +36,13 @@ class PageController extends Controller
             'subject' => $data['subject'] ?? 'General enquiry',
             'message' => $data['message'],
             'status' => 'open',
+            'ticket_type' => $data['ticket_type'] ?? 'general',
+            'order_number' => $data['order_number'] ?? null,
         ]);
 
+        $redirectRoute = auth()->check() ? 'account.contact' : 'pages.contact';
         return redirect()
-            ->route('pages.contact')
+            ->route($redirectRoute)
             ->with('status', 'Thank you for contacting us. Our support team will get back to you shortly.');
     }
 

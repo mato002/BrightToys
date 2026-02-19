@@ -367,18 +367,23 @@
                     </button>
                 </div>
             </div>
-            <nav class="mt-4 px-3 text-[13px] space-y-1 flex-1 overflow-y-auto min-h-0">
+            <nav class="mt-4 px-3 text-[13px] space-y-1 flex-1 overflow-y-auto min-h-0" aria-label="Account menu">
+                {{-- Dashboard --}}
                 <p class="px-3 mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-amber-200/80 sidebar-section-label">
                     Dashboard
                 </p>
-                <a href="{{ route('account.overview') }}"
-                   class="group flex items-center px-3 py-2.5 rounded-xl transition
+                <a href="{{ route('account.overview') }}"                   class="group flex items-center px-3 py-2.5 rounded-xl transition
                           {{ request()->routeIs('account.overview') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
                     <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
                         <i class="fas fa-chart-line text-xs"></i>
                     </span>
                     <span class="font-medium sidebar-label">Overview</span>
                 </a>
+
+                {{-- Orders & activity --}}
+                <p class="px-3 mt-4 mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-amber-200/80 sidebar-section-label">
+                    Orders & activity
+                </p>
                 <a href="{{ route('account.orders') }}"
                    class="group flex items-center px-3 py-2.5 rounded-xl transition
                           {{ request()->routeIs('account.orders*') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
@@ -388,8 +393,106 @@
                     <span class="font-medium sidebar-label">My Orders</span>
                 </a>
 
+                {{-- Account settings --}}
                 <p class="px-3 mt-4 mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-amber-200/80 sidebar-section-label">
-                    Resources
+                    Account settings
+                </p>
+                <a href="{{ route('account.profile') }}"                   class="group flex items-center px-3 py-2.5 rounded-xl transition
+                          {{ request()->routeIs('account.profile') && !request()->routeIs('account.profile.update') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                    <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                        <i class="fas fa-user text-xs"></i>
+                    </span>
+                    <span class="font-medium sidebar-label">Profile</span>
+                </a>
+                <a href="{{ route('account.addresses') }}"                   class="group flex items-center px-3 py-2.5 rounded-xl transition
+                          {{ request()->routeIs('account.addresses*') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                    <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                        <i class="fas fa-map-marker-alt text-xs"></i>
+                    </span>
+                    <span class="font-medium sidebar-label">Addresses</span>
+                </a>
+                <a href="{{ route('account.profile') }}#password"
+                   class="group flex items-center px-3 py-2.5 rounded-xl transition text-amber-100/90 hover:bg-amber-800/60 hover:text-white">
+                    <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                        <i class="fas fa-lock text-xs"></i>
+                    </span>
+                    <span class="font-medium sidebar-label">Password & security</span>
+                </a>
+
+                {{-- Shopping --}}
+                <p class="px-3 mt-4 mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-amber-200/80 sidebar-section-label">
+                    Shopping
+                </p>
+                <a href="{{ route('account.shop') }}"
+                   class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('account.shop') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                    <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                        <i class="fas fa-store text-xs"></i>
+                    </span>
+                    <span class="font-medium sidebar-label">Shop</span>
+                </a>
+                <a href="{{ route('account.wishlist') }}"
+                   class="group flex items-center px-3 py-2.5 rounded-xl transition
+                          {{ request()->routeIs('account.wishlist') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                    <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                        <i class="fas fa-heart text-xs"></i>
+                    </span>
+                    <span class="font-medium sidebar-label">Wishlist</span>
+                    @if(isset($wishlistCount) && $wishlistCount > 0)
+                        <span class="ml-auto inline-flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px] px-1.5 py-0.5">
+                            {{ $wishlistCount }}
+                        </span>
+                    @endif
+                </a>
+                <a href="{{ route('account.cart.index') }}"
+                   class="group flex items-center px-3 py-2.5 rounded-xl transition
+                          {{ request()->routeIs('account.cart*') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                    <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                        <i class="fas fa-shopping-cart text-xs"></i>
+                    </span>
+                    <span class="font-medium sidebar-label">Cart</span>
+                    @if(isset($cartCount) && $cartCount > 0)
+                        <span class="ml-auto inline-flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px] px-1.5 py-0.5">
+                            {{ $cartCount }}
+                        </span>
+                    @endif
+                </a>
+                <a href="{{ route('account.reviews') }}"
+                   class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('account.reviews*') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                    <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                        <i class="fas fa-star text-xs"></i>
+                    </span>
+                    <span class="font-medium sidebar-label">My Reviews</span>
+                </a>
+                <a href="{{ route('account.rewards') }}"                   class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('account.rewards*') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                    <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                        <i class="fas fa-gift text-xs"></i>
+                    </span>
+                    <span class="font-medium sidebar-label">Coupons & Rewards</span>
+                </a>
+                <a href="{{ route('account.analytics') }}"
+                   class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('account.analytics*') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                    <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                        <i class="fas fa-chart-pie text-xs"></i>
+                    </span>
+                    <span class="font-medium sidebar-label">Spending Analytics</span>
+                </a>
+
+                {{-- Membership / loans (available in routes) --}}
+                <p class="px-3 mt-4 mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-amber-200/80 sidebar-section-label">
+                    Membership
+                </p>
+                <a href="{{ route('account.loans') }}"
+                   class="group flex items-center px-3 py-2.5 rounded-xl transition
+                          {{ request()->routeIs('account.loans*') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                    <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                        <i class="fas fa-hand-holding-usd text-xs"></i>
+                    </span>
+                    <span class="font-medium sidebar-label">My Loans</span>
+                </a>
+
+                {{-- Support --}}
+                <p class="px-3 mt-4 mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-amber-200/80 sidebar-section-label">
+                    Support
                 </p>
                 <a href="{{ route('account.notifications') }}"
                    class="group flex items-center px-3 py-2.5 rounded-xl transition
@@ -407,29 +510,33 @@
                     </span>
                     <span class="font-medium sidebar-label">Notifications</span>
                 </a>
-
-                <p class="px-3 mt-4 mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-amber-200/80 sidebar-section-label">
-                    Shopping
-                </p>
-                <a href="{{ route('shop.index') }}"
-                   class="group flex items-center px-3 py-2.5 rounded-xl transition text-amber-100/90 hover:bg-amber-800/60 hover:text-white">
+                <a href="{{ route('account.support.index') }}"
+                   class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('account.support*') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
                     <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
-                        <i class="fas fa-store text-xs"></i>
+                        <i class="fas fa-headset text-xs"></i>
                     </span>
-                    <span class="font-medium sidebar-label">Shop</span>
+                    <span class="font-medium sidebar-label">My Tickets</span>
                 </a>
-                <a href="{{ route('account.cart.index') }}"
-                   class="group flex items-center px-3 py-2.5 rounded-xl transition
-                          {{ request()->routeIs('account.cart*') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                <a href="{{ route('account.faq') }}"
+                   class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('account.faq*') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
                     <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
-                        <i class="fas fa-shopping-cart text-xs"></i>
+                        <i class="fas fa-question-circle text-xs"></i>
                     </span>
-                    <span class="font-medium sidebar-label">Cart</span>
-                    @if(isset($cartCount) && $cartCount > 0)
-                        <span class="ml-auto inline-flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px] px-1.5 py-0.5">
-                            {{ $cartCount }}
-                        </span>
-                    @endif
+                    <span class="font-medium sidebar-label">FAQ</span>
+                </a>
+                <a href="{{ route('account.contact') }}"
+                   class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('account.contact') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                    <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                        <i class="fas fa-envelope text-xs"></i>
+                    </span>
+                    <span class="font-medium sidebar-label">Contact</span>
+                </a>
+                <a href="{{ route('account.returns') }}"
+                   class="group flex items-center px-3 py-2.5 rounded-xl transition {{ request()->routeIs('account.returns') ? 'bg-amber-800/80 text-amber-50' : 'text-amber-100/90 hover:bg-amber-800/60 hover:text-white' }}">
+                    <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-amber-800/80 text-[11px] text-amber-100 group-hover:bg-amber-700/90">
+                        <i class="fas fa-undo text-xs"></i>
+                    </span>
+                    <span class="font-medium sidebar-label">Returns & refunds</span>
                 </a>
             </nav>
 
@@ -439,7 +546,12 @@
                     <span class="sidebar-label">Back to Store</span>
                     <span class="text-[10px]">↗</span>
                 </a>
-
+                <a href="{{ route('account.contact') }}" class="flex items-center justify-between px-2 py-1.5 rounded-lg text-amber-200/90 hover:bg-amber-800/60 text-[11px] sidebar-label">
+                    <span>Contact us</span>
+                </a>
+                <a href="{{ route('pages.policies') }}" class="flex items-center justify-between px-2 py-1.5 rounded-lg text-amber-200/90 hover:bg-amber-800/60 text-[11px] sidebar-label">
+                    <span>Privacy & policies</span>
+                </a>
                 <form action="{{ route('logout') }}" method="POST" class="w-full">
                     @csrf
                     <button type="submit"
@@ -448,7 +560,6 @@
                         <span class="text-[10px]">⎋</span>
                     </button>
                 </form>
-
                 <a href="https://mathiasodhiambo.netlify.app"
                    target="_blank"
                    rel="noopener noreferrer"
@@ -478,16 +589,159 @@
                         <h1 class="text-sm md:text-base font-semibold text-slate-900 tracking-tight">
                             @yield('page_title', 'My Account')
                         </h1>
-                        <p class="text-[11px] text-slate-400 hidden md:block">Customer Account - Manage your orders and profile</p>
+                        <p class="text-[11px] text-slate-400 hidden md:block">@yield('page_subtitle', 'Orders, profile, addresses & support')</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 md:gap-3">
                     @if(isset($dataRefreshedAt) || true)
-                        <div class="data-refresh-indicator hidden md:flex">
+                        <div class="data-refresh-indicator hidden md:flex items-center gap-2 text-xs text-slate-500">
                             <span class="pulse"></span>
                             <span>Last updated: {{ now()->format('M d, H:i') }}</span>
                         </div>
                     @endif
+                    
+                    {{-- Notifications Bell --}}
+                    <div x-data="{ open: false }" class="relative">
+                        <button @click="open = !open"
+                                class="relative flex items-center justify-center w-9 h-9 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus:outline-none shadow-sm transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                            </svg>
+                            @php
+                                $unreadCount = \App\Models\SystemNotification::where('user_id', auth()->id())->whereNull('read_at')->count();
+                            @endphp
+                            @if($unreadCount > 0)
+                                <span class="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold border-2 border-white">
+                                    {{ $unreadCount > 9 ? '9+' : $unreadCount }}
+                                </span>
+                            @endif
+                        </button>
+                        {{-- Notification Dropdown --}}
+                        <div x-show="open"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="opacity-0 transform scale-95"
+                             x-transition:enter-end="opacity-100 transform scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="opacity-100 transform scale-100"
+                             x-transition:leave-end="opacity-0 transform scale-95"
+                             @click.away="open = false"
+                             class="absolute right-0 mt-2 w-80 md:w-96 rounded-lg bg-white border border-slate-200 shadow-xl z-50 max-h-96 overflow-hidden">
+                            <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+                                <h3 class="text-sm font-semibold text-slate-900">Notifications</h3>
+                                @if($unreadCount > 0)
+                                    <form action="{{ route('account.notifications.read-all') }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" class="text-xs text-amber-600 hover:text-amber-700 font-medium">
+                                            Mark all as read
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                            <div class="overflow-y-auto max-h-80">
+                                @php
+                                    $recentNotifications = \App\Models\SystemNotification::where('user_id', auth()->id())
+                                        ->latest()
+                                        ->take(5)
+                                        ->get();
+                                @endphp
+                                @forelse($recentNotifications as $notification)
+                                    <a href="{{ route('account.notifications') }}" 
+                                       class="block px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition-colors {{ !$notification->read_at ? 'bg-amber-50/50' : '' }}">
+                                        <div class="flex items-start gap-3">
+                                            <div class="flex-shrink-0 mt-0.5">
+                                                <div class="w-2 h-2 rounded-full {{ !$notification->read_at ? 'bg-amber-500' : 'bg-transparent' }}"></div>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-semibold text-slate-900 truncate">{{ $notification->title }}</p>
+                                                <p class="text-xs text-slate-600 mt-1 line-clamp-2">{{ $notification->message }}</p>
+                                                <p class="text-xs text-slate-400 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                @empty
+                                    <div class="px-4 py-8 text-center">
+                                        <p class="text-sm text-slate-500">No notifications</p>
+                                    </div>
+                                @endforelse
+                            </div>
+                            <div class="p-3 border-t border-slate-200 text-center">
+                                <a href="{{ route('account.notifications') }}" class="text-xs text-amber-600 hover:text-amber-700 font-semibold">
+                                    View all notifications →
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="{{ route('home') }}"
+                       class="hidden sm:flex items-center space-x-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] shadow-sm hover:bg-slate-50 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                        </svg>
+                        <span class="hidden md:inline">Store</span>
+                    </a>
+                    
+                    {{-- Profile Dropdown --}}
+                    <div x-data="{ open: false }" class="relative">
+                        <button @click="open = !open"
+                                class="flex items-center space-x-2 rounded-lg border border-slate-200 bg-white px-2 md:px-3 py-1.5 md:py-2 text-sm shadow-sm hover:bg-slate-50 focus:outline-none transition-colors">
+                            <div class="h-7 w-7 rounded-full bg-amber-500 flex items-center justify-center text-xs font-semibold text-white">
+                                {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
+                            </div>
+                            <div class="hidden md:flex flex-col items-start text-[11px] leading-tight">
+                                <span class="font-semibold text-slate-900">{{ auth()->user()->name ?? 'Customer' }}</span>
+                                <span class="text-slate-500 text-[10px]">{{ Str::limit(auth()->user()->email ?? '', 20) }}</span>
+                            </div>
+                            <svg xmlns="http://www.w3.org/2000/svg" 
+                                 class="h-4 w-4 text-slate-500 transition-transform"
+                                 :class="{ 'rotate-180': open }"
+                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </button>
+                        <div x-show="open"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="opacity-0 transform scale-95"
+                             x-transition:enter-end="opacity-100 transform scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="opacity-100 transform scale-100"
+                             x-transition:leave-end="opacity-0 transform scale-95"
+                             @click.away="open = false"
+                             class="absolute right-0 mt-2 w-56 rounded-lg bg-white border border-slate-200 shadow-lg z-50 py-1">
+                            <a href="{{ route('account.profile') }}"                               class="block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition
+                                      {{ request()->routeIs('account.profile*') ? 'bg-slate-50 font-medium' : '' }}">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-user text-xs text-slate-500 w-4"></i>
+                                    <span>Profile Details</span>
+                                </div>
+                            </a>
+                            <a href="{{ route('account.addresses') }}"                               class="block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition
+                                      {{ request()->routeIs('account.addresses') ? 'bg-slate-50 font-medium' : '' }}">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-map-marker-alt text-xs text-slate-500 w-4"></i>
+                                    <span>Addresses</span>
+                                </div>
+                            </a>
+                            <a href="{{ route('account.wishlist') }}"
+                               class="block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-heart text-xs text-slate-500 w-4"></i>
+                                    <span>Wishlist</span>
+                                </div>
+                            </a>
+                            <div class="border-t border-slate-200 my-1"></div>
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button type="submit"
+                                        class="w-full text-left block px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition">
+                                    <div class="flex items-center space-x-2">
+                                        <i class="fas fa-sign-out-alt text-xs w-4"></i>
+                                        <span>Logout</span>
+                                    </div>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
             @hasSection('breadcrumbs')
@@ -498,211 +752,70 @@
             @endif
         </header>
 
-            <div class="flex items-center space-x-2 md:space-x-3">
-                {{-- Notifications Bell --}}
-                <div x-data="{ open: false }" class="relative">
-                    <button @click="open = !open"
-                            class="relative flex items-center justify-center w-9 h-9 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus:outline-none shadow-sm transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                        </svg>
-                        @php
-                            $unreadCount = \App\Models\SystemNotification::where('user_id', auth()->id())->whereNull('read_at')->count();
-                        @endphp
-                        @if($unreadCount > 0)
-                            <span class="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold border-2 border-white">
-                                {{ $unreadCount > 9 ? '9+' : $unreadCount }}
-                            </span>
-                        @endif
-                    </button>
-                    {{-- Notification Dropdown --}}
-                    <div x-show="open"
-                         x-transition:enter="transition ease-out duration-100"
-                         x-transition:enter-start="opacity-0 transform scale-95"
-                         x-transition:enter-end="opacity-100 transform scale-100"
-                         x-transition:leave="transition ease-in duration-75"
-                         x-transition:leave-start="opacity-100 transform scale-100"
-                         x-transition:leave-end="opacity-0 transform scale-95"
-                         @click.away="open = false"
-                         class="absolute right-0 mt-2 w-80 md:w-96 rounded-lg bg-white border border-slate-200 shadow-xl z-50 max-h-96 overflow-hidden">
-                        <div class="p-4 border-b border-slate-200 flex items-center justify-between">
-                            <h3 class="text-sm font-semibold text-slate-900">Notifications</h3>
-                            @if($unreadCount > 0)
-                                <form action="{{ route('account.notifications.read-all') }}" method="POST" class="inline">
-                                    @csrf
-                                    <button type="submit" class="text-xs text-amber-600 hover:text-amber-700 font-medium">
-                                        Mark all as read
-                                    </button>
-                                </form>
-                            @endif
-                        </div>
-                        <div class="overflow-y-auto max-h-80">
-                            @php
-                                $recentNotifications = \App\Models\SystemNotification::where('user_id', auth()->id())
-                                    ->latest()
-                                    ->take(5)
-                                    ->get();
-                            @endphp
-                            @forelse($recentNotifications as $notification)
-                                <a href="{{ route('account.notifications') }}" 
-                                   class="block px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition-colors {{ !$notification->read_at ? 'bg-amber-50/50' : '' }}">
-                                    <div class="flex items-start gap-3">
-                                        <div class="flex-shrink-0 mt-0.5">
-                                            <div class="w-2 h-2 rounded-full {{ !$notification->read_at ? 'bg-amber-500' : 'bg-transparent' }}"></div>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-semibold text-slate-900 truncate">{{ $notification->title }}</p>
-                                            <p class="text-xs text-slate-600 mt-1 line-clamp-2">{{ $notification->message }}</p>
-                                            <p class="text-xs text-slate-400 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
-                                        </div>
-                                    </div>
-                                </a>
-                            @empty
-                                <div class="px-4 py-8 text-center">
-                                    <p class="text-sm text-slate-500">No notifications</p>
-                                </div>
-                            @endforelse
-                        </div>
-                        <div class="p-3 border-t border-slate-200 text-center">
-                            <a href="{{ route('account.notifications') }}" class="text-xs text-amber-600 hover:text-amber-700 font-semibold">
-                                View all notifications →
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <a href="{{ route('home') }}"
-                   class="flex items-center space-x-2 rounded-full border border-slate-200 bg-white px-2 py-1.5 text-[11px] shadow-sm hover:bg-slate-50">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                    </svg>
-                    <span class="hidden sm:inline">Store</span>
-                </a>
-                
-                {{-- Profile Dropdown --}}
-                <div x-data="{ open: false }" class="relative">
-                    <button @click="open = !open"
-                            class="flex items-center space-x-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm hover:bg-slate-50 focus:outline-none">
-                        <div class="h-7 w-7 rounded-full bg-amber-500 flex items-center justify-center text-xs font-semibold text-white">
-                            {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
-                        </div>
-                        <div class="hidden sm:flex flex-col items-start text-[11px] leading-tight">
-                            <span class="font-semibold text-slate-900">{{ auth()->user()->name ?? 'Customer' }}</span>
-                            <span class="text-slate-500">{{ auth()->user()->email ?? '' }}</span>
-                        </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" 
-                             class="h-4 w-4 text-slate-500 transition-transform"
-                             :class="{ 'rotate-180': open }"
-                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"/>
-                        </svg>
-                    </button>
-                    <div x-show="open"
-                         x-transition:enter="transition ease-out duration-100"
-                         x-transition:enter-start="opacity-0 transform scale-95"
-                         x-transition:enter-end="opacity-100 transform scale-100"
-                         x-transition:leave="transition ease-in duration-75"
-                         x-transition:leave-start="opacity-100 transform scale-100"
-                         x-transition:leave-end="opacity-0 transform scale-95"
-                         @click.away="open = false"
-                         class="absolute right-0 mt-2 w-56 rounded-lg bg-white border border-slate-200 shadow-lg z-50 py-1">
-                        <a href="{{ route('account.profile') }}"
-                           class="block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition
-                                  {{ request()->routeIs('account.profile*') ? 'bg-slate-50 font-medium' : '' }}">
-                            <div class="flex items-center space-x-2">
-                                <i class="fas fa-user text-xs text-slate-500 w-4"></i>
-                                <span>Profile Details</span>
-                            </div>
-                        </a>
-                        <a href="{{ route('account.addresses') }}"
-                           class="block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition
-                                  {{ request()->routeIs('account.addresses') ? 'bg-slate-50 font-medium' : '' }}">
-                            <div class="flex items-center space-x-2">
-                                <i class="fas fa-map-marker-alt text-xs text-slate-500 w-4"></i>
-                                <span>Addresses</span>
-                            </div>
-                        </a>
-                        <a href="{{ route('wishlist.index') }}"
-                           class="block px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition">
-                            <div class="flex items-center space-x-2">
-                                <i class="fas fa-heart text-xs text-slate-500 w-4"></i>
-                                <span>Wishlist</span>
-                            </div>
-                        </a>
-                        <div class="border-t border-slate-200 my-1"></div>
-                        <form action="{{ route('logout') }}" method="POST">
-                            @csrf
-                            <button type="submit"
-                                    class="w-full text-left block px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition">
-                                <div class="flex items-center space-x-2">
-                                    <i class="fas fa-sign-out-alt text-xs w-4"></i>
-                                    <span>Logout</span>
-                                </div>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </header>
-
         <main class="flex-1 w-full max-w-full overflow-x-hidden">
             <div class="account-content-wrapper w-full max-w-full p-4 md:p-6">
-                {{-- Success/Error Messages --}}
-                @if(session('success'))
-                    <div class="mb-4 sm:mb-6 bg-emerald-50 border-2 border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-700 shadow-sm">
-                        <div class="flex items-center gap-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <span>{{ session('success') }}</span>
-                        </div>
-                    </div>
-                @endif
-
-                @if(session('error'))
-                    <div class="mb-4 sm:mb-6 bg-red-50 border-2 border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 shadow-sm">
-                        <div class="flex items-center gap-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <line x1="15" y1="9" x2="9" y2="15"/>
-                                <line x1="9" y1="9" x2="15" y2="15"/>
-                            </svg>
-                            <span>{{ session('error') }}</span>
-                        </div>
-                    </div>
-                @endif
-
-                @if($errors->any())
-                    <div class="mb-4 sm:mb-6 bg-red-50 border-2 border-red-200 rounded-xl px-4 py-3 shadow-sm">
-                        <div class="flex items-start gap-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <line x1="12" y1="8" x2="12" y2="12"/>
-                                <line x1="12" y1="16" x2="12.01" y2="16"/>
-                            </svg>
-                            <div class="flex-1">
-                                <h3 class="text-sm font-semibold text-red-800 mb-2">Please correct the following errors:</h3>
-                                <ul class="text-sm text-red-700 space-y-1 list-disc list-inside">
-                                    @foreach($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
+                    {{-- Success/Error Messages --}}
+                    @if(session('success'))
+                        <div class="mb-4 sm:mb-6 bg-emerald-50 border-2 border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-700 shadow-sm">
+                            <div class="flex items-center gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span>{{ session('success') }}</span>
                             </div>
                         </div>
-                    </div>
-                @endif
+                    @endif
 
-                @yield('content')
-            </div>
+                    @if(session('error'))
+                        <div class="mb-4 sm:mb-6 bg-red-50 border-2 border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 shadow-sm">
+                            <div class="flex items-center gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="15" y1="9" x2="9" y2="15"/>
+                                    <line x1="9" y1="9" x2="15" y2="15"/>
+                                </svg>
+                                <span>{{ session('error') }}</span>
+                            </div>
+                        </div>
+                    @endif
+
+                    @if($errors->any())
+                        <div class="mb-4 sm:mb-6 bg-red-50 border-2 border-red-200 rounded-xl px-4 py-3 shadow-sm">
+                            <div class="flex items-start gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="8" x2="12" y2="12"/>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
+                                <div class="flex-1">
+                                    <h3 class="text-sm font-semibold text-red-800 mb-2">Please correct the following errors:</h3>
+                                    <ul class="text-sm text-red-700 space-y-1 list-disc list-inside">
+                                        @foreach($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    @yield('content')
+                </div>
         </main>
 
-        <footer class="px-4 md:px-6 py-3 text-[11px] text-slate-500 border-t border-slate-200 bg-white/80 backdrop-blur">
-            <div class="mx-auto max-w-6xl flex items-center justify-between">
-                <a href="https://mathiasodhiambo.netlify.app" target="_blank" rel="noopener noreferrer" class="hover:underline">
-                    © {{ date('Y') }} Otto Investments
-                </a>
-                <span class="hidden sm:inline text-slate-600">Customer account dashboard</span>
+        <footer class="px-4 md:px-6 py-4 text-[11px] text-slate-500 border-t border-slate-200 bg-white/80 backdrop-blur">
+            <div class="mx-auto max-w-6xl">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+                        <a href="{{ route('home') }}" class="hover:text-slate-700 hover:underline">Store</a>
+                        <a href="{{ route('account.overview') }}" class="hover:text-slate-700 hover:underline">Dashboard</a>
+                        <a href="{{ route('pages.contact') }}" class="hover:text-slate-700 hover:underline">Contact</a>
+                        <a href="{{ route('pages.policies') }}" class="hover:text-slate-700 hover:underline">Policies</a>
+                    </div>
+                    <div class="text-slate-400">
+                        <a href="https://mathiasodhiambo.netlify.app" target="_blank" rel="noopener noreferrer" class="hover:underline">© {{ date('Y') }} Otto Investments</a>
+                    </div>
+                </div>
             </div>
         </footer>
     </div>
@@ -892,5 +1005,6 @@
             }
         })();
     </script>
+    @yield('scripts')
 </body>
 </html>

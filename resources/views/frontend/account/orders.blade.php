@@ -182,6 +182,21 @@
                     @endforeach
                 </div>
 
+                {{-- Order status progress bar --}}
+                @if(!in_array($order->status, ['cancelled']))
+                    @php
+                        $steps = ['pending' => 1, 'processing' => 2, 'shipped' => 3, 'delivered' => 4, 'completed' => 5];
+                        $pct = isset($steps[$order->status]) ? ($steps[$order->status] / 5) * 100 : 0;
+                    @endphp
+                    <div class="mb-3">
+                        <div class="flex justify-between text-[10px] text-slate-500 mb-0.5">
+                            <span>Placed</span><span>Processing</span><span>Shipped</span><span>Delivered</span><span>Done</span>
+                        </div>
+                        <div class="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                            <div class="h-full bg-amber-500 rounded-full transition-all" style="width: {{ $pct }}%"></div>
+                        </div>
+                    </div>
+                @endif
                 {{-- Action Buttons --}}
                 <div class="flex flex-wrap gap-2 pt-4 border-t-2 border-slate-100">
                     <a href="{{ route('account.orders.track', $order) }}" 
@@ -192,6 +207,12 @@
                         </svg>
                         Track Order
                     </a>
+                    <form action="{{ route('account.orders.reorder', $order) }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-emerald-700 bg-emerald-50 border-2 border-emerald-200 rounded-lg hover:bg-emerald-100 hover:border-emerald-300 transition-colors">
+                            <i class="fas fa-redo"></i> Reorder
+                        </button>
+                    </form>
                     <a href="{{ route('account.orders.invoice', $order) }}" 
                        target="_blank"
                        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 border-2 border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-colors">

@@ -162,7 +162,7 @@
                 </div>
 
                 {{-- Password Section --}}
-                <div class="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                <div id="password" class="bg-slate-50 rounded-xl p-6 border border-slate-200 scroll-mt-4">
                     <p class="text-sm text-slate-600 mb-6 flex items-center gap-2">
                         <i class="fas fa-info-circle text-amber-500"></i>
                         Leave blank if you don't want to change your password

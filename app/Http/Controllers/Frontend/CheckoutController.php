@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
+use App\Models\Coupon;
+use App\Models\CouponRedemption;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -86,6 +88,7 @@ class CheckoutController extends Controller
             'address' => 'required|string|max:500',
             'payment_method' => 'required|in:mpesa,paybill,card,cod',
             'notes' => 'nullable|string|max:1000',
+            'coupon_code' => 'nullable|string|max:50',
         ]);
 
         $sessionId = session('cart_session_id');
@@ -121,7 +124,17 @@ class CheckoutController extends Controller
         });
         
         $shipping = 500; // Fixed shipping cost
-        $total = $subtotal + $shipping;
+        $discountAmount = 0;
+        $coupon = null;
+
+        if ($request->filled('coupon_code')) {
+            $coupon = Coupon::where('code', $request->coupon_code)->first();
+            if ($coupon && $coupon->isValidFor($subtotal, $userId)) {
+                $discountAmount = $coupon->calculateDiscount($subtotal);
+            }
+        }
+
+        $total = max(0, $subtotal + $shipping - $discountAmount);
 
         // Use database transaction to ensure data consistency
         try {
@@ -137,7 +150,18 @@ class CheckoutController extends Controller
                 'shipping_address' => $request->input('address'),
                 'phone' => $request->input('phone'),
                 'notes' => $request->input('notes'),
+                'coupon_id' => $coupon?->id,
+                'discount_amount' => $discountAmount,
             ]);
+
+            if ($coupon && $discountAmount > 0) {
+                CouponRedemption::create([
+                    'coupon_id' => $coupon->id,
+                    'user_id' => $userId,
+                    'order_id' => $order->id,
+                    'discount_amount' => $discountAmount,
+                ]);
+            }
 
             // Create order items and deduct stock
             foreach ($cartItems as $item) {

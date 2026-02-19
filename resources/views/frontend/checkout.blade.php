@@ -96,6 +96,13 @@
                                   class="border border-slate-200 rounded-lg w-full px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-400">{{ old('notes') }}</textarea>
                     </div>
 
+                    <div>
+                        <label class="block text-xs font-semibold mb-2 text-slate-700">Coupon code (Optional)</label>
+                        <input type="text" name="coupon_code" value="{{ old('coupon_code') }}" placeholder="Enter code"
+                               class="border border-slate-200 rounded-lg w-full px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-400">
+                        <p class="text-xs text-slate-500 mt-1">We'll apply the discount when you place the order.</p>
+                    </div>
+
                     {{-- Payment section --}}
                     <div class="border-t border-slate-100 pt-4 mt-4">
                         <h2 class="text-lg font-bold text-slate-900 mb-1">Payment Method</h2>

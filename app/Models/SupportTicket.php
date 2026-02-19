@@ -16,11 +16,18 @@ class SupportTicket extends Model
         'subject',
         'message',
         'status',
+        'ticket_type',
+        'order_number',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function replies()
+    {
+        return $this->hasMany(SupportTicketReply::class)->orderBy('created_at');
     }
 }
 

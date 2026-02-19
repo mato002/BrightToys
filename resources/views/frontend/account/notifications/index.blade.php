@@ -28,6 +28,14 @@
             @endif
         </div>
 
+        {{-- Filter tabs: Order updates, Delivery, Promotions, All --}}
+        <div class="flex flex-wrap gap-2 mb-4">
+            <a href="{{ route('account.notifications', ['filter' => 'all']) }}" class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors {{ request('filter', 'all') === 'all' ? 'bg-amber-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">All</a>
+            <a href="{{ route('account.notifications', ['filter' => 'order_updates']) }}" class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors {{ request('filter') === 'order_updates' ? 'bg-amber-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">Order updates</a>
+            <a href="{{ route('account.notifications', ['filter' => 'delivery']) }}" class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors {{ request('filter') === 'delivery' ? 'bg-amber-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">Delivery</a>
+            <a href="{{ route('account.notifications', ['filter' => 'promotion']) }}" class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors {{ request('filter') === 'promotion' ? 'bg-amber-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">Promotions</a>
+        </div>
+
         {{-- Notifications List --}}
         <div class="bg-white border-2 border-slate-200 rounded-xl shadow-sm overflow-hidden">
             @forelse($notifications as $notification)

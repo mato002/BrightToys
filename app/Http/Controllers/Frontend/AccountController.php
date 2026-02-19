@@ -4,11 +4,22 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Loan;
 use App\Models\Cart;
 use App\Models\Wishlist;
+use App\Models\Review;
+use App\Models\ReviewImage;
+use App\Models\SupportTicket;
+use App\Models\SupportTicketReply;
+use App\Models\Product;
+use App\Models\CouponRedemption;
+use App\Models\RewardPointTransaction;
+use App\Models\CustomerWallet;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class AccountController extends Controller
 {
@@ -36,6 +47,31 @@ class AccountController extends Controller
             ->latest()
             ->take(5)
             ->get();
+
+        // Recently viewed product IDs (from session, same key as product page)
+        $recentlyViewedIds = session('recently_viewed', []);
+        $recentlyViewed = $recentlyViewedIds
+            ? Product::whereIn('id', array_slice(array_reverse($recentlyViewedIds), 0, 6))
+                ->where('status', 'active')
+                ->with('category')
+                ->get()
+            : collect();
+
+        // Recommended: from categories of recent orders or featured
+        $recommended = Product::where('status', 'active')
+            ->where('featured', true)
+            ->with('category')
+            ->inRandomOrder()
+            ->take(6)
+            ->get();
+        if ($recommended->count() < 6) {
+            $extra = Product::where('status', 'active')
+                ->whereNotIn('id', $recommended->pluck('id'))
+                ->inRandomOrder()
+                ->take(6 - $recommended->count())
+                ->get();
+            $recommended = $recommended->merge($extra);
+        }
         
         // Orders this month
         $ordersThisMonth = $user->orders()
@@ -62,6 +98,22 @@ class AccountController extends Controller
             ];
         });
 
+        // Monthly orders & spending for current year (for charts)
+        $ordersByMonth = collect(range(1, 12))->map(function ($month) use ($user) {
+            return [
+                'month' => Carbon::createFromDate(Carbon::now()->year, $month, 1)->format('M'),
+                'orders' => $user->orders()
+                    ->whereMonth('created_at', $month)
+                    ->whereYear('created_at', Carbon::now()->year)
+                    ->count(),
+                'spent' => $user->orders()
+                    ->where('status', 'completed')
+                    ->whereMonth('created_at', $month)
+                    ->whereYear('created_at', Carbon::now()->year)
+                    ->sum('total'),
+            ];
+        });
+
         $stats = [
             'total_orders' => $totalOrders,
             'total_spent' => $totalSpent,
@@ -78,7 +130,19 @@ class AccountController extends Controller
             'spent_this_month' => $spentThisMonth,
         ];
 
-        return view('frontend.account.overview', compact('user', 'stats', 'recentOrders', 'ordersLast7Days'));
+        // Profile completeness (name, email, phone, default address)
+        $profileCompleteness = 0;
+        $profileTotal = 4;
+        if ($user->name) $profileCompleteness++;
+        if ($user->email) $profileCompleteness++;
+        if ($user->phone) $profileCompleteness++;
+        if ($user->addresses()->where('is_default', true)->exists()) $profileCompleteness++;
+        $profileCompletenessPercent = $profileTotal > 0 ? round(100 * $profileCompleteness / $profileTotal) : 0;
+
+        return view('frontend.account.overview', compact(
+            'user', 'stats', 'recentOrders', 'ordersLast7Days', 'ordersByMonth',
+            'recentlyViewed', 'recommended', 'profileCompletenessPercent', 'profileCompleteness', 'profileTotal'
+        ));
     }
 
     public function profile()
@@ -458,16 +522,261 @@ class AccountController extends Controller
     {
         $user = auth()->user();
         
-        $notifications = \App\Models\SystemNotification::where('user_id', $user->id)
-            ->latest()
-            ->paginate(20);
+        $query = \App\Models\SystemNotification::where('user_id', $user->id);
         
-        // Mark as read when viewing
+        // Filter by type: order_updates, delivery, promotion, or all
+        $filter = request('filter', 'all');
+        if ($filter === 'order_updates') {
+            $query->where(function ($q) {
+                $q->where('type', 'like', '%order%')->orWhere('type', 'like', '%payment%');
+            });
+        } elseif ($filter === 'delivery') {
+            $query->where(function ($q) {
+                $q->where('type', 'like', '%shipping%')->orWhere('type', 'like', '%delivery%');
+            });
+        } elseif ($filter === 'promotion') {
+            $query->where('type', 'like', '%promo%')->orWhere('type', 'like', '%promotion%');
+        }
+        
+        $notifications = $query->latest()->paginate(20)->withQueryString();
+        
+        if (view()->exists('frontend.account.notifications.index')) {
+            return view('frontend.account.notifications.index', compact('user', 'notifications'));
+        }
+        return view('frontend.account.notifications', compact('user', 'notifications'));
+    }
+    
+    /**
+     * Mark a single notification as read
+     */
+    public function markNotificationAsRead(Request $request, $notificationId)
+    {
+        $user = auth()->user();
+        
+        // Find notification belonging to this user
+        $notification = \App\Models\SystemNotification::where('user_id', $user->id)
+            ->where('id', $notificationId)
+            ->firstOrFail();
+        
+        if (!$notification->read_at) {
+            $notification->update(['read_at' => now()]);
+        }
+        
+        return redirect()->back()->with('success', 'Notification marked as read.');
+    }
+    
+    /**
+     * Mark all notifications as read
+     */
+    public function markAllNotificationsAsRead(Request $request)
+    {
+        $user = auth()->user();
+        
         \App\Models\SystemNotification::where('user_id', $user->id)
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
         
-        return view('frontend.account.notifications', compact('user', 'notifications'));
+        return redirect()->back()->with('success', 'All notifications marked as read.');
+    }
+
+    // ---------- My Reviews ----------
+    public function reviews()
+    {
+        $user = auth()->user();
+        $reviews = $user->reviews()->with(['product', 'images'])->latest()->paginate(10);
+        return view('frontend.account.reviews.index', compact('user', 'reviews'));
+    }
+
+    public function editReview(Review $review)
+    {
+        $user = auth()->user();
+        if ($review->user_id !== $user->id) {
+            abort(403, 'You do not have permission to edit this review.');
+        }
+        $review->load(['product', 'images']);
+        return view('frontend.account.reviews.edit', compact('review'));
+    }
+
+    public function updateReview(Request $request, Review $review)
+    {
+        $user = auth()->user();
+        if ($review->user_id !== $user->id) {
+            abort(403, 'You do not have permission to edit this review.');
+        }
+        $validated = $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'title' => 'nullable|string|max:255',
+            'comment' => 'required|string|min:10|max:1000',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ]);
+        $review->rating = $validated['rating'];
+        $review->title = $validated['title'] ?? null;
+        $review->comment = $validated['comment'];
+        $review->status = 'pending'; // re-submit for approval
+        $review->save();
+
+        if ($request->hasFile('images')) {
+            foreach ($review->images as $img) {
+                Storage::disk('public')->delete($img->path);
+            }
+            $review->images()->delete();
+            foreach ($request->file('images') as $index => $file) {
+                $path = $file->store('reviews/' . $review->id, 'public');
+                $review->images()->create(['path' => $path, 'sort_order' => $index]);
+            }
+        }
+
+        return redirect()->route('account.reviews')->with('success', 'Review updated. It will be published after approval.');
+    }
+
+    // ---------- Reorder ----------
+    public function reorder(Order $order)
+    {
+        $user = auth()->user();
+        if ($order->user_id !== $user->id) {
+            abort(403, 'You do not have permission to reorder this order.');
+        }
+        foreach ($order->items as $item) {
+            if (!$item->product || $item->product->status !== 'active') {
+                continue;
+            }
+            $existing = Cart::where('user_id', $user->id)->where('product_id', $item->product_id)->first();
+            if ($existing) {
+                $existing->quantity += $item->quantity;
+                $existing->save();
+            } else {
+                Cart::create([
+                    'user_id' => $user->id,
+                    'product_id' => $item->product_id,
+                    'quantity' => $item->quantity,
+                ]);
+            }
+        }
+        return redirect()->route('account.cart.index')->with('success', 'Order items added to cart. You can adjust quantities and checkout.');
+    }
+
+    // ---------- Support / My Tickets ----------
+    public function supportTickets()
+    {
+        $user = auth()->user();
+        $tickets = $user->supportTickets()->withCount('replies')->latest()->paginate(10);
+        return view('frontend.account.support.index', compact('user', 'tickets'));
+    }
+
+    public function showSupportTicket(SupportTicket $ticket)
+    {
+        $user = auth()->user();
+        if ($ticket->user_id !== $user->id) {
+            abort(403, 'You do not have permission to view this ticket.');
+        }
+        $ticket->load(['replies.user']);
+        return view('frontend.account.support.show', compact('ticket'));
+    }
+
+    public function createSupportTicket()
+    {
+        $user = auth()->user();
+        $orders = $user->orders()->latest()->take(20)->get(['id', 'order_number', 'created_at']);
+        return view('frontend.account.support.create', compact('user', 'orders'));
+    }
+
+    public function storeSupportTicket(Request $request)
+    {
+        $user = auth()->user();
+        $validated = $request->validate([
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string|max:5000',
+            'ticket_type' => 'nullable|in:general,complaint,return,refund',
+            'order_number' => 'nullable|string|max:50',
+        ]);
+        $ticket = $user->supportTickets()->create([
+            'name' => $user->name,
+            'email' => $user->email,
+            'subject' => $validated['subject'],
+            'message' => $validated['message'],
+            'status' => 'open',
+            'ticket_type' => $validated['ticket_type'] ?? 'general',
+            'order_number' => $validated['order_number'] ?? null,
+        ]);
+        return redirect()->route('account.support.show', $ticket)->with('success', 'Support ticket created. We will respond shortly.');
+    }
+
+    public function replySupportTicket(Request $request, SupportTicket $ticket)
+    {
+        $user = auth()->user();
+        if ($ticket->user_id !== $user->id) {
+            abort(403, 'You do not have permission to reply to this ticket.');
+        }
+        $validated = $request->validate(['message' => 'required|string|max:5000']);
+        $ticket->replies()->create([
+            'user_id' => $user->id,
+            'is_staff' => false,
+            'message' => $validated['message'],
+        ]);
+        $ticket->update(['status' => 'open']);
+        return redirect()->route('account.support.show', $ticket)->with('success', 'Reply sent.');
+    }
+
+    // ---------- Spending Analytics ----------
+    public function analytics()
+    {
+        $user = auth()->user();
+        $year = (int) request('year', date('Y'));
+        $years = range(date('Y'), max(date('Y') - 5, date('Y') - 10));
+        $orders = $user->orders()->where('status', 'completed')->whereYear('created_at', $year)->get();
+        $totalYearlySpent = $orders->sum('total');
+        $byMonth = collect(range(1, 12))->mapWithKeys(function ($m) use ($user, $year) {
+            $total = $user->orders()->where('status', 'completed')->whereYear('created_at', $year)->whereMonth('created_at', $m)->sum('total');
+            return [$m => $total];
+        });
+        $frequentProducts = OrderItem::whereIn('order_id', $user->orders()->where('status', 'completed')->select('id'))
+            ->select('product_id', DB::raw('SUM(quantity) as total_qty'))
+            ->groupBy('product_id')
+            ->orderByDesc('total_qty')
+            ->take(10)
+            ->get()
+            ->load('product');
+        $monthlyBudget = (float) request('budget', 0);
+        return view('frontend.account.analytics.index', compact(
+            'user', 'year', 'years', 'totalYearlySpent', 'byMonth', 'frequentProducts', 'monthlyBudget'
+        ));
+    }
+
+    // ---------- Coupons & Rewards ----------
+    public function rewards()
+    {
+        $user = auth()->user();
+        $couponHistory = $user->couponRedemptions()->with('coupon')->latest()->paginate(10, ['*'], 'coupons');
+        $pointsBalance = $user->rewardPointTransactions()->sum('points');
+        $pointsHistory = $user->rewardPointTransactions()->with('order')->latest()->take(20)->get();
+        $wallet = $user->customerWallet;
+        $walletBalance = $wallet ? (float) $wallet->balance : 0;
+        $walletTransactions = $wallet ? $wallet->transactions()->latest()->take(20)->get() : collect();
+        $referralCode = $user->referral_code ?? null;
+        return view('frontend.account.rewards.index', compact(
+            'user', 'couponHistory', 'pointsBalance', 'pointsHistory', 'walletBalance', 'walletTransactions', 'referralCode'
+        ));
+    }
+
+    // ---------- FAQ ----------
+    public function faq()
+    {
+        return view('frontend.account.faq');
+    }
+
+    // ---------- Contact (within account layout) ----------
+    public function contact()
+    {
+        $user = auth()->user();
+        return view('frontend.account.contact', compact('user'));
+    }
+
+    // ---------- Returns & refunds (dedicated page) ----------
+    public function returns()
+    {
+        $user = auth()->user();
+        $orders = $user->orders()->latest()->take(30)->get(['id', 'order_number', 'created_at', 'status']);
+        return view('frontend.account.returns', compact('user', 'orders'));
     }
 }
 

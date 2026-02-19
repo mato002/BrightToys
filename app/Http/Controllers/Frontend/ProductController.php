@@ -61,6 +61,54 @@ class ProductController extends Controller
         return view('frontend.shop', compact('products', 'categories'));
     }
 
+    /**
+     * Shop page within account layout (same data as index).
+     */
+    public function accountShop(Request $request)
+    {
+        $query = Product::query()->with('category');
+
+        if ($search = $request->get('q')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('category')) {
+            $query->whereHas('category', function ($q) use ($request) {
+                $q->where('slug', $request->get('category'));
+            });
+        }
+
+        if ($request->filled('min_price')) {
+            $query->where('price', '>=', (float) $request->get('min_price'));
+        }
+        if ($request->filled('max_price')) {
+            $query->where('price', '<=', (float) $request->get('max_price'));
+        }
+
+        switch ($request->get('sort')) {
+            case 'price_asc':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price_desc':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'newest':
+                $query->latest();
+                break;
+            default:
+                $query->latest();
+                break;
+        }
+
+        $products = $query->paginate(16)->withQueryString();
+        $categories = Category::orderBy('name')->get();
+
+        return view('frontend.account.shop', compact('products', 'categories'));
+    }
+
     public function show(string $slug)
     {
         $product = Product::query()->where('slug', $slug)->with('category')->firstOrFail();

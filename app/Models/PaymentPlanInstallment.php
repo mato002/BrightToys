@@ -19,6 +19,9 @@ class PaymentPlanInstallment extends Model
         'days_overdue',
         'penalty_amount',
         'notes',
+        'reminder_sent_at',
+        'last_reminder_sent_at',
+        'reminder_count',
     ];
 
     protected $casts = [
@@ -28,6 +31,9 @@ class PaymentPlanInstallment extends Model
         'due_date' => 'date',
         'paid_at' => 'date',
         'days_overdue' => 'integer',
+        'reminder_sent_at' => 'datetime',
+        'last_reminder_sent_at' => 'datetime',
+        'reminder_count' => 'integer',
     ];
 
     public function paymentPlan()
