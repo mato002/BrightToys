@@ -514,6 +514,16 @@
                             </span>
                             <span class="font-medium sidebar-label">Orders</span>
                         </a>
+                        <a href="{{ route('admin.pos.index') }}"
+                           class="group flex items-center px-3 py-2.5 rounded-xl transition
+                                  {{ request()->routeIs('admin.pos.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">
+                            <span class="mr-3 flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-800/80 text-[11px] text-emerald-100 group-hover:bg-emerald-700/90">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <span class="font-medium sidebar-label">Point of Sale</span>
+                        </a>
                         <a href="{{ route('admin.users.index') }}"
                            class="group flex items-center px-3 py-2.5 rounded-xl transition
                                   {{ request()->routeIs('admin.users.*') ? 'bg-emerald-800/80 text-emerald-50' : 'text-emerald-100/90 hover:bg-emerald-800/60 hover:text-white' }}">

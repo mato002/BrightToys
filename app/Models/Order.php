@@ -9,6 +9,9 @@ class Order extends Model
 {
     use HasFactory;
 
+    public const SOURCE_ECOMMERCE = 'ecommerce';
+    public const SOURCE_POS = 'pos';
+
     protected $fillable = [
         'user_id',
         'order_number',
@@ -22,6 +25,7 @@ class Order extends Model
         'notes',
         'coupon_id',
         'discount_amount',
+        'source',
     ];
 
     protected $casts = [

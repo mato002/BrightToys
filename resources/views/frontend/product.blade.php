@@ -309,7 +309,7 @@
             @endguest
 
             {{-- Reviews List --}}
-            @if($reviews->count() > 0)
+            @if(isset($reviews) && $reviews->count() > 0)
                 <div class="space-y-6">
                     @foreach($reviews as $review)
                         <div class="bg-white border border-slate-200 rounded-xl p-6">
@@ -342,11 +342,17 @@
                         </div>
                     @endforeach
                 </div>
-
                 <div class="mt-6">
                     {{ $reviews->links() }}
                 </div>
-            @else
+            @endif
+            @if(isset($reviews) && $reviews->count() == 0)
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center">
+                    <p class="text-slate-600 mb-2">No reviews yet.</p>
+                    <p class="text-sm text-slate-500">Be the first to review this product!</p>
+                </div>
+            @endif
+            @if(!isset($reviews))
                 <div class="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center">
                     <p class="text-slate-600 mb-2">No reviews yet.</p>
                     <p class="text-sm text-slate-500">Be the first to review this product!</p>
@@ -355,61 +361,3 @@
         </div>
     </div>
 @endsection
-
-@push('scripts')
-<script>
-    // Rating selector interaction
-    document.addEventListener('DOMContentLoaded', function() {
-        const stars = document.querySelectorAll('.rating-star');
-        const ratingInputs = document.querySelectorAll('input[name="rating"]');
-        
-        stars.forEach(star => {
-            star.addEventListener('click', function() {
-                const rating = this.dataset.rating;
-                ratingInputs.forEach(input => {
-                    if (input.value <= rating) {
-                        input.checked = true;
-                    }
-                });
-                updateStarDisplay(rating);
-            });
-
-            star.addEventListener('mouseenter', function() {
-                const rating = this.dataset.rating;
-                updateStarDisplay(rating);
-            });
-        });
-
-        const ratingSelector = document.getElementById('rating-selector');
-        if (ratingSelector) {
-            ratingSelector.addEventListener('mouseleave', function() {
-                const checked = document.querySelector('input[name="rating"]:checked');
-                if (checked) {
-                    updateStarDisplay(checked.value);
-                } else {
-                    updateStarDisplay(0);
-                }
-            });
-        }
-
-        function updateStarDisplay(rating) {
-            stars.forEach((star, index) => {
-                const starRating = 5 - index;
-                const icon = star.querySelector('i');
-                if (starRating <= rating) {
-                    icon.classList.remove('far');
-                    icon.classList.add('fas');
-                    icon.classList.remove('text-slate-300');
-                    icon.classList.add('text-amber-400');
-                } else {
-                    icon.classList.remove('fas');
-                    icon.classList.add('far');
-                    icon.classList.remove('text-amber-400');
-                    icon.classList.add('text-slate-300');
-                }
-            });
-        }
-    });
-</script>
-@endpush
-

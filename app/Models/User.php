@@ -134,6 +134,24 @@ class User extends Authenticatable
         return $this->hasOne(Member::class);
     }
 
+    /** POS orders where this user was the cashier */
+    public function posOrdersAsCashier()
+    {
+        return $this->hasMany(PosOrder::class, 'user_id');
+    }
+
+    /** POS orders where this user was the customer (walk-in) */
+    public function posOrdersAsCustomer()
+    {
+        return $this->hasMany(PosOrder::class, 'customer_id');
+    }
+
+    /** Refunds processed by this user */
+    public function refundsProcessed()
+    {
+        return $this->hasMany(Refund::class, 'refunded_by');
+    }
+
     /**
      * All admin roles attached to this user.
      */

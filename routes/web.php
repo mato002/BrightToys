@@ -149,6 +149,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/dashboard/export', [DashboardController::class, 'export'])->name('dashboard.export');
     Route::get('/dashboard/report', [DashboardController::class, 'report'])->name('dashboard.report');
 
+    // Point of Sale (POS)
+    Route::get('/pos', [\App\Http\Controllers\Admin\PosController::class, 'index'])->name('pos.index');
+    Route::get('/pos/products', [\App\Http\Controllers\Admin\PosController::class, 'searchProducts'])->name('pos.products.search');
+    Route::post('/pos/cart/add', [\App\Http\Controllers\Admin\PosController::class, 'addToCart'])->name('pos.cart.add');
+    Route::post('/pos/cart/update', [\App\Http\Controllers\Admin\PosController::class, 'updateCart'])->name('pos.cart.update');
+    Route::delete('/pos/cart/remove/{productId}', [\App\Http\Controllers\Admin\PosController::class, 'removeFromCart'])->name('pos.cart.remove');
+    Route::get('/pos/cart', [\App\Http\Controllers\Admin\PosController::class, 'getCart'])->name('pos.cart.get');
+    Route::get('/pos/products/by-sku', [\App\Http\Controllers\Admin\PosController::class, 'productBySku'])->name('pos.products.by-sku');
+    Route::post('/pos/cart/add-by-sku', [\App\Http\Controllers\Admin\PosController::class, 'addBySku'])->name('pos.cart.add-by-sku');
+    Route::post('/pos/checkout', [\App\Http\Controllers\Admin\PosController::class, 'checkout'])->name('pos.checkout');
+
     Route::resource('products', AdminProductController::class);
     Route::get('/products/export', [AdminProductController::class, 'export'])->name('products.export');
     Route::get('/products/report', [AdminProductController::class, 'report'])->name('products.report');
@@ -379,6 +390,9 @@ Route::prefix('partner')->name('partner.')->middleware(['auth', 'partner'])->gro
     Route::get('/activity', [\App\Http\Controllers\Partner\ActivityController::class, 'index'])->name('activity');
     Route::get('/profile', [\App\Http\Controllers\Partner\ProfileController::class, 'index'])->name('profile');
     Route::put('/profile', [\App\Http\Controllers\Partner\ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/sessions', [\App\Http\Controllers\Partner\ProfileController::class, 'sessions'])->name('profile.sessions');
+    Route::post('/profile/sessions/{sessionId}/revoke', [\App\Http\Controllers\Partner\ProfileController::class, 'revokeSession'])->name('profile.sessions.revoke');
+    Route::post('/profile/sessions/revoke-all', [\App\Http\Controllers\Partner\ProfileController::class, 'revokeAllOtherSessions'])->name('profile.sessions.revoke-all');
         Route::get('/reports', [\App\Http\Controllers\Partner\DashboardController::class, 'reports'])->name('reports');
         Route::get('/notifications', [\App\Http\Controllers\Partner\NotificationController::class, 'index'])->name('notifications');
     
